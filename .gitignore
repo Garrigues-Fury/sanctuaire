@@ -3,6 +3,9 @@ dist/
 dev-dist/
 *.log
 .claude/settings.local.json
+# Clés d'API : ne jamais publier.
+.env
+.env.*
 # Fichiers privés : le dépôt est public (obligatoire pour GitHub Pages gratuit).
 docs/reference.jpeg
 art/

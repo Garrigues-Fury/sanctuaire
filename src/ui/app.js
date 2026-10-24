@@ -1,6 +1,6 @@
 /* Interface : onglets, fiches, fenêtres et actions du joueur. */
 import { looks } from '../core/appearance.js';
-import { SANCT_VIEWS, goldArt } from '../core/data/art.js';
+import { SANCT_VIEWS, armorImg, goldArt } from '../core/data/art.js';
 import { ARTEFACTS, ART_BY, CARD_BY, EFF_N, UNLOCK_N, effText } from '../core/data/cards.js';
 import { NATS } from '../core/data/countries.js';
 import { ARMOR_COST, ARMOR_FORGE, ARMOR_SMITH, ARMOR_WORK, BORDER, BUILD, IKEYS, ITEMS, RECIPES, REC_BY, RES, RKEYS, ROLES, STATN, TOOL_SITES, TRIAL_LV, WORK } from '../core/data/economy.js';
@@ -190,7 +190,8 @@ export function viewArmures(){
  CONS.filter(c=>c.rank===rk).forEach(c=>{const s=S.armors[c.k];let act='';const restoring=S.forgeJob&&S.forgeJob.cons===c.k;
   if(s==='brisee'&&!restoring){const cost=ARMOR_COST[rk];const why=S.b.forge<ARMOR_FORGE[rk]?'Atelier niv. '+ARMOR_FORGE[rk]:bestSmith()<ARMOR_SMITH[rk]?'Forgeron niv. '+ARMOR_SMITH[rk]:S.forgeJob?'Atelier occupé':'';const can=!why&&afford(cost);
    act='<div style="display:grid;gap:4px;justify-items:end"><button class="btn sm" data-act="restore:'+c.k+'"'+(can?'':' disabled')+'>Restaurer</button>'+(why?'<span class="time">'+why+'</span>':'')+'</div>';}
-  h+='<div class="item" style="grid-template-columns:minmax(0,1fr) auto"><div class="main"><div class="name">'+(rk==='or'?'<span class="sign" style="color:var(--gold-hi)">'+SIGNS[c.sign].s+'</span> ':'')+c.n+' <span class="chip el-'+c.el+'">'+ELEM[c.el]+'</span></div><div class="meta">'+armorState(c)+'</div>'+(s==='brisee'&&!restoring?costHtml(ARMOR_COST[rk]):'')+'</div>'+act+'</div>';});
+  const mini=armorImg(c.k,true);
+  h+='<div class="item'+(mini?' tap':'')+'" style="grid-template-columns:'+(mini?'auto ':'')+'minmax(0,1fr) auto"'+(mini?' data-act="armor:'+c.k+'"':'')+'>'+(mini?'<img class="arm-mini'+(s==='brisee'?' broken':'')+'" src="'+mini+'" alt="" width="48" height="72">':'')+'<div class="main"><div class="name">'+(rk==='or'?'<span class="sign" style="color:var(--gold-hi)">'+SIGNS[c.sign].s+'</span> ':'')+c.n+' <span class="chip el-'+c.el+'">'+ELEM[c.el]+'</span></div><div class="meta">'+armorState(c)+'</div>'+(s==='brisee'&&!restoring?costHtml(ARMOR_COST[rk]):'')+'</div>'+act+'</div>';});
  return h+'</div></section>';
 }
 export function viewChronique(){
@@ -306,9 +307,19 @@ export function housesModal(){
   h+='<div class="bld"><div class="t"><b><span class="sign" style="color:var(--gold-hi)">'+s.s+'</span> Maison '+de(s.n)+'</b><span class="lv">'+(l?'niv. '+l:'ruines')+'</span></div><div class="eff">'+(guard?'Gardée par '+esc(guard.name):'Sans gardien')+' · formation '+s.n+' +'+10*l+' %</div>'+(l<HOUSE_MAX?costHtml(c):'<div class="cost"><span>Niveau maximal</span></div>')+'<div class="act">'+(l<HOUSE_MAX?'<button class="btn sm" data-act="house:'+i+'"'+(ok?'':' disabled')+'>'+(busy?'En cours':full?'Chantiers pleins':l?'Améliorer':'Relever')+'</button><span class="time">'+dur(houseTime(i))+'</span>':'')+'</div></div>';});
  return h+'</div>';
 }
+export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';const s=S.armors[c.k];const img=armorImg(c.k);
+ const intro={or:'Seul un natif '+de(SIGNS[c.sign||0].n)+' peut prétendre à cette armure.',argent:'Une armure d’argent, pour un apprenti de niveau '+TRIAL_LV.argent+' au moins.',bronze:'Une armure de bronze, la première marche des chevaliers.'}[c.rank];
+ let h='<div><h2 class="mh">'+esc(armorName(c))+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+rankChip(c.rank)+'<span class="chip el-'+c.el+'">'+ELEM[c.el]+'</span>'+armorState(c)+'</div></div>';
+ if(img)h+='<figure class="fullbody"><img class="'+(s==='brisee'?'broken':'')+'" src="'+img+'" alt="" width="400" height="600">'+(s==='brisee'?'<figcaption>Telle qu’elle sera une fois restaurée. Pour l’instant, elle gît en morceaux.</figcaption>':'')+'</figure>';
+ h+='<p class="hint">'+intro+'</p>';
+ if(s==='brisee')h+='<button class="btn ghost" data-act="tab:armures">Retour à l’atelier des armures</button>';
+ return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main"><h2>'+esc(k.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+signChip(k.sign)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
- const art=k.rank==='or'?goldArt(k):null;if(art)h+='<figure class="fullbody"><img src="img/or/corps-'+art.n+'.webp" alt="'+esc(armorName(c))+'" width="152" height="458"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
+ // L'armure illustrée (anime) passe avant l'ancienne planche semi-réaliste.
+ const aimg=armorImg(k.cons),art=k.rank==='or'?goldArt(k):null;
+ if(aimg)h+='<figure class="fullbody"><img src="'+aimg+'" alt="'+esc(armorName(c))+'" width="400" height="600"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
+ else if(art)h+='<figure class="fullbody"><img src="img/or/corps-'+art.n+'.webp" alt="'+esc(armorName(c))+'" width="152" height="458"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
  h+=persoBlock(k);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance '+fmt(power(k,k.rank))+'</div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+statsHtml(k,'k');
  h+=itemUse(k,'k');
@@ -397,6 +408,7 @@ export function act(a){
  case'craft':{const r=REC_BY[x];if(!r||S.craft[r.ws].length>=6||!afford(r.inp))return;pay(r.inp);S.craft[r.ws].push({k:x,prog:0});break;}
  case'tool':{const tl=S.tools[x]||0;if(tl>=5||(S.items.outil||0)<tl+1)return;S.items.outil-=tl+1;S.tools[x]=tl+1;log('Les outils '+de(BUILD[x].n.split(' ')[0]).replace('du Oliveraies','des oliveraies')+' passent au niveau '+(tl+1)+'.');flash='Outillage amélioré : +'+10*(tl+1)+' % de production.';break;}
  case'knight':openModal(knightModal(+x));return;
+ case'armor':openModal(armorModal(x));return;
  case'guard':openModal(guardModal(+x));return;
  case'dstart':if(!pope())return;startDuel();window.scrollTo(0,0);break;
  case'dtake':{const m=S.match;if(!m||m.over)return;const c=[1,2,3].flatMap(t=>m.market[t]).find(q=>q.id===x);if(!c||!canPay(c,'me'))return;takeCard(c,'me');break;}

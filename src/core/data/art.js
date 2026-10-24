@@ -13,6 +13,9 @@ export const GOLD_ART={
  10:{n:8,sex:'M'},  // Verseau : volutes d'eau
  11:{n:4,sex:'F'}   // Poissons : coquillage, voiles roses
 };
+// Armures illustrées (style anime), par clé de constellation. Les autres gardent un simple libellé.
+export const ARMOR_ART=new Set(['or-1','or-2','or-3','or-4','or-5']);
+export function armorImg(k,mini){return ARMOR_ART.has(k)?'img/armures/'+k+(mini?'-mini':'')+'.webp':null;}
 export function goldArt(p){const a=GOLD_ART[p.sign];return a&&a.sex===p.sex?a:null;}
 export const SANCT_VIEWS=[
  {src:'img/sanctuaire/vue-1.webp',t:'Le Sanctuaire au couchant, de la plaine au palais du Pope'},

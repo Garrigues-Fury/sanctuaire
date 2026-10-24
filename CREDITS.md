@@ -27,5 +27,6 @@ Tout ce qui est intégré au jeu est gratuit et sous licence libre. Chaque nouve
 | Icône de l'appli (`public/icon.svg`) et dérivés PNG | créée pour le projet | propre au projet |
 | Vues du Sanctuaire (`public/img/sanctuaire/`) | générées par Seba avec ChatGPT (OpenAI), d'après `art/sanctuaire/` | les conditions d'OpenAI attribuent la propriété des images produites à l'utilisateur ; usage privé |
 | Chevaliers d'or (`public/img/or/`) | générés par Seba avec ChatGPT (OpenAI), d'après `art/personnages/` | idem ; usage privé, ressemblance avec le canon assumée par Seba |
+| Armures d'or en style anime (`public/img/armures/`) | générées par Seba (outil d'IA de son abonnement), d'après `docs/prompts-images.md` | images produites par l'utilisateur ; usage privé |
 | Portraits et carte | dessinés par le code du jeu (générateur procédural repris du prototype) | propre au projet |
 | `docs/reference.jpeg` | image de référence fournie par Seba | usage privé, non diffusée dans le jeu |
