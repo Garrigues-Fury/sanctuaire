@@ -118,7 +118,7 @@ export function step(h,sum){
  S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
  S.gt+=h;
  tickWorld(sum);tickSocial(h,sum);
- for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;if(j.b[0]==='h'){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
+ for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
  if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}
  const iv=recruitInterval();
  if(iv<Infinity){S.recruitAcc+=h;if(S.recruitAcc>=iv){S.recruitAcc-=iv;if(S.pending.length<3){const a=makeApprentice();S.pending.push(a);const m='Un recruteur ramène '+a.name+', '+a.age+' ans, venu'+G(a,'e')+' '+NATS[a.nat].d+'.';log(m);sum?sum.ev.push(m):emit('recruit');S._dirty=true;}else S.recruitAcc=Math.min(S.recruitAcc,iv);}}

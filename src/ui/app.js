@@ -140,7 +140,7 @@ export function viewSanctuaire(){
  h+=villagersSection();
  h+='<section class="sec"><div class="sec-h"><h2>Réserve d’objets</h2></div>'+invHtml()+'</section>';
  h+='<section class="sec"><div class="sec-h"><h2>Chantiers</h2><span class="aside">'+S.jobs.length+' / '+slots+' en cours</span></div>';
- if(S.jobs.length)h+=S.jobs.map(j=>{const tot=j.end-j.start;const nm=j.b[0]==='h'?'Maison '+de(SIGNS[+j.b.slice(1)].n):BUILD[j.b].n;return '<div class="job"><div class="h"><span>'+nm+' → niv. '+j.lvl+'</span><span data-until="'+j.end+'">'+dur(j.end-S.gt)+'</span></div>'+bar((S.gt-j.start)/tot*100,'data-ps="'+j.start+'" data-pe="'+j.end+'"')+'</div>';}).join('');
+ if(S.jobs.length)h+=S.jobs.map(j=>{const tot=j.end-j.start;const nm=/^h\d+$/.test(j.b)?'Maison '+de(SIGNS[+j.b.slice(1)].n):BUILD[j.b].n;return '<div class="job"><div class="h"><span>'+nm+' → niv. '+j.lvl+'</span><span data-until="'+j.end+'">'+dur(j.end-S.gt)+'</span></div>'+bar((S.gt-j.start)/tot*100,'data-ps="'+j.start+'" data-pe="'+j.end+'"')+'</div>';}).join('');
  else h+='<p class="hint">Aucun chantier. Les artisans attendent vos ordres.</p>';
  h+='</section><section class="sec"><div class="sec-h"><h2>Reconstruction</h2></div><div class="list">'+BORDER.map(bldBlock).join('')+'</div></section>';
  h+='<section class="sec"><div class="sec-h"><h2>Les douze maisons</h2><span class="aside">'+S.houses.filter(x=>x>0).length+' / 12 relevées</span></div><p class="hint">Chaque niveau d’une maison accélère de 10 % la formation des apprentis de son signe.</p><button class="btn ghost" data-act="houses">Gérer les maisons</button></section>';

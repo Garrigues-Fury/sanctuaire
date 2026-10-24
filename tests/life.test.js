@@ -58,9 +58,9 @@ describe('affinités', () => {
 
 describe('entraînements', () => {
   it('tout le monde peut s’entraîner, surtout à l’énergie', () => {
-    const k = S.knights[0]; k.nrg = 100; const fo = k.st.fo;
+    const k = S.knights[0]; k.nrg = 100; k.flaw = []; const fo = k.st.fo;
     expect(train(k, 'fo')).toMatch(/force/);
-    expect(k.st.fo).toBe(fo + (k.flaw.some(f => f.k === 'distrait') ? k.st.fo - fo : 1));
+    expect(k.st.fo).toBe(fo + 1);
     expect(k.nrg).toBe(75);
     const energyOnly = TRAININGS.filter(t => !t.item && !t.savoir).length;
     expect(energyOnly).toBeGreaterThanOrEqual(5);
@@ -85,5 +85,18 @@ describe('entraînements', () => {
     expect(canTrain(k, TRAININGS.find(t => t.k === 'leste'))).toBe(false);
     S.items.materiel = 1;
     expect(canTrain(k, TRAININGS.find(t => t.k === 'leste'))).toBe(true);
+  });
+});
+
+describe('chantiers', () => {
+  it('l’herboristerie n’est pas prise pour une maison du zodiaque (elle commence aussi par « h »)', async () => {
+    const { step } = await import('../src/core/rules.js');
+    const before = S.b.herbo || 0;
+    S.jobs.push({ b: 'herbo', start: S.gt, end: S.gt + .01, lvl: before + 1 });
+    S.jobs.push({ b: 'h3', start: S.gt, end: S.gt + .01, lvl: 2 });
+    expect(() => step(.02, null)).not.toThrow();
+    expect(S.b.herbo).toBe(before + 1);
+    expect(S.houses[3]).toBe(2);
+    expect(S.jobs.length).toBe(0);
   });
 });
