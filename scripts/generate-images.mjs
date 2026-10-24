@@ -16,11 +16,14 @@ const REF = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(ROOT, 'docs/re
 const STYLE = 'Illustration de style manga / anime, rendu « splash art » de personnage de jeu mobile idol gacha haut de gamme : contours nets, couleurs vives et lumineuses, ombrages doux et brillants, reflets dorés sur le métal, grands yeux expressifs, visage très beau et soigné. Même qualité de trait que l’image jointe, mais ne reprends pas ses personnages. Lumière chaude de soleil couchant. Univers de la Grèce antique mythique. Armure en métal ciselé, segmenté et riveté, avec cuir, tissu, sangles et boucles. Aucun texte, aucune lettre, aucun logo, aucune signature, aucun filigrane. Une seule image, jamais de planche à plusieurs cases.';
 // Personnage adulte en armure (charte, section 3) : pas de casque, un accessoire discret.
 const HEAD = 'Pas de casque ni de couvre-chef : cheveux libres et soignés, visibles en entier, avec seulement un petit accessoire discret aux couleurs de l’armure (barrette, fine chaîne, plume ou petit ornement dans les cheveux) ou une boucle d’oreille.';
+// Silhouettes et visages variés (demande de Seba du 2026-10-24) : toutes les femmes ne sont pas fines, tous les hommes ne sont pas beaux.
+const LOOK_F = ['très belle, poitrine généreuse, taille fine', 'jolie, petite poitrine, silhouette fine et sportive', 'femme ronde et voluptueuse, hanches larges, ventre doux, très séduisante', 'grande et très musclée, épaules larges, cicatrice sur le bras', 'traits marqués, pas d’une beauté parfaite mais pleine de caractère, cicatrice sur la joue, tatouages tribaux sur l’épaule'];
+const LOOK_M = ['très beau, traits fins', 'traits rudes et irréguliers, nez cassé, pas spécialement beau mais charismatique', 'homme corpulent et massif, gros ventre puissant, barbe épaisse', 'mince et nerveux, cicatrice en travers du sourcil', 'colosse très musclé, cicatrices sur le torse, tatouages tribaux sur les bras'];
 const BODY = {
-  F: 'Une femme adulte d’environ 25 ans, très belle, au look sexy et élégant d’héroïne de jeu gacha : silhouette athlétique et féminine mise en valeur, armure ajustée qui laisse voir le ventre, les épaules et le haut des cuisses, tenue séduisante mais jamais vulgaire, aucune nudité.',
-  M: 'Un homme adulte d’environ 27 ans, très beau, au look sexy et charismatique de héros de jeu gacha : silhouette athlétique, abdominaux et bras musclés en partie visibles entre les pièces d’armure, tenue séduisante mais jamais vulgaire, aucune nudité.'
+  F: look => 'Une femme adulte d’environ 25 ans, au look sexy et séduisant d’héroïne de jeu gacha : ' + look + '. Armure ajustée qui laisse voir le ventre, les épaules et le haut des cuisses, tenue séduisante mais jamais vulgaire, aucune nudité.',
+  M: look => 'Un homme adulte d’environ 28 ans, au look sexy et charismatique de héros de jeu gacha : ' + look + '. Ventre et bras en partie visibles entre les pièces d’armure, tenue séduisante mais jamais vulgaire, aucune nudité.'
 };
-const FRAME = 'Tatouages tribaux discrets. Pose assurée et dynamique de personnage de gacha, en pied, de la tête aux pieds, entièrement dans le cadre avec un peu de marge, vue de face ou de légers trois quarts. Fond gris neutre uni. Format vertical 2:3.';
+const FRAME = 'Tatouages tribaux discrets. Pose assurée et dynamique de personnage de gacha, vue de face ou de légers trois quarts. Le personnage ENTIER, des cheveux jusqu’aux pieds compris, avec de l’espace vide au-dessus de la tête et sous les pieds : rien n’est coupé par le bord de l’image. Fond gris neutre uni, sans aucun décor, sans ciel ni bâtiment. Format vertical 2:3.';
 const RANK = {
   or: 'Armure d’or de chevalier, très ornée, avec des pierres de couleur : épaulières, plastron, ceinture, brassards, gantelets, jambières et bottes.',
   argent: 'Armure d’argent et de bleu acier, partielle et plus sobre qu’une armure d’or : épaulières, plastron, avant-bras et jambières sur une tenue sombre ajustée.',
@@ -50,18 +53,18 @@ const EL = {
   air: ['Thème de l’air : plumes et nuages gravés, tissus blancs, pierres blanches.', 'Argentine', 'Vietnam'],
   terre: ['Thème de la terre : roche et racines gravées, tissus verts, pierres vertes.', 'Éthiopie', 'Pérou']
 };
-const who = (sex, nat) => BODY[sex] + ' Originaire de ' + nat + ' : peau, cheveux, yeux et traits du visage typiques de ce pays.';
-const perso = (sex, nat, rank, theme) => who(sex, nat) + ' ' + RANK[rank] + ' ' + theme + ' ' + HEAD + ' ' + FRAME;
+const who = (sex, nat, look) => BODY[sex](look) + ' Originaire de ' + nat + ' : peau, cheveux, yeux et traits du visage typiques de ce pays.';
+const perso = (sex, nat, rank, theme, i) => who(sex, nat, sex === 'F' ? LOOK_F[i % 5] : LOOK_M[(i + 2) % 5]) + ' ' + RANK[rank] + ' ' + theme + ' ' + HEAD + ' ' + FRAME;
 
 export const JOBS = {};
-GOLD.forEach(([k, theme, natF, natM]) => {
-  JOBS['perso-or-' + k + '-F'] = perso('F', natF, 'or', theme);
-  JOBS['perso-or-' + k + '-M'] = perso('M', natM, 'or', theme);
+GOLD.forEach(([k, theme, natF, natM], i) => {
+  JOBS['perso-or-' + k + '-F'] = perso('F', natF, 'or', theme, i);
+  JOBS['perso-or-' + k + '-M'] = perso('M', natM, 'or', theme, i);
 });
-Object.entries(EL).forEach(([e, [theme, natF, natM]]) => {
-  ['argent', 'bronze'].forEach(rk => {
-    JOBS['perso-' + rk + '-' + e + '-F'] = perso('F', natF, rk, theme);
-    JOBS['perso-' + rk + '-' + e + '-M'] = perso('M', natM, rk, theme);
+Object.entries(EL).forEach(([e, [theme, natF, natM]], j) => {
+  ['argent', 'bronze'].forEach((rk, r) => {
+    JOBS['perso-' + rk + '-' + e + '-F'] = perso('F', natF, rk, theme, j * 2 + r + 1);
+    JOBS['perso-' + rk + '-' + e + '-M'] = perso('M', natM, rk, theme, j * 2 + r + 3);
   });
 });
 GOLD.forEach(([k, theme]) => { JOBS['armure-or-' + k] = RANK.or + ' ' + theme + ' ' + EMPTY; });
@@ -94,6 +97,7 @@ for (const n of names) {
   if (process.env.SKIP_EXISTING && exists(n)) continue;
   for (let essai = 1; essai <= 3; essai++) {
     try { console.log('✓', n, '→', path.relative(ROOT, await generate(n, JOBS[n]))); break; }
-    catch (e) { console.error('✗', n, 'essai', essai, ':', e.message); if (essai === 3) console.error('  abandon pour', n); else await new Promise(r => setTimeout(r, 5000)); }
+    catch (e) { console.error('✗', n, 'essai', essai, ':', e.message);
+      if (/budget/i.test(e.message)) { console.error('Plafond de dépense atteint : arrêt.'); process.exit(2); } if (essai === 3) console.error('  abandon pour', n); else await new Promise(r => setTimeout(r, 5000)); }
   }
 }

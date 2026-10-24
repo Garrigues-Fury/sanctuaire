@@ -52,14 +52,25 @@ export function specOf(p,o={}){
   rank,el,cons,motif:fac?(fac.motif||null):rank?motifOf(cons):null,cloth:fac?fac.cloth:EL[el].cloth,gem:EL[el].gem,
   metal:fac?fac.metal:(rank||'bronze'),faction:o.faction||null,boss:!!o.boss,glow:!!o.boss,
   outfit:fac?'foe':rank?'knight':child?'apprentice':'villager',cover:F?(r()<.75?'midriff':'full'):(rank&&rank!=='or'&&r()<.45?'bare':'suit'),r};
+ // Morphologie et visage variés (demande de Seba du 2026-10-24), pour les adultes seulement.
+ // Tirés à part, pour ne pas changer l'apparence déjà connue des personnages existants.
+ const r2=rng((p.seed^0x9e3779b1)>>>0),adult=!child,gourmand=(p.flaw||[]).some(x=>x.k==='gourmand');
+ s.round=adult&&r2()<(gourmand?.55:.18)?.45+r2()*.55:0;
+ s.bust=F&&adult?(r2()<.3?.05+r2()*.25:r2()<.6?.35+r2()*.3:.7+r2()*.3):.45;
+ s.strong=adult&&r2()<(F?.15:.25)?.5+r2()*.5:0;
+ s.plain=adult&&r2()<(F?.2:.32)?.5+r2()*.5:0;
+ s.scar=adult&&r2()<(p.origin==='survivant'||fac?.5:.2)?1+Math.floor(r2()*3):0;
+ if(adult&&!s.tattoo&&r2()<.15)s.tattoo=true;
  if(fac){s.hood=fac.hood&&r()<.7?fac.hood:null;s.mask=!!fac.mask;s.spiky=!!fac.spiky;s.robe=!!fac.robe;s.bow=!!fac.bow;s.vine=!!fac.vine;}
  return s;
 }
 
 /* ---------- géométrie du corps ---------- */
 function geo(s){
- const F=s.F,m=s.build;
- return{sw:F?66:86+m*14,wa:F?35:52+m*5,hip:F?68+s.curvy*7:58+m*3,neck:F?10:14+m*2,arm:F?[25,18,13]:[33+m*7,24+m*4,18+m*2],thigh:F?[58+s.curvy*8,30,18]:[58+m*6,34+m*3,21]};
+ const F=s.F,m=s.build,o=s.round||0,t=s.strong||0;
+ // o : silhouette ronde ; t : carrure puissante
+ return{sw:F?66+t*10:86+m*14+t*6,wa:F?35+o*24:52+m*5+o*22,hip:F?68+s.curvy*7+o*12:58+m*3+o*10,neck:F?10+t*2:14+m*2,
+  arm:F?[25+o*6+t*6,18+o*5+t*4,13+o*2]:[33+m*7+o*5+t*4,24+m*4+o*4+t*3,18+m*2+o*2],thigh:F?[58+s.curvy*8+o*14,30+o*8,18+o*3]:[58+m*6+o*10,34+m*3+o*6,21+o*2]};
 }
 // Métal en ombrage « cel » : reflet net, aplat, puis ombre franche, comme dans les animés.
 const metalDefs=(id,M)=>lin(id,[[0,M[0]],[.18,M[0]],[.2,M[1]],[.55,M[1]],[.57,M[2]],[.86,M[2]],[.88,M[1]],[1,M[1]]],1,1)+lin(id+'e',[[0,M[3]],[1,M[3]]]);
@@ -68,7 +79,7 @@ const metalDefs=(id,M)=>lin(id,[[0,M[0]],[.18,M[0]],[.2,M[1]],[.55,M[1]],[.57,M[
 function face(s,d){
  const S=s.skin,sd=shade(S,-.18),dk=shade(S,-.42),F=s.F;
  d.push(lin('fl',[[0,'#ffe2b8',.22],[.55,'#ffe2b8',0],[1,'#3a1a10',.28]],1,.4));
- const k=F?.95:1;
+ const k=(F?.95:1)*(1+.07*(s.round||0)),pl=s.plain||0;
  const fp=sym(CX,[[0,38],[29*k,42],[42*k,64],[44*k,96],[41*k,121],[32*k,141],[17*k,157],[0,F?162:166]]);
  let h='<defs><clipPath id="fc"><path d="'+fp+'"/></clipPath></defs>';
  // oreilles
@@ -80,7 +91,7 @@ function face(s,d){
  // joues
  h+='<ellipse cx="'+(CX-23)+'" cy="132" rx="9" ry="4.5" fill="#e8706a" opacity="'+(F||s.child?.28:.12)+'"/><ellipse cx="'+(CX+23)+'" cy="132" rx="9" ry="4.5" fill="#e8706a" opacity="'+(F||s.child?.28:.12)+'"/>';
  // yeux (l'œil droit est dessiné, puis reflété)
- const sy=s.mono?.72:1,eh=(F||s.child?1.12:1)*sy,iy=110;
+ const sy=s.mono?.72:1,eh=(F||s.child?1.12:1)*sy*(1-.16*pl),iy=110;
  d.push(lin('ir',[[0,shade(s.eye,-.6)],[.5,s.eye],[1,shade(s.eye,.5)]]));
  const wpts=[[208,iy+1],[213,iy-8*eh],[222,iy-10.5*eh],[231,iy-8.5*eh],[235,iy-3]];
  const lpts=[[235,iy-3],[229,iy+7*eh],[221,iy+8.5*eh],[213,iy+6*eh]];
@@ -93,13 +104,18 @@ function face(s,d){
  if(F)eye+='<path d="M235 '+(iy-3.5)+' L242 '+(iy-9)+'" stroke="#1a1012" stroke-width="2.2" stroke-linecap="round"/><path d="M233 '+(iy-6)+' L238 '+(iy-12)+'" stroke="#1a1012" stroke-width="1.6" stroke-linecap="round"/>';
  eye+='<path d="'+smooth([[214,iy+6.5*eh],[221,iy+8.4*eh],[229,iy+6.5*eh]],false)+'" fill="none" stroke="'+dk+'" stroke-width="1" opacity=".6"/>';
  const by=iy-19,bf=s.fierce?4:0;
- eye+='<path d="'+smooth([[209,by+bf],[221,by-3],[235,by+1-bf*.2]],false)+'" fill="none" stroke="'+shade(s.hair,-.25)+'" stroke-width="'+(F?2.6:3.8)+'" stroke-linecap="round"/>';
+ eye+='<path d="'+smooth([[209,by+bf],[221,by-3],[235,by+1-bf*.2]],false)+'" fill="none" stroke="'+shade(s.hair,-.25)+'" stroke-width="'+((F?2.6:3.8)+pl*1.6)+'" stroke-linecap="round"/>';
  h+=eye+'<g transform="translate(400 0) scale(-1 1)">'+eye.replace(/id="ec"/,'id="ec2"').replace(/url\(#ec\)/,'url(#ec2)')+'</g>';
  // nez, bouche
  h+='<path d="M'+(CX+2)+' 123 Q'+(CX+4)+' 132 '+(CX-1)+' 135" fill="none" stroke="'+dk+'" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>';
  if(s.smile)h+='<path d="M'+(CX-9)+' 145 Q'+CX+' 156 '+(CX+9)+' 145 Q'+CX+' 149 '+(CX-9)+' 145Z" fill="#6a2024"/><path d="M'+(CX-7)+' 146 L'+(CX+7)+' 146" stroke="#fff" stroke-width="1.6"/>';
  else if(F)h+='<path d="M'+(CX-8)+' 146 Q'+CX+' 143.5 '+(CX+8)+' 146 Q'+CX+' 151 '+(CX-8)+' 146Z" fill="'+mix2(S,'#c0505a',.55)+'"/>';
  else h+='<path d="M'+(CX-8)+' 147 Q'+CX+' '+(s.fierce?145:149)+' '+(CX+8)+' 147" fill="none" stroke="'+dk+'" stroke-width="2" stroke-linecap="round"/>';
+ // visage moins gracieux : nez plus marqué, narines visibles
+ if(pl)h+='<path d="M'+(CX-6)+' 136 Q'+(CX-9)+' 131 '+(CX-3)+' 129 M'+(CX+6)+' 136 Q'+(CX+9)+' 131 '+(CX+3)+' 129 M'+(CX+3)+' 112 Q'+(CX+7)+' 120 '+(CX+5)+' 128" fill="none" stroke="'+dk+'" stroke-width="1.7" stroke-linecap="round" opacity="'+f(.45+.4*pl)+'"/>';
+ // cicatrices : joue ou sourcil
+ if(s.scar===1)h+='<path d="M'+(CX-36)+' 104 L'+(CX-15)+' 142" stroke="#b4615c" stroke-width="2.6" stroke-linecap="round" opacity=".85"/><path d="M'+(CX-31)+' 118 l6 -3 M'+(CX-25)+' 129 l6 -3" stroke="#b4615c" stroke-width="1.4" opacity=".7"/>';
+ if(s.scar===2)h+='<path d="M'+(CX+27)+' 82 L'+(CX+19)+' 126" stroke="#b4615c" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>';
  if(s.beard)h+='<path d="'+sym(CX,[[0,150],[22,146],[36,128],[38,140],[28,160],[14,172],[0,176]])+'" fill="'+s.hair+'" opacity=".92"/><path d="M'+(CX-10)+' 147 Q'+CX+' 150 '+(CX+10)+' 147" fill="none" stroke="'+shade(S,-.45)+'" stroke-width="2"/>';
  if(s.mask)h+='<path d="'+sym(CX,[[0,124],[30,120],[44,118],[42,140],[26,160],[0,168]])+'" fill="#3a2a22"/><path d="M'+(CX-40)+' 126 L'+(CX+40)+' 126" stroke="#2a1d16" stroke-width="3"/>';
  if(s.tattoo&&s.r()<.5)h+='<path d="M'+(CX+30)+' 120 l6 14 M'+(CX+25)+' 122 l4 12" stroke="#1d1416" stroke-width="2.2" stroke-linecap="round" opacity=".8"/>';
@@ -274,7 +290,7 @@ function armorBody(s,G){
  h+='<path d="'+smooth([[CX-wa-8,372],[CX,378],[CX+wa+8,372],[CX+wa+10,392],[CX,398],[CX-wa-10,392]])+'" fill="'+M+'" stroke="'+E+'" stroke-width="1.5"/><path d="M'+CX+' 376 L'+(CX+9)+' 386 L'+CX+' 396 L'+(CX-9)+' 386Z" fill="'+s.gem+'" stroke="'+E+'" stroke-width="1"/>';
  // plastron
  if(s.F){
-  const by=262,bx=24,rx=28+s.curvy*3,ry=25+s.curvy*3;
+  const bu=s.bust==null?.45:s.bust,by=262+bu*4,bx=24+bu*3,rx=22+bu*14,ry=19+bu*13;
   h+='<path d="'+sym(CX,[[0,192],[18,192],[38,200],[sw-20,212],[sw-22,226],[0,214]])+'" fill="'+M+'" stroke="'+E+'" stroke-width="1.3"/>';
   [-1,1].forEach(sd=>{const x=CX+sd*bx;h+='<path d="'+smooth([[x-sd*rx*.15,by-ry],[x+sd*rx*.85,by-ry*.6],[x+sd*rx,by+ry*.2],[x+sd*rx*.55,by+ry],[x-sd*rx*.6,by+ry*.85],[x-sd*rx*.95,by+ry*.1]])+'" fill="'+M+'" stroke="'+E+'" stroke-width="1.6"/><path d="M'+f(x+sd*rx*.3)+' '+f(by-ry*.55)+' q'+f(sd*rx*.45)+' 8 '+f(sd*rx*.5)+' 26" stroke="#fffbe8" stroke-width="2.2" fill="none" opacity=".55"/>';});
   if(s.cover!=='midriff')h+='<path d="'+sym(CX,[[0,290],[wa+6,296],[wa+2,340],[wa,366],[0,370]])+'" fill="'+M+'" stroke="'+E+'" stroke-width="1.3"/>';
@@ -327,7 +343,9 @@ export function layersOf(s){
  const back=backExtras(s)+cape(s,G)+'<g'+HS+'>'+hairBack(s)+'</g>';
  const neck='<path d="M'+(CX-G.neck)+' 140 L'+(CX-G.neck-2)+' 192 L'+(CX+G.neck+2)+' 192 L'+(CX+G.neck)+' 140Z" fill="'+s.skin+'"/><path d="M'+(CX-G.neck)+' 160 Q'+CX+' 184 '+(CX+G.neck)+' 160 L'+(CX+G.neck)+' 150 Q'+CX+' 172 '+(CX-G.neck)+' 150Z" fill="'+shade(s.skin,-.2)+'" opacity=".6"/>';
  const torso='<path d="'+torsoPath(s,G)+'" fill="'+s.skin+'" stroke="'+line(s.skin)+'" stroke-width="2"/><path d="M'+(CX+G.wa*.35)+' 176 Q'+(CX+G.wa*.1)+' 300 '+(CX+G.wa*.5)+' 520 L400 520 L400 176Z" fill="'+shade(s.skin,-.2)+'" opacity=".55" clip-path="url(#tc)"/>'+(s.F&&!s.child?'<path d="M'+(CX-30)+' 286 Q'+(CX-24)+' 292 '+(CX-10)+' 288 M'+(CX+30)+' 286 Q'+(CX+24)+' 292 '+(CX+10)+' 288 M'+(CX-2)+' 322 v14" stroke="'+shade(s.skin,-.3)+'" stroke-width="1.4" fill="none" opacity=".7"/>':'')+(!s.F&&!s.child?'<path d="M'+(CX-34)+' 200 Q'+(CX-16)+' 206 '+(CX-4)+' 200 M'+(CX+34)+' 200 Q'+(CX+16)+' 206 '+(CX+4)+' 200" stroke="'+shade(s.skin,-.25)+'" stroke-width="1.6" fill="none"/><path d="M'+(CX-8)+' 300 h16 M'+(CX-9)+' 322 h18 M'+(CX-8)+' 344 h16 M'+CX+' 290 v70" stroke="'+shade(s.skin,-.2)+'" stroke-width="1.6" opacity=".6"/>':'');
- const bodyG=kid+legs(s,G)+torso+arm(s,G,-1,false)+clothes(s,G)+armorBody(s,G)+neck+'</g>';
+ // cicatrice en travers du ventre (visible sur les tenues qui le découvrent)
+ const scarB=s.scar===3?'<path d="M'+(CX+36)+' 300 L'+(CX-14)+' 352" stroke="#b4615c" stroke-width="2.8" stroke-linecap="round" opacity=".8"/><path d="M'+(CX+22)+' 312 l5 6 M'+(CX+6)+' 330 l5 6" stroke="#b4615c" stroke-width="1.4" opacity=".7"/>':'';
+ const bodyG=kid+legs(s,G)+torso+scarB+arm(s,G,-1,false)+clothes(s,G)+armorBody(s,G)+neck+'</g>';
  const head='<g'+HS+'>'+face(s,d)+hood(s)+hairFront(s)+headgear(s)+'</g>';
  const body=bodyG+head;
  const armL=kid+arm(s,G,1,true)+'</g>';
