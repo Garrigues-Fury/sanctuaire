@@ -79,7 +79,13 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
     - **Victoire** : on garde une carte, dont l'effet devient permanent.
     - **Défaite** : le dieu monte en niveau, garde ses acquis et sera plus dangereux lors de ses attaques.
 13. **Factions** : une page présente le Sanctuaire et chaque dieu, avec niveaux, bilans et bonus. On y trouve aussi 10 artefacts mythologiques, débloqués en accumulant des bonus permanents.
-14. **Comptes à rebours** : réveil de Poséidon au jour 90, guerre sainte contre Hadès au jour 270. La réincarnation d'Athéna sera révélée plus tard.
+14. **Expéditions dans le monde** (décidé avec Seba le 2026-10-24) :
+    - **Mappemonde** dans l'onglet Monde. Des alertes apparaissent avec le temps : une toutes les 6 à 10 h de jeu, 4 au plus. Il y a deux sortes d'alertes : village attaqué par des pillards, des bêtes ou les serviteurs d'un dieu, ou enfant prometteur à recruter, qui vient alors de ce pays.
+    - **Départ immédiat**, mais il coûte **30 d'énergie** au chevalier choisi. Une alerte ignorée disparaît au bout de 3 jours **sans pénalité** : on rate seulement la récompense.
+    - **Combat au tour par tour** (frapper, technique, coup ultime, garde ; cosmos de 0 à 10 ; avantage d'élément) ou **automatique**. Les niveaux de danger sont calés sur un chevalier type : ★ bronze débutant, ★★★★★ chevalier d'or.
+    - **Dialogues façon RPG** : choix de réponse, répliques selon les qualités et défauts du chevalier, tirages au sort, rebondissements inattendus. Des **scènes au Sanctuaire** se présentent environ une fois par jour.
+    - Code : `src/core/combat.js`, `src/core/expeditions.js`, `src/core/data/scenes.js` (le texte des scènes), `src/ui/world.js`, `src/ui/scene.js`.
+15. **Comptes à rebours** : réveil de Poséidon au jour 90, guerre sainte contre Hadès au jour 270. La réincarnation d'Athéna sera révélée plus tard.
 
 ## Feuille de route
 

@@ -8,6 +8,7 @@ import './styles/main.css';
 import { newGame } from './core/people.js';
 import { advance, newSum, recomputeCB } from './core/rules.js';
 import { load, save } from './core/save.js';
+import { ensureWorld } from './core/expeditions.js';
 import { S, setS } from './core/state.js';
 import { setMapTapHandler } from './map/map.js';
 import { sfx, unlockAudio } from './audio/audio.js';
@@ -30,7 +31,7 @@ function tick(){
 function start(){
  setS(load());
  const fresh=!S;if(fresh){newGame();save();}
- recomputeCB();
+ recomputeCB();ensureWorld();
  S.tab=S.tab||'sanctuaire';
  installClicks();setMapTapHandler(onMapTap);
  // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.

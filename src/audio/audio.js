@@ -88,7 +88,10 @@ const SFX={
  turn:()=>play('tour',{vol:.5}),
  win:()=>chime([523,659,784,1047,1319],.2,.13),
  lose:()=>{play('echec',{vol:.5});bell(196,.2,.15);},
- study:()=>play('livre',{vol:.4})
+ study:()=>play('livre',{vol:.4}),
+ hit:()=>play('marteau'+(1+Math.floor(Math.random()*3)),{vol:.35,rate:1.5+Math.random()*.3}),
+ hurt:()=>play('chantier',{vol:.4,rate:1.4}),
+ alert:()=>bell(523,.12)
 };
 // État du son, pour les vérifications.
 export function audioState(){return{ctx:ctx?ctx.state:'pas démarré',loaded:Object.keys(buffers).length,of:FILES.length};}

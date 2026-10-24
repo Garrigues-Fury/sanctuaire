@@ -19,9 +19,10 @@ export function makePerson(seed,natPref){
  const t=genTraits(r);
  return{seed,sex,nat,name:pick(r,nat==='France'&&r()<.3?OCC[sex]:ZONES[NATS[nat].z][sex]),sign:Math.floor(r()*12),qual:t.qual,flaw:t.flaw,sp:0};
 }
-export function makeApprentice(){
- const seed=(Math.random()*2**31)|0;const p=makePerson(seed);const r=mulberry32(seed^0x5bd1e995);
- const u=r();const pot=u<.01?93+r()*7:u<.2?65+r()*28:25+r()*40;
+// natPref : pays imposé (recrue trouvée en expédition). boost (0 à 1) : rapproche d'un fort potentiel.
+export function makeApprentice(natPref,boost=0){
+ const seed=(Math.random()*2**31)|0;const p=makePerson(seed,natPref);const r=mulberry32(seed^0x5bd1e995);
+ const u=r()*(1-boost);const pot=u<.01?93+r()*7:u<.2?65+r()*28:25+r()*40;
  const fp=pot+(r()-.5)*18;const imp=fp<45?'Ordinaire':fp<65?'Solide':fp<86?'Prometteur':'Exceptionnel';
  const a=Object.assign(p,{id:uid(),age:8+Math.floor(r()*9),pot:Math.round(pot),imp,st:rollStats(r,3,9),lv:1,xp:0,master:null,tech:[],awk:false,cd:0,job:null,wacc:0,bio:makeBio(p,r,false)});
  a.nrg=emax(a);return a;

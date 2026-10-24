@@ -17,6 +17,9 @@ import { G, ROMAN, clamp, dur, esc, fmt, fmt1 } from '../core/util.js';
 import { syncAgents } from '../map/agents.js';
 import { mountMap } from '../map/map.js';
 import { setSound, sfx, soundPrefs, unlockAudio } from '../audio/audio.js';
+import { startExpedition, startHomeScene } from '../core/expeditions.js';
+import { eventModal, viewMonde } from './world.js';
+import { openScene } from './scene.js';
 import { portrait } from './portraits.js';
 
 export function $(s){return document.querySelector(s);}
@@ -109,9 +112,10 @@ export function guardModal(id){return()=>{const g=(S.guards||[]).find(x=>x.id===
  h+=SIGNS.map((s,i)=>'<button class="opt'+(g.post==='h'+i?' sel':'')+'" data-act="post:'+g.id+':h'+i+'"><b><span class="sign">'+s.s+'</span> '+s.n+'</b><span class="d">déf. '+fmt(defenseOf('h'+i))+'</span></button>').join('');
  h+=POSTS.map(p=>'<button class="opt'+(g.post===p?' sel':'')+'" data-act="post:'+g.id+':'+p+'"><b>'+esc(postName(p).replace(/^./,c=>c.toUpperCase()))+'</b><span class="d">déf. '+fmt(defenseOf(p))+'</span></button>').join('');
  return h+'</div>';};}
-export const TABS=[['sanctuaire','Sanctuaire','Δ'],['chevaliers','Chevaliers','✦'],['apprentis','Apprentis','☉'],['armures','Armures','⛨'],['pope','Pope','♛'],['chronique','Chronique','⌛']];
+export const TABS=[['sanctuaire','Sanctuaire','Δ'],['monde','Monde','◎'],['chevaliers','Chevaliers','✦'],['apprentis','Apprentis','☉'],['armures','Armures','⛨'],['pope','Pope','♛'],['chronique','Chronique','⌛']];
 export function renderTabs(){
- const badge={apprentis:S.pending.length+S.aps.filter(a=>a.sp>0).length,chevaliers:S.knights.filter(k=>k.sp>0).length+(S.guards||[]).filter(g=>g.sp>0).length};
+ const W=S.world;
+ const badge={monde:W?W.events.length+(W.active?1:0):0,apprentis:S.pending.length+S.aps.filter(a=>a.sp>0).length,chevaliers:S.knights.filter(k=>k.sp>0).length+(S.guards||[]).filter(g=>g.sp>0).length};
  $('#tabs').innerHTML=TABS.map(([k,n,g])=>'<button data-act="tab:'+k+'"'+(S.tab===k?' aria-current="page"':'')+'><span class="g">'+g+'&#xFE0E;</span>'+n+(badge[k]?'<span class="badge">'+badge[k]+'</span>':'')+'</button>').join('');
 }
 export function renderRes(){
@@ -134,6 +138,8 @@ export function viewSanctuaire(){
  if(S.starve)h+='<div class="banner bad">Les vivres sont épuisés. L’entraînement tourne au ralenti (−50 %). Envoyez du monde aux oliveraies ou agrandissez-les.</div>';
  if(!pope())h+='<div class="banner info">Personne ne guide le Sanctuaire. Ouvrez l’onglet Chevaliers et nommez un Grand Pope.</div>';
  const idle=S.workers.filter(w=>!w.job).length;
+ if(S.world&&S.world.home)h+='<div class="banner home">Il se passe quelque chose au Sanctuaire… <button class="btn sm" data-act="home:start" style="margin-left:6px">Voir la scène</button></div>';
+ if(S.world&&S.world.active)h+='<div class="banner info">Une scène attend votre retour. <button class="btn sm" data-act="scene:resume" style="margin-left:6px">Reprendre</button></div>';
  if(idle)h+='<div class="banner info">'+idle+' villageois attend'+(idle>1?'ent':'')+' une affectation. Touchez un site sur la carte pour l’y envoyer.</div>';
  h+='<section class="sec"><div class="map-wrap" id="mapSlot" role="img" aria-label="Carte du Sanctuaire : touchez un site pour gérer ses travailleurs"></div><p class="hint">Touchez un site pour y affecter du monde ou lancer une fabrication. Touchez la colline pour les douze maisons.</p><div class="sites">';
  ['champs','carriere','mine','biblio','jardin','herbo','atelier','forge','artisans'].forEach(id=>{const l=S.b[id];let info;
@@ -205,7 +211,7 @@ export function viewChronique(){
  h+='<section class="sec"><div class="sec-h"><h2>Journal du Sanctuaire</h2></div><div class="log">'+S.log.map(e=>'<div><span>Jour '+(Math.floor(e.t/24)+1)+'</span>'+esc(e.m)+'</div>').join('')+'</div></section>';
  return h;
 }
-export const VIEWS={pope:viewPope,sanctuaire:viewSanctuaire,chevaliers:viewChevaliers,apprentis:viewApprentis,armures:viewArmures,chronique:viewChronique};
+export const VIEWS={monde:viewMonde,pope:viewPope,sanctuaire:viewSanctuaire,chevaliers:viewChevaliers,apprentis:viewApprentis,armures:viewArmures,chronique:viewChronique};
 export function render(){S._dirty=false;renderRes();renderTabs();$('#view').innerHTML=VIEWS[S.tab]();mountMap(document.getElementById('mapSlot'));syncAgents();liveUpdate();if(modalFn){const sc=$('.sheet-card').scrollTop;$('#sheetBody').innerHTML=modalFn();$('.sheet-card').scrollTop=sc;}}
 export function liveUpdate(){
  document.querySelectorAll('[data-res]').forEach(e=>{const r=e.dataset.res;e.textContent=fmt(S.res[r]);e.closest('.res').classList.toggle('full',S.res[r]>=cap(r)-.5);});
@@ -401,7 +407,7 @@ export function installClicks(){
 const ACT_SOUND={tab:'tap',close:'close',dclose:'close',site:'open',knight:'open',ap:'open',guard:'open',armor:'open',houses:'open',settings:'open',trialOpen:'open',
  build:'build',house:'build',restore:'build',hire:'pay',craft:'pay',tool:'build',dtake:'card',dend:'turn',dboost:'pay',
  role:'confirm',assign:'confirm',accept:'confirm',post:'confirm',friend:'confirm',sp:'tap',spauto:'confirm',wjob:'confirm',ajob:'confirm',
- sess:'study',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dkeep:'milestone',dstart:'turn'};
+ sess:'study',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dkeep:'milestone',dstart:'turn',event:'open',go:'turn',scene:'open',home:'open'};
 function actWithSound(a){
  const k=a.split(':')[0],wasOver=!!(S.match&&S.match.over);
  if(k!=='trial'&&k!=='sound')sfx(ACT_SOUND[k]||'tap');
@@ -427,6 +433,10 @@ export function act(a){
  case'craft':{const r=REC_BY[x];if(!r||S.craft[r.ws].length>=6||!afford(r.inp))return;pay(r.inp);S.craft[r.ws].push({k:x,prog:0});break;}
  case'tool':{const tl=S.tools[x]||0;if(tl>=5||(S.items.outil||0)<tl+1)return;S.items.outil-=tl+1;S.tools[x]=tl+1;log('Les outils '+de(BUILD[x].n.split(' ')[0]).replace('du Oliveraies','des oliveraies')+' passent au niveau '+(tl+1)+'.');flash='Outillage amélioré : +'+10*(tl+1)+' % de production.';break;}
  case'knight':openModal(knightModal(+x));return;
+ case'event':openModal(eventModal(+x));return;
+ case'go':{if(!startExpedition(+x,+y))return;closeModal();save();render();openScene();return;}
+ case'scene':closeModal();openScene();return;
+ case'home':{if(!startHomeScene())return;save();render();openScene();return;}
  case'armor':openModal(armorModal(x));return;
  case'guard':openModal(guardModal(+x));return;
  case'dstart':if(!pope())return;startDuel();window.scrollTo(0,0);break;
