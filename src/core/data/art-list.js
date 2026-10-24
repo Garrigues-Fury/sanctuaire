@@ -1,0 +1,2 @@
+/* Images générées et branchées par scripts/integrate-images.mjs (ne pas modifier à la main). */
+export const PAINTED=new Set(["perso-or-balance-F","perso-or-balance-M","perso-or-belier-F","perso-or-belier-M","perso-or-cancer-M","perso-or-gemeaux-F","perso-or-lion-F","perso-or-lion-M","perso-or-sagittaire-F","perso-or-scorpion-F","perso-or-scorpion-M","perso-or-taureau-F","perso-or-taureau-M","perso-or-vierge-F","perso-or-vierge-M"]);

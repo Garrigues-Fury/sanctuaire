@@ -1,5 +1,5 @@
-// Génère les images du jeu avec l'API Mammouth AI (modèle Gemini « Nano Banana »).
-// Usage : node scripts/generate-images.mjs [nom-de-fichier…]   (sans argument : toutes celles qui manquent)
+// Génère les images du jeu avec l'API Mammouth AI, d'après la charte graphique v3 (docs/charte-graphique.md).
+// Usage : node scripts/generate-images.mjs [nom-ou-préfixe…]   (sans argument : toutes celles qui manquent)
 // La clé est lue dans .env.local (MAMMOUTH_API_KEY), jamais publiée.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,32 +8,64 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace
 try { process.loadEnvFile(path.join(ROOT, '.env.local')); } catch {}
 const KEY = process.env.MAMMOUTH_API_KEY;
 if (!KEY || KEY === 'colle-ta-cle-ici') { console.error('Clé absente : remplis MAMMOUTH_API_KEY dans .env.local'); process.exit(1); }
-const MODEL = process.env.MAMMOUTH_IMAGE_MODEL || 'google/gemini-2.5-flash-image';
+const MODEL = process.env.MAMMOUTH_IMAGE_MODEL || 'gemini-3-pro-image-preview';
 const OUT = path.join(ROOT, 'art/a-integrer'); fs.mkdirSync(OUT, { recursive: true });
 const REF = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(ROOT, 'docs/reference.jpeg')).toString('base64');
 
-const STYLE = 'Illustration de style anime, exactement le même style de dessin que l’image jointe : dessin japonais moderne de qualité série télévisée haut de gamme, contours nets, aplats de couleur et ombrages doux. Lumière dorée de soleil couchant. Univers de la Grèce antique mythique. Métal patiné, segmenté et riveté, cuir, tissu, sangles et boucles. Aucun texte, aucune lettre, aucun logo, aucune signature, aucun filigrane. Une seule image, jamais de planche à plusieurs cases. Ne reprends pas les personnages de l’image jointe : seulement son style.';
-const GOLD = 'Une armure d’or de chevalier, vide, dressée comme si un corps invisible la portait, en pied, vue de face, de la tête aux pieds, entièrement dans le cadre. Forme neutre, qui irait aussi bien à un homme qu’à une femme. Armure intégrale très ornée : casque ou diadème, épaulières, plastron, ceinture, brassards, gantelets, jambières, bottes, pièces segmentées et rivetées, avec des pierres de couleur. Fond gris neutre uni. Format vertical 2:3.';
-const SILVER = 'Une armure d’argent de chevalier, vide, dressée comme si un corps invisible la portait, en pied, vue de face, de la tête aux pieds, entièrement dans le cadre. Forme neutre, qui irait aussi bien à un homme qu’à une femme. Armure partielle : épaulières, plastron, avant-bras, jambières, sur une tenue sombre ajustée. Argent et bleu acier, plus sobre qu’une armure d’or, pièces segmentées et rivetées. Fond gris neutre uni. Format vertical 2:3.';
-const BRONZE = 'Une armure de bronze de chevalier, vide, dressée comme si un corps invisible la portait, en pied, vue de face, de la tête aux pieds, entièrement dans le cadre. Forme neutre, qui irait aussi bien à un homme qu’à une femme. Armure légère de bronze patiné : quelques pièces (épaulières, plastron court, brassards, genouillères) sur une tenue de cuir et de tissu, rivets apparents. Fond gris neutre uni. Format vertical 2:3.';
-const EL = { feu: 'Thème du feu : flammes gravées, pierres rouges.', eau: 'Thème de l’eau : vagues gravées, pierres bleues.', air: 'Thème de l’air : plumes et nuages gravés, pierres blanches.', terre: 'Thème de la terre : roche et racines gravées, pierres vertes.' };
-
-export const JOBS = {
-  'armure-or-belier': GOLD + ' Thème du Bélier : épaulières en cornes de bélier enroulées, cape rouge, pierres rouges.',
-  'armure-or-taureau': GOLD + ' Thème du Taureau : casque à larges cornes de taureau, plastron massif, tissus vert sombre, pierres vertes.',
-  'armure-or-gemeaux': GOLD + ' Thème des Gémeaux : deux visages sereins gravés sur le plastron, symétrie parfaite, cape bleu nuit, pierres bleues.',
-  'armure-or-cancer': GOLD + ' Thème du Cancer : croissant de lune sur le diadème, épaulières en carapace arrondie, cape bleue, pierres argentées.',
-  'armure-or-lion': GOLD + ' Thème du Lion : casque en tête de lion à crinière, genouillères à tête de lion, cape rouge, pierres ambrées.',
-  'armure-or-vierge': GOLD + ' Thème de la Vierge : petites ailes aux épaules, voiles blancs, épis de blé gravés, pierres bleu pâle.',
-  'armure-or-balance': GOLD + ' Thème de la Balance : plateaux de balance stylisés aux épaules, lignes droites et équilibrées, tissus blanc et or, pierres vertes.',
-  'armure-or-scorpion': GOLD + ' Thème du Scorpion : plaques en carapace pointue, queue de scorpion articulée dans le dos, cape violette, pierres violettes.',
-  'armure-or-sagittaire': GOLD + ' Thème du Sagittaire : grandes ailes repliées dans le dos, arc doré fixé à l’épaule, tissus bruns, pierres rouges.',
-  'armure-or-capricorne': GOLD + ' Thème du Capricorne : casque à cornes de chèvre recourbées vers l’arrière, lame courbe le long de l’avant-bras, tissus gris, pierres noires.',
-  'armure-or-verseau': GOLD + ' Thème du Verseau : volutes d’eau gravées partout, amphore stylisée sur le plastron, voiles bleu clair, pierres bleues.',
-  'armure-or-poissons': GOLD + ' Thème des Poissons : épaulières en coquillage, écailles gravées, voiles roses transparents, pierres roses.',
-  ...Object.fromEntries(Object.keys(EL).map(e => ['armure-argent-' + e, SILVER + ' ' + EL[e]])),
-  ...Object.fromEntries(Object.keys(EL).map(e => ['armure-bronze-' + e, BRONZE + ' ' + EL[e]]))
+// Bloc de style commun (charte, section 2).
+const STYLE = 'Illustration de style manga / anime, rendu « splash art » de personnage de jeu mobile idol gacha haut de gamme : contours nets, couleurs vives et lumineuses, ombrages doux et brillants, reflets dorés sur le métal, grands yeux expressifs, visage très beau et soigné. Même qualité de trait que l’image jointe, mais ne reprends pas ses personnages. Lumière chaude de soleil couchant. Univers de la Grèce antique mythique. Armure en métal ciselé, segmenté et riveté, avec cuir, tissu, sangles et boucles. Aucun texte, aucune lettre, aucun logo, aucune signature, aucun filigrane. Une seule image, jamais de planche à plusieurs cases.';
+// Personnage adulte en armure (charte, section 3) : pas de casque, un accessoire discret.
+const HEAD = 'Pas de casque ni de couvre-chef : cheveux libres et soignés, visibles en entier, avec seulement un petit accessoire discret aux couleurs de l’armure (barrette, fine chaîne, plume ou petit ornement dans les cheveux) ou une boucle d’oreille.';
+const BODY = {
+  F: 'Une femme adulte d’environ 25 ans, très belle, au look sexy et élégant d’héroïne de jeu gacha : silhouette athlétique et féminine mise en valeur, armure ajustée qui laisse voir le ventre, les épaules et le haut des cuisses, tenue séduisante mais jamais vulgaire, aucune nudité.',
+  M: 'Un homme adulte d’environ 27 ans, très beau, au look sexy et charismatique de héros de jeu gacha : silhouette athlétique, abdominaux et bras musclés en partie visibles entre les pièces d’armure, tenue séduisante mais jamais vulgaire, aucune nudité.'
 };
+const FRAME = 'Tatouages tribaux discrets. Pose assurée et dynamique de personnage de gacha, en pied, de la tête aux pieds, entièrement dans le cadre avec un peu de marge, vue de face ou de légers trois quarts. Fond gris neutre uni. Format vertical 2:3.';
+const RANK = {
+  or: 'Armure d’or de chevalier, très ornée, avec des pierres de couleur : épaulières, plastron, ceinture, brassards, gantelets, jambières et bottes.',
+  argent: 'Armure d’argent et de bleu acier, partielle et plus sobre qu’une armure d’or : épaulières, plastron, avant-bras et jambières sur une tenue sombre ajustée.',
+  bronze: 'Armure légère de bronze patiné : quelques pièces (épaulières, plastron court, brassards, genouillères) sur une tenue de cuir et de tissu, rivets apparents.'
+};
+// Armure seule (pour l'atelier des armures) : sans casque non plus.
+const EMPTY = 'L’armure seule, vide, dressée comme si un corps invisible la portait, en pied, vue de face, entièrement dans le cadre. Forme neutre, qui irait aussi bien à un homme qu’à une femme. Pas de casque : au niveau de la tête, rien, ou seulement un petit ornement de cheveux posé au-dessus. Fond gris neutre uni. Format vertical 2:3.';
+
+// Les douze maisons : thème de l'armure, et origine des deux personnages illustrés (pour varier les visages).
+const GOLD = [
+  ['belier', 'Thème du Bélier : épaulières en cornes de bélier enroulées, cape rouge, pierres rouges.', 'Grèce', 'Maroc'],
+  ['taureau', 'Thème du Taureau : épaulières massives ornées de cornes de taureau, plastron puissant, tissus vert sombre, pierres vertes.', 'Brésil', 'Mongolie'],
+  ['gemeaux', 'Thème des Gémeaux : deux visages sereins gravés sur le plastron, symétrie parfaite, cape bleu nuit, pierres bleues.', 'Japon', 'Inde'],
+  ['cancer', 'Thème du Cancer : petit croissant de lune comme ornement de cheveux, épaulières en carapace arrondie, cape bleue, pierres argentées.', 'France', 'Égypte'],
+  ['lion', 'Thème du Lion : épaulières en tête de lion à crinière, genouillères à tête de lion, cape rouge, pierres ambrées.', 'Nigeria', 'Espagne'],
+  ['vierge', 'Thème de la Vierge : petites ailes aux épaules, voiles blancs, épis de blé gravés, pierres bleu pâle.', 'Inde', 'Suède'],
+  ['balance', 'Thème de la Balance : plateaux de balance stylisés aux épaules, lignes droites et équilibrées, tissus blanc et or, pierres vertes.', 'Chine', 'Mexique'],
+  ['scorpion', 'Thème du Scorpion : plaques en carapace pointue, queue de scorpion articulée dans le dos, cape violette, pierres violettes.', 'Turquie', 'Russie'],
+  ['sagittaire', 'Thème du Sagittaire : grandes ailes repliées dans le dos, arc doré fixé à l’épaule, tissus bruns, pierres rouges.', 'Pérou', 'Kenya'],
+  ['capricorne', 'Thème du Capricorne : lame courbe le long de l’avant-bras, petites cornes de chèvre recourbées comme ornement de cheveux, tissus gris, pierres noires.', 'Iran', 'Écosse'],
+  ['verseau', 'Thème du Verseau : volutes d’eau gravées partout, amphore stylisée sur le plastron, voiles bleu clair, pierres bleues.', 'Islande', 'Polynésie française'],
+  ['poissons', 'Thème des Poissons : épaulières en coquillage, écailles gravées, voiles roses transparents, pierres roses.', 'Italie', 'Corée du Sud']
+];
+const EL = {
+  feu: ['Thème du feu : flammes gravées, tissus rouges, pierres rouges.', 'Espagne', 'Ghana'],
+  eau: ['Thème de l’eau : vagues gravées, tissus bleus, pierres bleues.', 'Philippines', 'Norvège'],
+  air: ['Thème de l’air : plumes et nuages gravés, tissus blancs, pierres blanches.', 'Argentine', 'Vietnam'],
+  terre: ['Thème de la terre : roche et racines gravées, tissus verts, pierres vertes.', 'Éthiopie', 'Pérou']
+};
+const who = (sex, nat) => BODY[sex] + ' Originaire de ' + nat + ' : peau, cheveux, yeux et traits du visage typiques de ce pays.';
+const perso = (sex, nat, rank, theme) => who(sex, nat) + ' ' + RANK[rank] + ' ' + theme + ' ' + HEAD + ' ' + FRAME;
+
+export const JOBS = {};
+GOLD.forEach(([k, theme, natF, natM]) => {
+  JOBS['perso-or-' + k + '-F'] = perso('F', natF, 'or', theme);
+  JOBS['perso-or-' + k + '-M'] = perso('M', natM, 'or', theme);
+});
+Object.entries(EL).forEach(([e, [theme, natF, natM]]) => {
+  ['argent', 'bronze'].forEach(rk => {
+    JOBS['perso-' + rk + '-' + e + '-F'] = perso('F', natF, rk, theme);
+    JOBS['perso-' + rk + '-' + e + '-M'] = perso('M', natM, rk, theme);
+  });
+});
+GOLD.forEach(([k, theme]) => { JOBS['armure-or-' + k] = RANK.or + ' ' + theme + ' ' + EMPTY; });
+Object.entries(EL).forEach(([e, [theme]]) => ['argent', 'bronze'].forEach(rk => { JOBS['armure-' + rk + '-' + e] = RANK[rk] + ' ' + theme + ' ' + EMPTY; }));
 
 async function generate(name, prompt) {
   const body = { model: MODEL, modalities: ['image', 'text'], image_config: { aspect_ratio: '2:3' },
@@ -43,7 +75,8 @@ async function generate(name, prompt) {
   if (!res.ok) throw new Error('HTTP ' + res.status + ' : ' + txt.slice(0, 300));
   const msg = JSON.parse(txt).choices?.[0]?.message || {};
   const img = (msg.images || [])[0];
-  const url = img?.image_url?.url || img?.url || (typeof img === 'string' ? img : null);
+  let url = img?.image_url?.url || img?.url || (typeof img === 'string' ? img : null);
+  if (!url && typeof msg.content === 'string') url = (/(data:image\/\w+;base64,[A-Za-z0-9+/=]+)/.exec(msg.content) || /(https?:\/\/\S+\.(?:png|jpe?g|webp))/i.exec(msg.content) || [])[1];
   if (!url) throw new Error('pas d’image dans la réponse : ' + JSON.stringify(msg).slice(0, 300));
   const m = /^data:image\/(\w+);base64,(.+)$/s.exec(url);
   const buf = m ? Buffer.from(m[2], 'base64') : Buffer.from(await (await fetch(url)).arrayBuffer());
@@ -52,12 +85,13 @@ async function generate(name, prompt) {
   return file;
 }
 
+// Arguments : noms exacts ou préfixes (« perso-or » = les 24 chevaliers d'or). Sans argument : tout ce qui manque.
 const wanted = process.argv.slice(2);
-const names = (wanted.length ? wanted : Object.keys(JOBS)).filter(n => {
-  if (!JOBS[n]) { console.error('inconnu :', n); return false; }
-  return wanted.length || !fs.readdirSync(OUT).some(f => f.startsWith(n + '.'));
-});
+const exists = n => fs.readdirSync(OUT).some(f => f.startsWith(n + '.'));
+const names = wanted.length ? Object.keys(JOBS).filter(n => wanted.some(w => n === w || n.startsWith(w))) : Object.keys(JOBS).filter(n => !exists(n));
+if (!names.length) console.error('Rien à générer pour :', wanted.join(' ') || '(tout existe déjà)');
 for (const n of names) {
+  if (process.env.SKIP_EXISTING && exists(n)) continue;
   for (let essai = 1; essai <= 3; essai++) {
     try { console.log('✓', n, '→', path.relative(ROOT, await generate(n, JOBS[n]))); break; }
     catch (e) { console.error('✗', n, 'essai', essai, ':', e.message); if (essai === 3) console.error('  abandon pour', n); else await new Promise(r => setTimeout(r, 5000)); }

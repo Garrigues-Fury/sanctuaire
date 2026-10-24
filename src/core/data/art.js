@@ -1,4 +1,19 @@
 /* Images peintes disponibles (voir docs/charte-graphique.md). Chemins relatifs au site. */
+import { PAINTED } from './art-list.js';
+import { CONS_BY } from './world.js';
+import { S } from '../state.js';
+
+export const SIGN_KEY=['belier','taureau','gemeaux','cancer','lion','vierge','balance','scorpion','sagittaire','capricorne','verseau','poissons'];
+const armorKey=c=>c.rank==='or'?'or-'+SIGN_KEY[c.sign]:c.rank+'-'+c.el;
+// Chevalier illustré façon gacha (charte v3) : même armure (maison d'or, ou élément pour l'argent et le bronze)
+// et même sexe. Une image n'a qu'un porteur à la fois : le premier chevalier qui y a droit ; les autres gardent le générateur.
+export function paintedOf(p){
+ const c=p&&p.cons&&CONS_BY[p.cons];if(!c||!S||!S.knights)return null;
+ const key='perso-'+armorKey(c)+'-'+p.sex;if(!PAINTED.has(key))return null;
+ const first=S.knights.filter(k=>k.sex===p.sex&&k.cons&&CONS_BY[k.cons]&&armorKey(CONS_BY[k.cons])===armorKey(c)).sort((a,b)=>a.id-b.id)[0];
+ if(first&&first.id!==p.id)return null;
+ return{body:'img/gacha/'+key+'.webp',head:'img/gacha/'+key+'-tete.webp'};
+}
 
 // Chevaliers d'or illustrés, par indice de signe (0 = Bélier … 11 = Poissons).
 // n = numéro de la planche dans public/img/or/, sex = sexe du personnage dessiné.
@@ -15,7 +30,7 @@ export const GOLD_ART={
 };
 // Armures illustrées (style anime), par clé de constellation. Les autres gardent un simple libellé.
 export const ARMOR_ART=new Set(['or-1','or-2','or-3','or-4','or-5']);
-export function armorImg(k,mini){return ARMOR_ART.has(k)?'img/armures/'+k+(mini?'-mini':'')+'.webp':null;}
+export function armorImg(k,mini){const c=CONS_BY[k];if(c&&PAINTED.has('armure-'+armorKey(c)))return 'img/armures/armure-'+armorKey(c)+(mini?'-mini':'')+'.webp';return ARMOR_ART.has(k)?'img/armures/'+k+(mini?'-mini':'')+'.webp':null;}
 export function goldArt(p){const a=GOLD_ART[p.sign];return a&&a.sex===p.sex?a:null;}
 export const SANCT_VIEWS=[
  {src:'img/sanctuaire/vue-1.webp',t:'Le Sanctuaire au couchant, de la plaine au palais du Pope'},

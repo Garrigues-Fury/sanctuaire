@@ -141,8 +141,16 @@ function hairFront(s){
 function hood(s){if(!s.hood)return'';return'<path d="'+smooth([[CX-56,150],[CX-62,70],[CX-36,22],[CX,12],[CX+36,22],[CX+62,70],[CX+56,150],[CX+44,96],[CX+30,52],[CX,44],[CX-30,52],[CX-44,96]])+'" fill="'+s.hood+'"/><path d="M'+(CX-40)+' 60 Q'+CX+' 30 '+(CX+40)+' 60" fill="none" stroke="'+shade(s.hood,.25)+'" stroke-width="2" opacity=".6"/>';}
 
 /* ---------- coiffes et motifs d'armure ---------- */
+// Chevaliers : pas de casque (charte v3), seulement un petit accessoire aux couleurs de l'armure.
+function accessory(s){
+ const M='url(#mt)',E='url(#mte)',g=s.gem,k=s.F?.95:1,pick=(s.seed>>>3)%3;
+ if(pick===0){const x=CX+31,y=60;return'<g transform="rotate(-24 '+x+' '+y+')"><path d="M'+(x-13)+' '+y+' L'+(x+13)+' '+(y-3.5)+' L'+(x+13)+' '+(y+3.5)+'Z" fill="'+M+'" stroke="'+E+'" stroke-width="1"/><circle cx="'+x+'" cy="'+y+'" r="4.2" fill="'+g+'" stroke="'+E+'" stroke-width="1"/></g>';}
+ if(pick===1)return'<path d="M'+(CX-41)+' 68 Q'+CX+' 50 '+(CX+41)+' 68" fill="none" stroke="'+M+'" stroke-width="2.4"/><path d="M'+CX+' 56 l4.5 6 l-4.5 7 l-4.5 -7Z" fill="'+g+'" stroke="'+E+'" stroke-width=".8"/>';
+ const ex=f(CX-46*k);return'<path d="M'+ex+' 126 L'+ex+' 136" stroke="'+M+'" stroke-width="1.8"/><path d="M'+ex+' 135 l4.5 6 l-4.5 9 l-4.5 -9Z" fill="'+g+'" stroke="'+E+'" stroke-width=".8"/>';
+}
 function headgear(s){
- if((s.outfit!=='knight'&&s.outfit!=='foe')||!s.motif)return'';
+ if(s.outfit==='knight')return accessory(s);
+ if(s.outfit!=='foe'||!s.motif)return'';
  if(s.hood&&s.motif!=='crescent')return'';
  const M='url(#mt)',E='url(#mte)',g=s.gem;let h='';
  const tiara='<path d="'+smooth([[CX-46,72],[CX-30,54],[CX,48],[CX+30,54],[CX+46,72],[CX+30,62],[CX,57],[CX-30,62]])+'" fill="'+M+'" stroke="'+E+'" stroke-width="1.5"/><path d="M'+CX+' 40 L'+(CX+8)+' 52 L'+CX+' 64 L'+(CX-8)+' 52Z" fill="'+M+'"/><circle cx="'+CX+'" cy="52" r="3.6" fill="'+g+'"/>';

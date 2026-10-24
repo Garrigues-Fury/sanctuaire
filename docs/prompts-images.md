@@ -1,3 +1,5 @@
+> **Remplacé le 24 octobre 2026 par la charte v3** (`docs/charte-graphique.md`) : style idol gacha, pas de casque, génération automatique par `scripts/generate-images.mjs`. Ce fichier n'est gardé que pour mémoire.
+
 # Consignes d'images à générer dans ChatGPT
 
 **Principe.** Une armure peut être portée par un homme ou une femme, de n'importe quelle origine. On génère donc séparément :

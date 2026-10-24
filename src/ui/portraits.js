@@ -2,6 +2,7 @@
 import { looks } from '../core/appearance.js';
 import { dataUrl, specOf, svgBust, svgFull } from '../art/character.js';
 import { SIGNS } from '../core/data/world.js';
+import { paintedOf } from '../core/data/art.js';
 import { mulberry32, shade } from '../core/util.js';
 
 export const PC=new Map();
@@ -10,12 +11,13 @@ export function strand(g,x0,y0,x1,y1,w,bend){g.beginPath();g.moveTo(x0-w/2,y0);g
 // Portrait par le générateur anime (src/art). opts.faction pour un ennemi, opts.elder pour un ancien.
 const PC2=new Map();
 export function portrait(p,rank,opts={}){
+ if(rank&&rank!=='garde'&&!opts.faction){const pa=paintedOf(p);if(pa)return pa.head;}
  const key=p.seed+'|'+(rank||'')+'|'+p.nat+'|'+p.sex+'|'+(p.cons||'')+'|'+(opts.faction||'')+'|'+(p.age!=null&&p.age<17?'c':'');
  if(PC2.has(key))return PC2.get(key);
  const s=specOf(p,{rank:rank&&rank!=='garde'?rank:null,faction:opts.faction||(rank==='garde'?'bandits':undefined),elder:opts.elder,child:!rank&&!opts.faction&&(p.age!=null?p.age<17:!!p.child)});
  const url=dataUrl(svgBust(s,{size:256}));PC2.set(key,url);return url;
 }
-export function fullBody(p,rank,opts={}){return dataUrl(svgFull(specOf(p,{rank:rank||null,faction:opts.faction}),{w:300,h:675}));}
+export function fullBody(p,rank,opts={}){if(rank&&rank!=='garde'&&!opts.faction){const pa=paintedOf(p);if(pa)return pa.body;}return dataUrl(svgFull(specOf(p,{rank:rank||null,faction:opts.faction}),{w:300,h:675}));}
 // Ancien générateur (gardé en secours).
 export function portraitOld(p,rank){
  const key=p.seed+'|'+(rank||'')+'|'+p.nat+'|'+p.sex;if(PC.has(key))return PC.get(key);
