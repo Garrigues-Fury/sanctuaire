@@ -5,19 +5,30 @@
    - Une scène au Sanctuaire se présente environ une fois par jour. */
 import { GODS } from './data/gods.js';
 import { NATS } from './data/countries.js';
-import { FOES, regionOf } from './data/worldmap.js';
+import { FOES, REGIONS, regionOf } from './data/worldmap.js';
+import { compat } from './social.js';
+import { trainHours } from './training.js';
 import { SCENES } from './data/scenes.js';
 import { newBattle } from './combat.js';
 import { makeApprentice, makePerson, makeWorker } from './people.js';
 import { RES } from './data/economy.js';
-import { fkey, knightRate, levelUpAp, levelUpKnight, need, villageCap, xpRate, emax } from './rules.js';
+import { fkey, knightRate, levelUpAp, levelUpKnight, need, people, villageCap, xpRate, emax } from './rules.js';
 import { S, emit, log } from './state.js';
 import { G, clamp, mulberry32, pick } from './util.js';
 
 export const EXP_E=30,MAX_EVENTS=4,EVENT_LIFE=72;
 const r=()=>Math.random();
 const ATTACK_SCENES=['defi','defi','deserteurs','banquet','champion'],RECRUIT_SCENES=['charrette','voleur','rival'];
-const HOME_SCENES=['doute','dispute','astres','trouvaille'];
+const HOME_SCENES=['doute','dispute','astres','trouvaille','complicite','tension','racines','complicite'];
+// Paires de personnages pour les scènes nées des affinités.
+function pairsFor(need){
+ const P=people(),out=[];
+ for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const a=P[i],b=P[j],c=compat(a,b).v;
+  if(need==='pairPos'&&c>=2)out.push([a,b]);
+  if(need==='pairNeg'&&c<=-2)out.push([a,b]);
+  if(need==='pairRoots'&&(a.nat===b.nat||regionOf(a.nat)===regionOf(b.nat)))out.push([a,b]);}
+ return out;
+}
 
 export function ensureWorld(){
  if(!S.world){S.world={events:[],nextAt:S.gt+6,homeAt:S.gt+2,home:null,active:null,seq:1,wins:0,done:0};spawn('attack');spawn('recruit');}
@@ -53,6 +64,7 @@ function homeCast(key){
  if(need==='ap')return S.aps.length>0&&S.knights.length>0;
  if(need==='k2')return S.knights.length>=2;
  if(need==='pope')return S.knights.some(k=>k.role==='pope');
+ if(need&&need.startsWith('pair'))return pairsFor(need).length>0;
  return S.knights.length>0||ks.length>0;
 }
 function varsFor(k,extra){
@@ -74,16 +86,18 @@ export function startHomeScene(){
  const pope=S.knights.find(k=>k.role==='pope');
  let k=S.knights.filter(x=>x.role!=='pope')[0]||S.knights[0];
  if(key==='astres'&&pope)k=pope;
- const others=S.knights.filter(x=>x.id!==k.id);const k2=others[Math.floor(r()*others.length)]||null;
+ const others=S.knights.filter(x=>x.id!==k.id);let k2=others[Math.floor(r()*others.length)]||null;
+ const need=SCENES[key].need;
+ if(need&&need.startsWith('pair')){const ps=pairsFor(need);if(ps.length){[k,k2]=pick(r,ps);if(r()<.5)[k,k2]=[k2,k];}}
  const ap=S.aps[Math.floor(r()*S.aps.length)]||null;
  const lieux=['les ruines de la carrière','l’ancienne bibliothèque','les fondations du temple','le lit du torrent'];
  const nat=randomNat();
- const vars=varsFor(k,{ap:ap?ap.name:'',k2:k2?k2.name:'',e2:k2?G(k2,'e'):'',pope:pope?pope.name:'',pays:nat,lieu:pick(r,lieux)});
+ const vars=varsFor(k,{ap:ap?ap.name:'',k2:k2?k2.name:'',e2:k2?G(k2,'e'):'',pope:pope?pope.name:'',pays:nat,lieu:pick(r,lieux),region:REGIONS[regionOf(k.nat)].n});
  W.home=null;
  W.active={kind:'home',scene:key,node:SCENES[key].start,kid:k.id,k2:k2&&k2.id,apId:ap&&ap.id,battle:null,mods:{},fx:[],vars,cast:{villageois:npc((r()*2**31)|0,'Grèce')},nat,log:[]};
  return W.active;
 }
-export function activeKnight(){const a=S.world&&S.world.active;return a?S.knights.find(k=>k.id===a.kid):null;}
+export function activeKnight(){const a=S.world&&S.world.active;return a?people().find(k=>k.id===a.kid)||null:null;}
 export function currentNode(){const a=S.world&&S.world.active;return a?SCENES[a.scene].nodes[a.node]:null;}
 
 // Avance dans la scène : va au nœud id en appliquant ses effets ; prépare un combat si le nœud en contient un.
@@ -116,16 +130,16 @@ export function finishScene(){
   if(end==='win'||end==='peace')W.wins++;
   log(k.name+' revient de '+ev.v+' : '+({win:'victoire',peace:'paix conclue',recruit:'une recrue',lose:'défaite',leave:'retour bredouille'})[end]+'.');
  }else{
-  const ap=S.aps.find(x=>x.id===a.apId),k2=S.knights.find(x=>x.id===a.k2);
+  const ap=S.aps.find(x=>x.id===a.apId),k2=people().find(x=>x.id===a.k2);
   fx.forEach(f=>{
    if(f==='ap_xp'&&ap){ap.xp+=xpRate(ap)*6;let g=0;while(ap.xp>=need(ap.lv)&&g++<50)levelUpAp(ap,null);out.push(ap.name+' : +6 h de formation');}
    if(f==='ap_fo'&&ap){ap.st.fo++;ap.nrg=Math.max(0,ap.nrg-20);out.push(ap.name+' : +1 force, −20 énergie');}
    if(f==='ap_co'&&ap){ap.st.co+=2;out.push(ap.name+' : +2 cosmos');}
-   if(f==='kk_xp'&&k&&k2){[k,k2].forEach(q=>{q.xp+=knightRate(q)*6;let g=0;while(q.xp>=need(q.lv)*1.5&&g++<20)levelUpKnight(q);});out.push(k.name+' et '+k2.name+' : l’équivalent de 6 h d’entraînement');}
+   if(f==='kk_xp'&&k&&k2){[k,k2].forEach(q=>trainHours(q,6));out.push(k.name+' et '+k2.name+' : l’équivalent de 6 h d’entraînement');}
    if(f.startsWith('kk_friend:')&&k&&k2){const n=+f.split(':')[1],key=fkey(k.id,k2.id);S.friend[key]=Math.min(10,(S.friend[key]||0)+n);out.push('Amitié '+k.name+' – '+k2.name+' : '+S.friend[key]+'/10');}
    if(f==='spawn_recruit'){const ev=spawn('recruit',a.nat,.35);out.push(ev?'Une étoile brille sur la mappemonde : '+ev.v:'La mappemonde est déjà pleine d’alertes');}
   });
-  log('Au Sanctuaire : '+({doute:'un apprenti a douté, puis s’est relevé.',dispute:'deux chevaliers se sont défiés.',astres:'le Pope a lu les astres.',trouvaille:'les villageois ont fait une trouvaille.'})[a.scene]);
+  log('Au Sanctuaire : '+({doute:'un apprenti a douté, puis s’est relevé.',dispute:'deux chevaliers se sont défiés.',astres:'le Pope a lu les astres.',trouvaille:'les villageois ont fait une trouvaille.',complicite:'une soirée de rires entre '+a.vars.k+' et '+a.vars.k2+'.',tension:'le ton est monté entre '+a.vars.k+' et '+a.vars.k2+'.',racines:a.vars.k+' et '+a.vars.k2+' ont parlé de leur pays.'})[a.scene]);
  }
  fx.forEach(f=>{
   const [t,x,y]=f.split(':');

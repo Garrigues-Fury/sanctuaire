@@ -7,6 +7,7 @@ import { QKEYS, QUAL, TECH, fl, ql } from './data/traits.js';
 import { CONS_BY, ELEM, RANK_MULT, SIGNS, armorName, de } from './data/world.js';
 import { makeApprentice } from './people.js';
 import { tickWorld } from './expeditions.js';
+import { tickSocial } from './social.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
 
@@ -110,7 +111,7 @@ export function step(h,sum){
  ['herbo','atelier'].forEach(ws=>{const q=S.craft[ws];if(!q.length)return;let left=craftRate(ws)*h;while(left>0&&q.length){const j=q[0];const r=REC_BY[j.k];const need=r.work-j.prog;if(left>=need){left-=need;q.shift();S.items[j.k]=(S.items[j.k]||0)+1;S._dirty=true;if(sum)sum.made[j.k]=(sum.made[j.k]||0)+1;else emit('crafted',j.k);}else{j.prog+=left;left=0;}}});
  S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
  S.gt+=h;
- tickWorld(sum);
+ tickWorld(sum);tickSocial(h,sum);
  for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;if(j.b[0]==='h'){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
  if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}
  const iv=recruitInterval();

@@ -10,6 +10,7 @@ import { advance, newSum, recomputeCB } from './core/rules.js';
 import { load, save } from './core/save.js';
 import { ensureWorld } from './core/expeditions.js';
 import { ensureDuel } from './core/duel.js';
+import { installTips } from './ui/tips.js';
 import { S, setS } from './core/state.js';
 import { setMapTapHandler } from './map/map.js';
 import { sfx, unlockAudio } from './audio/audio.js';
@@ -34,7 +35,7 @@ function start(){
  const fresh=!S;if(fresh){newGame();save();}
  recomputeCB();ensureWorld();ensureDuel();
  S.tab=S.tab||'sanctuaire';
- installClicks();setMapTapHandler(onMapTap);
+ installClicks();installTips();setMapTapHandler(onMapTap);
  // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.
  const title=document.getElementById('title');
  // Le premier toucher (écran titre ou ailleurs) autorise le son.

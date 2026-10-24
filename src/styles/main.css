@@ -279,6 +279,18 @@ nav.tabs button{font-size:.68rem}
 .vision figcaption,.fullbody figcaption{font-size:.82rem;color:var(--marble-dim);font-style:italic}
 .fullbody{justify-items:center;background:radial-gradient(80% 60% at 50% 40%,var(--night-4),var(--night) 75%);border-radius:14px;padding:12px}
 .fullbody img{display:block;height:min(52vh,420px);width:auto;border-radius:10px}
+/* Aide contextuelle */
+#gtip{position:fixed;z-index:200;background:#fff8ea;color:#1c120a;border-radius:9px;padding:7px 10px;font-size:.82rem;line-height:1.35;box-shadow:0 6px 20px rgba(0,0,0,.55);pointer-events:none;border:1px solid #e1a94f}
+#gtip[hidden]{display:none}
+[data-tip]{cursor:help}button[data-tip]{cursor:pointer}
+/* Traits, affinités, villageois */
+.trait{display:grid;gap:2px;padding:6px 0;border-bottom:1px solid var(--line)}.trait:last-child{border:0}
+.trait span{font-size:.82rem}.trait i{font-style:normal;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-right:6px}
+.affs{display:grid;gap:6px;margin-top:8px}
+.aff{display:grid;grid-template-columns:40px 1fr;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--night-2);border-left:3px solid var(--ok)}
+.aff.neg{border-left-color:var(--bad)}.aff .pt{width:40px;height:40px;border-radius:8px}
+.aff div{display:grid;gap:1px}.aff b{font-size:.9rem}.aff span{font-size:.75rem;font-weight:700;color:var(--ok)}.aff.neg span{color:var(--bad)}.aff small{font-size:.74rem;color:var(--marble-dim)}
+.vrow{grid-template-columns:auto minmax(0,1fr)}.vsites{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
 /* Lecture des astres (plein écran) */
 :root{--gfeu:#ff7a3a;--geau:#3aa0f0;--gair:#e8f2ff;--gterre:#7cb84a;--gor:#f6c94f}
 #duel{position:fixed;inset:0;z-index:55;overflow:auto;background:radial-gradient(120% 60% at 50% 0%,#3a2448 0%,#160f22 55%,#08060c 100%);color:var(--marble);padding:calc(8px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));display:grid;gap:8px;align-content:start}

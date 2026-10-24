@@ -6,7 +6,10 @@ import { NATS } from '../core/data/countries.js';
 import { ARMOR_COST, ARMOR_FORGE, ARMOR_SMITH, ARMOR_WORK, BORDER, BUILD, IKEYS, ITEMS, RECIPES, REC_BY, RES, RKEYS, ROLES, STATN, TOOL_SITES, TRIAL_LV, WORK } from '../core/data/economy.js';
 import { DUEL_TURNS, DUEL_WIN, GODS, GOD_KEYS } from '../core/data/gods.js';
 import { SITES } from '../core/data/map.js';
-import { FLAW, QUAL, SIG_WORDS, fl, ql } from '../core/data/traits.js';
+import { FLAW, QUAL, SIG_WORDS, fl, ql, traitText } from '../core/data/traits.js';
+import { TIP, tip } from './tips.js';
+import { TRAININGS, canTrain, train } from '../core/training.js';
+import { compat, compatLabel } from '../core/social.js';
 import { CONS, CONS_BY, EKEYS, ELEM, RANKS, RANK_MULT, SIGNS, armorLow, armorName, de } from '../core/data/world.js';
 import { cardOf, duelAvailable, ensureDuel, godState, myStart, startDuel } from '../core/duel.js';
 import { RELICS } from '../core/data/stars.js';
@@ -27,13 +30,15 @@ import { fullBody, portrait } from './portraits.js';
 
 export function $(s){return document.querySelector(s);}
 export function ptImg(p,rank,lg){return '<img class="pt'+(lg?' lg':'')+(rank?' '+rank:'')+'" src="'+portrait(p,rank)+'" alt="Portrait de '+esc(p.name)+'" width="'+(lg?132:58)+'" height="'+(lg?132:58)+'">';}
-export function signChip(i){const s=SIGNS[i];return '<span class="chip el-'+s.el+'"><span class="sign">'+s.s+'</span> '+s.n+'</span>';}
-export function rankChip(r){return '<span class="chip '+r+'">'+RANKS[r]+'</span>';}
+export function signChip(i){const s=SIGNS[i];return '<span class="chip el-'+s.el+'"'+tip('Signe : '+s.n+', élément '+ELEM[s.el].toLowerCase()+'. Avec un maître du même signe, la formation va 1,5 fois plus vite ; du même élément, 1,25 fois. Chaque niveau de la maison du signe ajoute 10 %.')+'><span class="sign">'+s.s+'</span> '+s.n+'</span>';}
+export function rankChip(r){return '<span class="chip '+r+'"'+tip(r)+'>'+RANKS[r]+'</span>';}
+export const nrgIcon=p=>'<span'+tip('nrg')+'>⚡&#xFE0E; '+Math.floor(p.nrg)+'</span>';
+export const spChip=p=>p.sp>0?'<span class="chip sp"'+tip('sp')+'>+'+p.sp+' pts</span>':'';
 export function colorOf(k){return RES[k]?RES[k].c:ITEMS[k].c;}
 export function nameOf(k){return RES[k]?RES[k].n.toLowerCase():ITEMS[k].n.toLowerCase();}
 export function costHtml(c){return '<div class="cost">'+Object.keys(c).map(r=>'<span class="'+(have(r)<c[r]?'no':'')+'"><i style="background:'+colorOf(r)+'"></i>'+fmt(c[r])+' '+nameOf(r)+'</span>').join('')+'</div>';}
-export function traitChips(p){return (p.qual||[]).map(t=>'<span class="chip q">'+QUAL[t.k].n+' '+ROMAN[t.lv]+'</span>').join('')+(p.flaw||[]).map(t=>'<span class="chip f">'+FLAW[t.k].n+' '+ROMAN[t.lv]+'</span>').join('');}
-export function nrgBar(p){return '<div class="nrg"><span>Énergie</span><div class="bar green"><i data-nrg="'+p.id+'" style="width:'+clamp(p.nrg/emax(p)*100,0,100)+'%"></i></div><b data-nrgv="'+p.id+'">'+Math.floor(p.nrg)+'</b></div>';}
+export function traitChips(p){return (p.qual||[]).map(t=>'<span class="chip q"'+tip(QUAL[t.k].n+' '+ROMAN[t.lv]+'\n'+traitText(t.k,t.lv,false))+'>'+QUAL[t.k].n+' '+ROMAN[t.lv]+'</span>').join('')+(p.flaw||[]).map(t=>'<span class="chip f"'+tip(FLAW[t.k].n+' '+ROMAN[t.lv]+'\n'+traitText(t.k,t.lv,true))+'>'+FLAW[t.k].n+' '+ROMAN[t.lv]+'</span>').join('');}
+export function nrgBar(p){return '<div class="nrg"><span'+tip('nrg')+'>Énergie</span><div class="bar green"><i data-nrg="'+p.id+'" style="width:'+clamp(p.nrg/emax(p)*100,0,100)+'%"></i></div><b data-nrgv="'+p.id+'">'+Math.floor(p.nrg)+'</b></div>';}
 export function openSite(id){
  if(id==='dortoirs'){act('tab:apprentis');return;}
  if(id==='arene'){openModal(()=>bldBlock('arene')+'<p class="hint">Les apprentis qui ont un maître s’entraînent ici. Les maîtres se tiennent au bord de l’arène.</p><button class="btn ghost" data-act="tab:apprentis">Voir les apprentis</button>');return;}
@@ -77,14 +82,14 @@ export function viewGuards(){
  if(!G0.length)return h+'<p class="hint">Un apprenti de niveau 8 ou plus, qui a raté une épreuve ou qu’un autre surpasse, peut devenir garde depuis sa fiche. Les gardes défendent une maison, le village ou un site.</p></section>';
  const hs=S.houses.map((x,i)=>defenseOf('h'+i)).reduce((a,b)=>a+b,0);const vs=defenseOf('village');let ss=0;POSTS.slice(1).forEach(p=>ss+=defenseOf(p));
  h+='<div class="elems three"><span class="el"><small>Maisons</small><b>'+fmt(hs)+'</b></span><span class="el"><small>Village</small><b>'+fmt(vs)+'</b></span><span class="el"><small>Sites</small><b>'+fmt(ss)+'</b></span></div><p class="hint">Valeurs de défense. Elles compteront quand les dieux enverront leurs guerriers.</p><div class="list">';
- G0.forEach(g=>{h+='<div class="item tap" data-act="guard:'+g.id+'">'+ptImg(g,'garde')+'<div class="main"><div class="name">'+esc(g.name)+' <span class="chip garde">Garde</span>'+(g.sp>0?'<span class="chip sp">+'+g.sp+' pts</span>':'')+'</div><div class="sub">'+(g.post?'Poste : '+esc(postName(g.post)):'<span style="color:var(--warn)">Sans poste</span>')+'</div><div class="meta"><span>⚡&#xFE0E; '+Math.floor(g.nrg)+'</span><span>Défense '+fmt(power(g,'garde'))+'</span></div></div><div class="right"><div class="lvl"><small>niv.</small>'+g.lv+'</div></div></div>';});
+ G0.forEach(g=>{h+='<div class="item tap" data-act="guard:'+g.id+'">'+ptImg(g,'garde')+'<div class="main"><div class="name">'+esc(g.name)+' <span class="chip garde">Garde</span>'+spChip(g)+'</div><div class="sub">'+(g.post?'Poste : '+esc(postName(g.post)):'<span style="color:var(--warn)">Sans poste</span>')+'</div><div class="meta">'+nrgIcon(g)+'<span>Défense '+fmt(power(g,'garde'))+'</span></div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+g.lv+'</div></div></div>';});
  return h+'</div></section>';
 }
 export function guardModal(id){return()=>{const g=(S.guards||[]).find(x=>x.id===id);if(!g)return '<p>Ce garde n’est plus là.</p>';
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(g,'garde',true)+'<div class="main"><h2>'+esc(g.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="chip garde">Garde</span>'+signChip(g.sign)+'</div><div class="hint">'+(g.post?'En poste : '+esc(postName(g.post)):'Sans poste')+'</div></div></div>';
  h+=persoBlock(g);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+g.lv+'</b> · défense '+fmt(power(g,'garde'))+'</div>'+bar(g.xp/(need(g.lv)*1.5)*100)+nrgBar(g)+'</div>'+statsHtml(g,'g')+itemUse(g,'g');
- h+=selfWork(g,'g')+friendBlock(g);
+ h+=trainingBlock(g,'g')+selfWork(g,'g')+friendBlock(g);
  h+='<div class="sec-h"><h2>Poste</h2></div><div class="posts">';
  h+=SIGNS.map((s,i)=>'<button class="opt'+(g.post==='h'+i?' sel':'')+'" data-act="post:'+g.id+':h'+i+'"><b><span class="sign">'+s.s+'</span> '+s.n+'</b><span class="d">déf. '+fmt(defenseOf('h'+i))+'</span></button>').join('');
  h+=POSTS.map(p=>'<button class="opt'+(g.post===p?' sel':'')+'" data-act="post:'+g.id+':'+p+'"><b>'+esc(postName(p).replace(/^./,c=>c.toUpperCase()))+'</b><span class="d">déf. '+fmt(defenseOf(p))+'</span></button>').join('');
@@ -97,7 +102,7 @@ export function renderTabs(){
 }
 export function renderRes(){
  const R=rates();
- $('#resbar').innerHTML=RKEYS.map(r=>'<div class="res"><div class="k"><i style="background:'+RES[r].c+'"></i>'+RES[r].n+'</div><div class="v" data-res="'+r+'">'+fmt(S.res[r])+'</div><div class="r">'+(R[r]>=0?'+':'')+fmt(R[r])+'/h · max '+fmt(cap(r))+'</div></div>').join('');
+ $('#resbar').innerHTML=RKEYS.map(r=>'<div class="res"'+tip(r)+'><div class="k"><i style="background:'+RES[r].c+'"></i>'+RES[r].n+'</div><div class="v" data-res="'+r+'">'+fmt(S.res[r])+'</div><div class="r">'+(R[r]>=0?'+':'')+fmt(R[r])+'/h · max '+fmt(cap(r))+'</div></div>').join('');
  $('#speedTag').hidden=S.speed===1;
  const sb=$('#soundBtn');if(sb){const on=soundPrefs().on;sb.setAttribute('aria-pressed',on);sb.classList.toggle('off',!on);sb.setAttribute('aria-label',on?'Couper le son':'Activer le son');}
 }
@@ -117,7 +122,7 @@ export function viewSanctuaire(){
  const idle=S.workers.filter(w=>!w.job).length;
  if(S.world&&S.world.home)h+='<div class="banner home">Il se passe quelque chose au Sanctuaire… <button class="btn sm" data-act="home:start" style="margin-left:6px">Voir la scène</button></div>';
  if(S.world&&S.world.active)h+='<div class="banner info">Une scène attend votre retour. <button class="btn sm" data-act="scene:resume" style="margin-left:6px">Reprendre</button></div>';
- if(idle)h+='<div class="banner info">'+idle+' villageois attend'+(idle>1?'ent':'')+' une affectation. Touchez un site sur la carte pour l’y envoyer.</div>';
+ if(idle)h+='<div class="banner info">'+idle+' villageois attend'+(idle>1?'ent':'')+' une affectation : voyez la section « Villageois » plus bas.</div>';
  h+='<section class="sec"><div class="map-wrap" id="mapSlot" role="img" aria-label="Carte du Sanctuaire : touchez un site pour gérer ses travailleurs"></div><p class="hint">Touchez un site pour y affecter du monde ou lancer une fabrication. Touchez la colline pour les douze maisons.</p><div class="sites">';
  ['champs','carriere','mine','biblio','jardin','herbo','atelier','forge','artisans'].forEach(id=>{const l=S.b[id];let info;
   if(id==='artisans')info=S.workers.length+' / '+villageCap(S.b.artisans)+' villageois';
@@ -128,6 +133,7 @@ export function viewSanctuaire(){
   else info=usedSlots(id)+' / '+siteSlots(id)+' · '+fmt(siteProd(id))+'/h';
   h+='<button class="site-btn" data-act="site:'+id+'"><b>'+SITES[id].n+'</b><span>'+info+'</span></button>';});
  h+='</div></section>';
+ h+=villagersSection();
  h+='<section class="sec"><div class="sec-h"><h2>Réserve d’objets</h2></div>'+invHtml()+'</section>';
  h+='<section class="sec"><div class="sec-h"><h2>Chantiers</h2><span class="aside">'+S.jobs.length+' / '+slots+' en cours</span></div>';
  if(S.jobs.length)h+=S.jobs.map(j=>{const tot=j.end-j.start;const nm=j.b[0]==='h'?'Maison '+de(SIGNS[+j.b.slice(1)].n):BUILD[j.b].n;return '<div class="job"><div class="h"><span>'+nm+' → niv. '+j.lvl+'</span><span data-until="'+j.end+'">'+dur(j.end-S.gt)+'</span></div>'+bar((S.gt-j.start)/tot*100,'data-ps="'+j.start+'" data-pe="'+j.end+'"')+'</div>';}).join('');
@@ -141,7 +147,7 @@ export function viewChevaliers(){
  let h='<section class="sec"><div class="sec-h"><h2>Chevaliers d’Athéna</h2><span class="aside">'+S.knights.length+'</span></div><p class="hint">Touchez un chevalier pour lire son histoire, répartir ses points et lui confier un rôle.</p>';
  h+='<div class="fp-box"><b>'+S.fp+'</b> point'+(S.fp>1?'s':'')+' d’amitié à offrir · +1 toutes les 6 h (veillées autour du feu). Ouvrez une fiche pour renforcer un lien.</div><div class="list">';
  S.knights.slice().sort((a,b)=>RANK_MULT[b.rank]-RANK_MULT[a.rank]||b.lv-a.lv).forEach(k=>{const c=CONS_BY[k.cons];const nAp=S.aps.filter(a=>a.master===k.id).length;
-  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+(k.sp>0?'<span class="chip sp">+'+k.sp+' pts</span>':'')+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(k.role==='maitre'?'<span>'+nAp+' / 3 apprentis</span>':'')+'<span>⚡&#xFE0E; '+Math.floor(k.nrg)+'</span></div></div><div class="right"><div class="lvl"><small>niv.</small>'+k.lv+'</div></div></div>';});
+  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+spChip(k)+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(k.role==='maitre'?'<span>'+nAp+' / 3 apprentis</span>':'')+''+nrgIcon(k)+'</div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+k.lv+'</div></div></div>';});
  return h+'</div></section>'+viewGuards();
 }
 export function viewApprentis(){
@@ -156,7 +162,7 @@ export function viewApprentis(){
  else{h+='<div class="list">';S.aps.slice().sort((a,b)=>b.lv-a.lv).forEach(a=>{const m=masterOf(a);const af=affinity(a,m);
   let sub=m?'Maître : '+esc(m.name)+(af.t?' · '+af.t:''):'<span style="color:var(--warn)">Sans maître (formation lente)</span>';
   if(a.job)sub+=' · <span style="color:var(--gold-hi)">en renfort : '+SITES[a.job].n.toLowerCase()+'</span>';
-  h+='<div class="item tap" data-act="ap:'+a.id+'">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+'<span class="sign" style="color:var(--'+SIGNS[a.sign].el+')">'+SIGNS[a.sign].s+'</span>'+(a.sp>0?'<span class="chip sp">+'+a.sp+' pts</span>':'')+'</div><div class="sub">'+sub+'</div>'+bar(a.xp/need(a.lv)*100,'data-apbar="'+a.id+'"')+'<div class="meta"><span>⚡&#xFE0E; '+Math.floor(a.nrg)+'</span><span>Cosmos '+a.st.co+'</span><span>'+a.imp+'</span>'+(a.cd>S.gt?'<span style="color:var(--bad)">au repos</span>':'')+'</div></div><div class="right"><div class="lvl"><small>niv.</small><span data-aplv="'+a.id+'">'+a.lv+'</span></div></div></div>';});h+='</div>';}
+  h+='<div class="item tap" data-act="ap:'+a.id+'">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+'<span class="sign" style="color:var(--'+SIGNS[a.sign].el+')">'+SIGNS[a.sign].s+'</span>'+spChip(a)+'</div><div class="sub">'+sub+'</div>'+bar(a.xp/need(a.lv)*100,'data-apbar="'+a.id+'"')+'<div class="meta">'+nrgIcon(a)+'<span>Cosmos '+a.st.co+'</span><span>'+a.imp+'</span>'+(a.cd>S.gt?'<span style="color:var(--bad)">au repos</span>':'')+'</div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small><span data-aplv="'+a.id+'">'+a.lv+'</span></div></div></div>';});h+='</div>';}
  return h+'</section>';
 }
 export function armorState(c){const s=S.armors[c.k];if(s==='portee'){const k=S.knights.find(k=>k.cons===c.k);return '<span class="chip ok">Portée'+(k?' par '+esc(k.name):'')+'</span>';}if(s==='restauree')return '<span class="chip '+c.rank+'">Restaurée, sans porteur</span>';if(S.forgeJob&&S.forgeJob.cons===c.k)return '<span class="chip warn">En restauration</span>';return '<span class="chip">Brisée</span>';}
@@ -212,14 +218,31 @@ export function closeModal(){modalFn=null;flash='';$('#sheet').hidden=true;}
 export function flashHtml(){if(!flash)return '';const f=flash;flash='';return '<div class="flash">'+esc(f)+'</div>';}
 export function statsHtml(p,kind){
  const sp=p.sp||0;
- let h='<div class="stats">'+[['fo','Force'],['vi','Vitesse'],['en','Endurance'],['co','Cosmos']].map(([k,n])=>'<div class="stat"><div class="k">'+n+'</div><div class="v">'+p.st[k]+'</div>'+(sp>0?'<button class="plus" data-act="sp:'+kind+':'+p.id+':'+k+'" aria-label="+1 '+n+'">+</button>':'')+'</div>').join('')+'</div>';
+ let h='<div class="stats">'+[['fo','Force'],['vi','Vitesse'],['en','Endurance'],['co','Cosmos']].map(([k,n])=>'<div class="stat"'+tip(k)+'><div class="k">'+n+'</div><div class="v">'+p.st[k]+'</div>'+(sp>0?'<button class="plus" data-act="sp:'+kind+':'+p.id+':'+k+'" aria-label="+1 '+n+'">+</button>':'')+'</div>').join('')+'</div>';
  if(sp>0)h+='<div class="sp-row"><span><b>'+sp+'</b> point'+(sp>1?'s':'')+' de compétence à répartir</span><button class="btn sm ghost" data-act="spauto:'+kind+':'+p.id+'">Répartir automatiquement</button></div>';
  return h;
 }
 export function persoBlock(p){
  let h='<div class="bio"><div class="bio-h"><span class="chip">'+esc(NATS[p.nat].n)+'</span>'+traitChips(p)+'</div><p>'+p.bio.map(esc).join('<br>')+'</p></div>';
- h+='<details class="dt"><summary>Qualités et défauts</summary><div class="tlist">'+(p.qual||[]).map(t=>'<div><b class="q">'+QUAL[t.k].n+' '+ROMAN[t.lv]+'</b> '+QUAL[t.k].d(t.lv)+'</div>').join('')+(p.flaw||[]).map(t=>'<div><b class="f">'+FLAW[t.k].n+' '+ROMAN[t.lv]+'</b> '+FLAW[t.k].d(t.lv)+'</div>').join('')+'</div></details>';
+ const line=(T,t,cls)=>'<div class="trait"><b class="'+cls+'">'+T[t.k].n+' '+ROMAN[t.lv]+'</b><span><i>Au Sanctuaire</i> '+T[t.k].d(t.lv)+'</span><span><i>En combat</i> '+T[t.k].c(t.lv)+'</span><span><i>Avec les autres</i> '+T[t.k].s+'</span></div>';
+ h+='<details class="dt"><summary>Qualités et défauts</summary><div class="tlist">'+(p.qual||[]).map(t=>line(QUAL,t,'q')).join('')+(p.flaw||[]).map(t=>line(FLAW,t,'f')).join('')+'</div></details>';
+ h+=affinityBlock(p);
  return h;
+}
+// Avec qui ce personnage s'entend, et pourquoi (caractère, racines, histoire).
+export function affinityBlock(p){
+ const others=people().filter(o=>o.id!==p.id).map(o=>({o,c:compat(p,o)})).filter(x=>x.c.v!==0).sort((a,b)=>b.c.v-a.c.v);
+ if(!others.length)return '';
+ const row=x=>'<div class="aff '+(x.c.v>0?'pos':'neg')+'"'+tip(x.c.why.join('\n'))+'>'+ptImg(x.o,x.o.rank||null)+'<div><b>'+esc(x.o.name)+'</b><span>'+compatLabel(x.c.v)+'</span><small>'+esc(x.c.why[0].slice(2))+(x.c.why.length>1?' · …':'')+'</small></div></div>';
+ const good=others.filter(x=>x.c.v>0).slice(0,4),bad=others.filter(x=>x.c.v<0).slice(-3).reverse();
+ return '<details class="dt"><summary>Affinités <span class="aside">'+good.length+' entente'+(good.length>1?'s':'')+(bad.length?' · '+bad.length+' friction'+(bad.length>1?'s':''):'')+'</span></summary><p class="hint">Le caractère, les racines et l’histoire de chacun rapprochent ou éloignent les personnages. Au fil des jours, les amitiés se nouent ou s’effilochent d’elles-mêmes. Touchez un nom pour voir pourquoi.</p><div class="affs">'+good.concat(bad).map(row).join('')+'</div></details>';
+}
+// Séances d'entraînement : surtout de l'énergie, parfois un objet fabriqué ou du savoir.
+export function trainingBlock(p,kind){
+ let h='<div class="sec-h"><h2>Entraînement</h2></div><p class="hint">Les séances coûtent de l’énergie. Certaines demandent un objet fabriqué à l’artisanat ou à l’herboristerie.'+(fl(p,'distrait')?' Distrait : '+10*fl(p,'distrait')+' % de risque de séance perdue.':'')+'</p><div class="opts">';
+ TRAININGS.forEach(t=>{const ok=canTrain(p,t);const extra=[t.e+' énergie'];if(t.item)extra.push('1 '+ITEMS[t.item].n.toLowerCase()+' (en réserve : '+(S.items[t.item]||0)+')');if(t.savoir)extra.push(t.savoir(p)+' savoir');
+  h+='<button class="opt" data-act="train:'+kind+':'+p.id+':'+t.k+'"'+(ok?'':' disabled')+'><b>'+t.n+'</b><span class="chip">'+t.gain+'</span><span class="d">'+extra.join(' · ')+'</span></button>';});
+ return h+'</div>';
 }
 export function selfWork(p,kind){
  let h='<details class="dt"><summary>Travail sur soi</summary><p class="hint">Corriger un défaut coûte 40 d’énergie et un objet préparé à l’herboristerie ou à l’artisanat. Renforcer une qualité coûte 50 d’énergie, un élixir et du savoir. Le succès n’est pas garanti ; la persévérance aide.</p><div class="opts">';
@@ -235,7 +258,8 @@ export function friendBlock(p){
  let h='<details class="dt"><summary>Amitiés <span class="aside">+'+Math.round(fb*100)+' % d’XP</span></summary>';
  h+='<p class="hint">Chaque niveau d’amitié donne +1 % d’XP aux deux personnes (+2 % entre un maître et son apprenti), plafonné à 30 %. Points disponibles : <b style="color:var(--gold-hi)">'+S.fp+'</b>.</p><div class="list">';
  people().filter(o=>o.id!==p.id).sort((a,b)=>friendLv(p.id,b.id)-friendLv(p.id,a.id)).forEach(o=>{const lv=friendLv(p.id,o.id);
-  h+='<div class="item fr">'+ptImg(o,o.rank||null)+'<div class="main"><div class="name">'+esc(o.name)+'</div><div class="hearts" aria-label="Amitié '+lv+' sur 10">'+'<i class="on"></i>'.repeat(lv)+'<i></i>'.repeat(10-lv)+'</div></div><button class="btn sm ghost" data-act="friend:'+p.id+':'+o.id+'"'+(S.fp<1||lv>=10?' disabled':'')+'>+1</button></div>';});
+  const c=compat(p,o);
+  h+='<div class="item fr">'+ptImg(o,o.rank||null)+'<div class="main"><div class="name">'+esc(o.name)+(c.v?' <span class="chip '+(c.v>0?'ok':'f')+'"'+tip(c.why.join('\n'))+'>'+compatLabel(c.v)+'</span>':'')+'</div><div class="hearts"'+tip('hearts')+' aria-label="Amitié '+lv+' sur 10">'+'<i class="on"></i>'.repeat(lv)+'<i></i>'.repeat(10-lv)+'</div></div><button class="btn sm ghost" data-act="friend:'+p.id+':'+o.id+'"'+(S.fp<1||lv>=10?' disabled':'')+'>+1</button></div>';});
  return h+'</div></details>';
 }
 export function itemUse(p,kind){
@@ -276,6 +300,20 @@ export function siteModal(id){return()=>{
  else h+='<p class="hint">Aucun apprenti disponible.</p>';
  return h+bldBlock(id);
 };}
+// Villageois : recruter, voir qui travaille où, affecter d'un toucher ceux qui attendent.
+const WORK_SITES=['champs','carriere','mine','biblio','jardin','herbo','atelier','forge'];
+function freeSites(){return WORK_SITES.filter(id=>S.b[id]>0&&usedSlots(id)<siteSlots(id));}
+export function villagersSection(){
+ const c=workerCost(),capV=villageCap(S.b.artisans),full=S.workers.length>=capV,idle=S.workers.filter(w=>!w.job),fs=freeSites();
+ let h='<section class="sec"><div class="sec-h"><h2>Villageois</h2><span class="aside">'+S.workers.length+' / '+capV+'</span></div>';
+ h+='<p class="hint">Les villageois de Rodorio produisent les ressources et font tourner les ateliers. Chacun mange 1 vivre par heure. Pour en accueillir plus, agrandissez le village des artisans.</p>';
+ h+='<div class="btns" style="align-items:center"><button class="btn sm" data-act="hire"'+(full||!afford(c)?' disabled':'')+'>'+(full?'Village plein':'Recruter un villageois')+'</button>'+(full?'<button class="btn sm ghost" data-act="site:artisans">Agrandir le village</button>':costHtml(c))+'</div>';
+ const by=WORK_SITES.filter(id=>workersAt(id).length).map(id=>'<span class="chip">'+SITES[id].n+' : '+workersAt(id).length+'</span>').join('');
+ if(by)h+='<div class="inv">'+by+'</div>';
+ if(idle.length){h+='<div class="list">';idle.forEach(w=>{h+='<div class="item vrow">'+workerDot(w)+'<div class="main"><div class="name">'+esc(w.name)+' <span class="chip warn">sans affectation</span></div><div class="vsites">'+(fs.length?fs.map(id=>'<button class="btn sm ghost" data-act="wjob:'+w.id+':'+id+'">'+SITES[id].n+'</button>').join(''):'<span class="hint">Aucun poste libre : bâtissez ou agrandissez un site.</span>')+'</div></div></div>';});h+='</div>';}
+ else h+='<p class="hint">Tout le monde est au travail. Pour déplacer quelqu’un, touchez son site sur la carte.</p>';
+ return h+'</section>';
+}
 export function workerDot(w){const L=looks(w);return '<span class="wdot" style="--sk:'+L.skin+';--hr:'+L.hair+'" aria-hidden="true"></span>';}
 export function villageModal(){
  const c=workerCost(),capV=villageCap(S.b.artisans),full=S.workers.length>=capV;
@@ -307,7 +345,7 @@ export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance '+fmt(power(k,k.rank))+'</div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+statsHtml(k,'k');
  h+=itemUse(k,'k');
  h+='<div class="hint">Techniques : '+(k.tech.length?k.tech.map(esc).join(' · '):'aucune')+'</div>';
- h+=selfWork(k,'k')+friendBlock(k);
+ h+=trainingBlock(k,'k')+selfWork(k,'k')+friendBlock(k);
  h+='<div class="sec-h"><h2>Rôle</h2></div><div class="opts">';
  h+='<button class="opt'+(k.role===null?' sel':'')+'" data-act="role:'+k.id+':none"><b>Entraînement personnel</b><span class="d">Pas de rôle : progresse à pleine vitesse.</span></button>';
  const p=pope();
@@ -325,9 +363,7 @@ export function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)re
  if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Formation ralentie de moitié. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
  h+='<div class="sec-h"><h2>Entraînement particulier</h2></div><p class="hint">Un chevalier prend '+esc(a.name)+' en tête-à-tête : '+DUO_E+' d’énergie chacun, l’équivalent de 8 h de formation, +1 d’amitié entre eux, et parfois la transmission d’une qualité.</p><div class="opts">';
  S.knights.forEach(k=>{const ok=a.nrg>=DUO_E&&k.nrg>=DUO_E;const af=affinity(a,k);h+='<button class="opt" data-act="duo:'+a.id+':'+k.id+'"'+(ok?'':' disabled')+'><b>'+esc(k.name)+' <span class="sign">'+SIGNS[k.sign].s+'</span></b><span class="chip '+k.rank+'">⚡&#xFE0E; '+Math.floor(k.nrg)+'</span><span class="d">Amitié '+friendLv(a.id,k.id)+'/10'+(af.t?' · '+af.t:'')+(k.qual.length?' · '+k.qual.map(t=>QUAL[t.k].n).join(', '):'')+'</span></button>';});
- h+='</div><div class="sec-h"><h2>Séances spéciales</h2></div><p class="hint">'+SESS_E+' d’énergie et des ressources pour forger une aptitude précise.'+(fl(a,'distrait')?' Distrait : '+10*fl(a,'distrait')+' % de risque d’échec.':'')+'</p><div class="opts">';
- SESS.forEach(s=>{const c=s.cost(a);h+='<button class="opt" data-act="sess:'+a.id+':'+s.k+'"'+(afford(c)&&a.nrg>=SESS_E?'':' disabled')+'><b>'+s.n+'</b><span class="chip">'+s.gain+'</span><span class="d">'+SESS_E+' énergie · '+Object.keys(c).map(r=>fmt(c[r])+' '+nameOf(r)).join(' · ')+'</span></button>';});
- h+='</div>'+selfWork(a,'a')+friendBlock(a);
+ h+='</div>'+trainingBlock(a,'a')+selfWork(a,'a')+friendBlock(a);
  h+='<div class="sec-h"><h2>Maître</h2></div><div class="opts">';
  const masters=knightsWith('maitre');
  if(!masters.length)h+='<p class="hint">Aucun chevalier n’a le rôle de Maître. Confiez ce rôle à un chevalier dans l’onglet Chevaliers.</p>';
@@ -382,7 +418,7 @@ export function installClicks(){
 const ACT_SOUND={tab:'tap',close:'close',dclose:'close',site:'open',knight:'open',ap:'open',guard:'open',armor:'open',houses:'open',settings:'open',trialOpen:'open',
  build:'build',house:'build',restore:'build',hire:'pay',craft:'pay',tool:'build',dtake:'card',dend:'turn',dboost:'pay',
  role:'confirm',assign:'confirm',accept:'confirm',post:'confirm',friend:'confirm',sp:'tap',spauto:'confirm',wjob:'confirm',ajob:'confirm',
- sess:'study',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dstart:'turn',dopen:'open',loadout:'confirm',event:'open',go:'turn',scene:'open',home:'open'};
+ train:'study',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dstart:'turn',dopen:'open',loadout:'confirm',event:'open',go:'turn',scene:'open',home:'open'};
 function actWithSound(a){
  const k=a.split(':')[0],wasOver=!!(S.match&&S.match.over);
  if(k!=='trial'&&k!=='sound')sfx(ACT_SOUND[k]||'tap');
@@ -450,9 +486,7 @@ export function act(a){
   kn.role=nr;if(nr)log(kn.name+' devient '+ROLES[nr].n+'.');break;}
  case'accept':{const i=+x,ap=S.pending[i];if(!ap||S.aps.length>=capacity())return;S.pending.splice(i,1);S.aps.push(ap);log(ap.name+' rejoint le Sanctuaire comme apprenti'+G(ap,'e')+'.');break;}
  case'dismiss':{const ap=S.pending.splice(+x,1)[0];if(ap)log(ap.name+' est reconduit'+G(ap,'e')+' chez sa famille.');break;}
- case'sess':{const ap=S.aps.find(q=>q.id===+x),s=SESS.find(q=>q.k===y);if(!ap||!s)return;const c=s.cost(ap);if(!afford(c)||ap.nrg<SESS_E)return;pay(c);ap.nrg-=SESS_E;
-  if(Math.random()<.1*fl(ap,'distrait')){flash=ap.name+' a la tête ailleurs : séance ratée.';break;}
-  if(y==='xp'){ap.xp+=xpRate(ap)*6;let g=0;while(ap.xp>=need(ap.lv)&&g++<50)levelUpAp(ap,null);flash='Retraite terminée : +6 h de formation.';}else{ap.st[y]+=2;flash='+2 '+STATN[y]+' pour '+ap.name+'.';}break;}
+ case'train':{const p=getP(x,+y);if(!p)return;const m=train(p,z);if(!m)return;flash=m;break;}
  case'trialOpen':lastTrial=null;openModal(trialModal(+x));return;
  case'trial':{const ap=S.aps.find(q=>q.id===+x),c=CONS_BY[y];if(!ap||!c)return;const e=trialEval(ap,c);if(!e.ok)return;
   const win=Math.random()<e.ch;const cd=ql(ap,'orgueilleux')?24:12;

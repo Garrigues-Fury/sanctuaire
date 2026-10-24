@@ -6,6 +6,7 @@ import { COST, autoPick, canUse, heroAction } from '../core/combat.js';
 import { fill, pickText, reqLabel, reqOk, rollChance } from '../core/dialogue.js';
 import { activeKnight, beginFight, choose, currentNode, doRoll, endFight, finishScene, goTo } from '../core/expeditions.js';
 import { save } from '../core/save.js';
+import { byId } from '../core/rules.js';
 import { S } from '../core/state.js';
 import { esc } from '../core/util.js';
 import { sfx } from '../audio/audio.js';
@@ -20,8 +21,8 @@ let root=null,tw=null,twKey='',target=null,autoTimer=null,lastLog=0,results=null
 function speaker(who){
  const a=S.world.active,v=a.vars;
  if(who==='narr')return null;
- if(who==='k')return{p:activeKnight(),rank:activeKnight().rank,name:v.k};
- if(who==='k2'){const k=S.knights.find(x=>x.id===a.k2);return k?{p:k,rank:k.rank,name:k.name}:null;}
+ if(who==='k')return{p:activeKnight(),rank:activeKnight().rank||null,name:v.k};
+ if(who==='k2'){const k=byId(a.k2);return k?{p:k,rank:k.rank||null,name:k.name}:null;}
  if(who==='ap'){const p=S.aps.find(x=>x.id===a.apId);return p?{p,rank:null,name:p.name}:null;}
  if(who==='pope'){const p=S.knights.find(x=>x.role==='pope');return p?{p,rank:p.rank,name:p.name+', Grand Pope'}:null;}
  const c=a.cast[who];if(!c)return null;

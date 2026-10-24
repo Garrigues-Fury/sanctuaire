@@ -68,7 +68,9 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
    - L'XP s'accumule en temps réel. Chaque niveau donne des points de compétence, répartis par le joueur.
    - Le cosmos s'éveille au niveau 5. Une technique est découverte aux niveaux 10, 20 et 30.
    - L'affinité de signe ou d'élément avec le maître accélère la formation.
-7. **Énergie**, qui se recharge avec le temps. Elle sert aux :
+   - **Effets des traits (précisés le 2026-10-24)** : chaque qualité et chaque défaut a un effet « au Sanctuaire », un effet « en combat » et un effet « avec les autres » (`src/core/data/traits.js`). Nouvelle qualité : **Drôle**.
+   - **Affinités et vie entre personnages** (`src/core/social.js`) : l'entente (de −4 à +4) vient du caractère, des racines (même pays, même région du monde) et de l'histoire (orphelins, survivants, deuil, enfance au bord de la mer, appel du cosmos). Chaque jour, des amitiés se nouent ou s'effilochent seules, et la chronique le raconte. Les scènes au Sanctuaire « complicité », « tension » et « racines » en découlent.
+7. **Énergie**, qui se recharge avec le temps. Les **entraînements sont ouverts à tous** (chevaliers, Pope, apprentis, gardes ; `src/core/training.js`) et coûtent surtout de l'énergie, rarement du savoir, parfois un objet fabriqué (matériel d'entraînement, élixir). Elle sert aussi aux :
    - séances spéciales ;
    - entraînements particuliers chevalier-apprenti (gain d'amitié, transmission possible d'une qualité) ;
    - travail sur soi : corriger un défaut ou renforcer une qualité, avec des objets fabriqués.
