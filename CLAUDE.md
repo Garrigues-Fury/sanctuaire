@@ -78,10 +78,14 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
 11. **Gardes** : un apprenti qui a raté son épreuve ou qui est surpassé devient garde. Il est affecté à une maison, au village ou à un site, et sa valeur de défense comptera lors des attaques.
 12. **Lecture des astres**, le duel quotidien du Pope contre un dieu :
     - **Fréquence** : une partie par jour réel, toutes les 24 minutes en mode test. Il faut un Grand Pope en poste.
-    - **Format** : 5 à 10 minutes, au tour par tour, mécanique proche de Splendor Marvel.
-    - **Capacités** : elles viennent des scores d'élément du Sanctuaire (feu, eau, air, terre) et du cosmos de chaque constellation portée. Elles **ne se dépensent pas** : elles se rechargent à chaque tour. On achète autant de cartes que la capacité du tour le permet, et les bonus des cartes s'ajoutent au tour suivant.
-    - **Renforts** : on peut les acheter avec de vraies ressources.
-    - **Fin de partie** : le premier à 15 ✦, sinon le meilleur après 12 tours.
+    - **Format (revu le 2026-10-24, vraies règles de Splendor)** : au tour par tour, en plein écran et animé. À son tour, une action : prendre 3 gemmes d'éléments différents, ou 2 identiques (s'il en reste 4), ou acheter une carte, ou en réserver une (3 au plus, +1 cosmos d'or qui sert de joker). Les gemmes **s'accumulent** (10 au plus) et se dépensent. Les cartes donnent des ✦ et une **réduction permanente** de leur élément. Seba a choisi d'abandonner l'ancienne règle des capacités qui se rechargent.
+    - **102 cartes** (40 de rang I, 32 de rang II, 20 de rang III, 10 artefacts) et **8 constellations sacrées** (les « nobles » de Splendor : 3 ✦ pour qui réunit les bonus demandés). Données dans `src/core/data/stars.js`, illustrations dans `src/art/cards.js`.
+    - **Force du Sanctuaire** : ses scores d'élément donnent des bonus de départ, et chaque chevalier une gemme de son élément.
+    - **Renforts** : une gemme contre de vraies ressources, une fois par tour, sans perdre son action.
+    - **Balayage** : renouveler une rangée de cartes contre des ressources du Sanctuaire (vivres et marbre), de plus en plus cher.
+    - **Artefacts** (Masque du Grand Pope, Sceptre d'Athéna, etc.) : achetés en duel, ils agissent jusqu'à la fin de la partie et rejoignent la collection pour toujours. On en emporte 3 à chaque duel.
+    - **Fin de partie** : le premier à 15 ✦ en fin de manche, sinon le meilleur après 20 manches.
+    - **Difficulté** : le dieu reçoit des gemmes de départ selon son niveau, et un bonus tous les 6 niveaux. Ses acquis deviennent des gemmes de départ.
     - **Victoire** : on garde une carte, dont l'effet devient permanent.
     - **Défaite** : le dieu monte en niveau, garde ses acquis et sera plus dangereux lors de ses attaques.
 13. **Factions** : une page présente le Sanctuaire et chaque dieu, avec niveaux, bilans et bonus. On y trouve aussi 10 artefacts mythologiques, débloqués en accumulant des bonus permanents.

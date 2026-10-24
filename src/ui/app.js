@@ -8,7 +8,10 @@ import { DUEL_TURNS, DUEL_WIN, GODS, GOD_KEYS } from '../core/data/gods.js';
 import { SITES } from '../core/data/map.js';
 import { FLAW, QUAL, SIG_WORDS, fl, ql } from '../core/data/traits.js';
 import { CONS, CONS_BY, EKEYS, ELEM, RANKS, RANK_MULT, SIGNS, armorLow, armorName, de } from '../core/data/world.js';
-import { boostCost, canPay, duelAvailable, endTurn, finishDuel, godState, keepCard, myBase, pool, startDuel, takeCard } from '../core/duel.js';
+import { cardOf, duelAvailable, ensureDuel, godState, myStart, startDuel } from '../core/duel.js';
+import { RELICS } from '../core/data/stars.js';
+import { cardArt } from '../art/cards.js';
+import { openDuel } from './duel.js';
 import { makeGuardFrom, makeWorker, newGame } from '../core/people.js';
 import { CB, DUO_E, HOUSE_MAX, POSTS, SESS, SESS_E, affinity, afford, apsAt, arena, artReady, bestSmith, bonusOf, byId, cap, capacity, cardPrice, cb, consScore, cosmosLabel, costOf, craftRate, defenseOf, elemScores, emax, fkey, forgeRate, friendBonus, friendLv, friendsOf, guardRate, have, houseCost, houseTime, knightRate, knightsWith, levelUpAp, masterOf, need, pay, people, pope, postName, power, rates, recomputeCB, recruitInterval, reqOk, reqText, sanctPower, siteProd, siteSlots, slotsFor, timeOf, trialEval, usedSlots, villageCap, workerCost, workersAt, xpRate } from '../core/rules.js';
 import { exportCode, importCode, save } from '../core/save.js';
@@ -40,46 +43,20 @@ export function openSite(id){
 }
 export function reqsHtml(reqs){if(!reqs||!reqs.length)return '';return '<div class="reqs">'+reqs.map(r=>'<span class="'+(reqOk(r)?'ok':'no')+'">'+(reqOk(r)?'✓':'✗')+' '+esc(reqText(r))+'</span>').join('')+'</div>';}
 export function effsHtml(o){const parts=[];if(o.eff)for(const k in o.eff)parts.push(effText(k,o.eff[k]));if(o.unlock)parts.push(UNLOCK_N[o.unlock]);return parts.length?'<div class="ceff">'+parts.map(esc).join(' · ')+'</div>':'';}
-export function poolHtml(){
- const m=S.match,p=pool('me'),sp=m.me.spent||{};
- let h='<div class="pool">'+EKEYS.map(e=>{const left=p[e]-(sp[e]||0);return '<div class="pl'+(left<=0?' empty':'')+'"><span class="gem g-'+e+'"></span><b>'+left+'</b><small>/ '+p[e]+'</small></div>';}).join('')+'</div>';
- const ck=Object.keys(m.me.cons);if(ck.length)h+='<div class="pool cons">'+ck.map(k=>{const left=p['c:'+k]-(sp['c:'+k]||0);return '<div class="pl'+(left<=0?' empty':'')+'"><span class="star">✦</span><b>'+left+'</b><small>/ '+p['c:'+k]+' cosmos '+esc(CONS_BY[k].n)+'</small></div>';}).join('')+'</div>';
- return h;
-}
-export function costChips(c,side){const p=pool(side),sp=S.match[side].spent||{};return Object.keys(c.cost).map(k=>{const ok=(p[k]||0)-(sp[k]||0)>=c.cost[k];if(k.startsWith('c:'))return '<span class="u'+(ok?'':' short')+'"><span class="star">✦</span>'+c.cost[k]+' '+esc(CONS_BY[k.slice(2)].n)+'</span>';return '<span class="u'+(ok?'':' short')+'"><span class="gem g-'+k+'"></span>'+c.cost[k]+'</span>';}).join('');}
-export function dcardHtml(c,mode){
- const can=mode==='buy'&&canPay(c,'me');
- let h='<div class="card el-'+c.el+(c.cons?' cons':'')+'"><div class="ch"><span class="ctier">'+ROMAN[c.t]+'</span><b>'+esc(c.n)+'</b>'+(c.fav?'<span class="fav">✦ '+c.fav+'</span>':'')+'</div>';
- h+='<div class="cgem">+'+c.give+' <span class="gem g-'+c.el+'"></span> '+ELEM[c.el].toLowerCase()+' dès le tour suivant</div>';
- h+='<div class="ceff">Si gardée : '+(c.unlock?esc(UNLOCK_N[c.unlock]):Object.keys(c.eff).map(k=>esc(effText(k,c.eff[k]))).join(' · '))+'</div>';
- if(mode==='buy')h+='<div class="cbuy"><div class="ccost">'+costChips(c,'me')+'</div><button class="btn sm" data-act="dtake:'+c.id+'"'+(can?'':' disabled')+'>Prendre</button></div>';
- if(mode==='keep')h+='<button class="btn sm" data-act="dkeep:'+c.id+'">Garder pour toujours</button>';
- return h+'</div>';
-}
-export function viewDuel(){
- const m=S.match,G0=GODS[m.god],g=godState(m.god);
- let h='<section class="duel-head"><div class="side me"><small>Sanctuaire</small><b>✦ '+m.me.fav+'</b></div><div class="mid"><span>Tour '+m.turn+' / '+DUEL_TURNS+'</span><small>premier à '+DUEL_WIN+' ✦</small></div><div class="side god"><small>'+G0.n+' · niv. '+g.lv+'</small><b>✦ '+m.ai.fav+'</b></div></section>';
- if(m.over){
-  if(m.result==='win'){h+='<div class="result win"><h3>Victoire sur '+G0.n+'</h3><p class="hint">Choisissez une carte de la partie. Son effet devient permanent pour le Sanctuaire.</p></div><div class="cards">'+m.me.cards.map(c=>dcardHtml(c,'keep')).join('')+'</div>';}
-  else h+='<div class="result lose"><h3>'+(m.result==='draw'?'Les astres restent muets':G0.n+' l’emporte')+'</h3><p class="hint">'+(m.result==='draw'?'Personne ne prend l’ascendant aujourd’hui.':G0.n+' gagne en puissance (niveau '+g.lv+'). Il sera plus dur à vaincre, et plus dangereux quand il s’en prendra au Sanctuaire.')+'</p></div><button class="btn" data-act="dclose">Quitter la chambre des astres</button>';
-  return h+logHtml(m);
- }
- h+='<div class="sec-h"><h2>Capacités ce tour</h2><span class="aside">'+G0.n+' : '+EKEYS.map(e=>'<span class="gem g-'+e+'"></span>'+((m.ai.base[e]||0)+(m.ai.bonus[e]||0)+((m.ai.boost||{})[e]||0))).join(' ')+'</span></div>'+poolHtml();
- h+='<p class="hint">Vos points se reposent à chaque tour : prenez autant de cartes que vos capacités le permettent. Leurs bonus s’ajoutent dès le tour suivant.</p>';
- [1,2,3].forEach(t=>{h+='<div class="sec-h"><h2>Rang '+ROMAN[t]+'</h2><span class="aside">'+m.decks[t].length+' en pioche</span></div>';h+=m.market[t].length?'<div class="cards">'+m.market[t].map(c=>dcardHtml(c,'buy')).join('')+'</div>':'<p class="hint">Plus de cartes.</p>';});
- h+='<details class="dt"><summary>Renforts du Sanctuaire</summary><p class="hint">Dépensez de vraies ressources pour +1 d’un élément jusqu’à la fin de la partie. Chaque renfort coûte 50 % de plus que le précédent.</p><div class="opts">'+EKEYS.map(e=>{const c=boostCost(e);return '<button class="opt" data-act="dboost:'+e+'"'+(afford(c)?'':' disabled')+'><b>+1 <span class="gem g-'+e+'"></span>'+ELEM[e]+'</b><span class="chip">'+Object.keys(c).map(r=>fmt(c[r])+' '+nameOf(r)).join('')+'</span></button>';}).join('')+'</div></details>';
- h+='<div class="duel-actions"><button class="btn" data-act="dend">Fin du tour</button>'+(forfeitArm?'<button class="btn sm danger" data-act="dforfeit">Confirmer l’abandon (défaite)</button>':'<button class="btn sm ghost" data-act="dforfeit">Abandonner</button>')+'</div>';
- if(m.me.cards.length)h+='<details class="dt"><summary>Vos cartes <span class="aside">'+m.me.cards.length+'</span></summary><div class="tlist">'+m.me.cards.map(c=>'<div><span class="gem g-'+c.el+'"></span>'+esc(c.n)+' · +'+c.give+(c.fav?' · ✦'+c.fav:'')+'</div>').join('')+'</div></details>';
- return h+logHtml(m);
-}
-export function logHtml(m){return '<div class="sec-h"><h2>Chronique du duel</h2></div><div class="log">'+m.log.slice(0,14).map(x=>'<div style="grid-template-columns:1fr">'+esc(x)+'</div>').join('')+'</div>';}
 export function viewPope(){
- if(S.match)return viewDuel();
- const p=pope(),av=duelAvailable(),base=myBase();
+ ensureDuel();
+ const p=pope(),av=duelAvailable(),st=myStart(),lo=S.duel.loadout;
  let h='<section class="hero pope-hero"><div class="hero-top"><div><div class="lbl">Lecture des astres</div><div class="pow">✦ '+fmt(S.faveur||0)+'</div><div class="hint">Faveur d’Athéna</div></div><div class="row">'+(p?'Le Grand Pope '+esc(p.name)+' veille.':'<span style="color:var(--warn)">Nommez un Grand Pope pour lire dans les astres.</span>')+'</div></div>';
- h+='<div class="bonusrow">'+EKEYS.map(e=>'<div class="bn"><span class="gem g-'+e+'"></span><b>'+base[e]+'</b><small>'+ELEM[e]+'</small></div>').join('')+'</div>';
- h+=(av&&p?'<button class="btn" data-act="dstart">Défier un dieu</button>':'<p class="hint">'+(S.speed!==1?'Prochaine lecture dans '+dur(24-(S.gt-(S.duel.lastGt??-999))):'Les astres ont parlé pour aujourd’hui. Revenez demain, sans obligation : un jour sans duel ne coûte rien.')+'</p>')+'</section>';
- h+='<p class="hint">Chaque jour, le Pope affronte un dieu au tour par tour. Vos capacités viennent de la force du Sanctuaire (ci-dessus) et des cosmos de vos chevaliers ; elles se reposent à chaque tour. Une victoire vous laisse garder une carte pour toujours. Une défaite rend le dieu plus fort.</p>';
+ h+='<div class="bonusrow">'+EKEYS.map(e=>'<div class="bn"><span class="gem g-'+e+'"></span><b>'+st[e]+'</b><small>bonus '+ELEM[e].toLowerCase()+'</small></div>').join('')+'</div>';
+ if(S.match)h+='<button class="btn" data-act="dopen">Reprendre la partie contre '+esc(GODS[S.match.god].n)+'</button>';
+ else h+=(av&&p?'<button class="btn" data-act="dstart">Défier un dieu</button>':'<p class="hint">'+(S.speed!==1?'Prochaine lecture dans '+dur(24-(S.gt-(S.duel.lastGt??-999))):'Les astres ont parlé pour aujourd’hui. Revenez demain, sans obligation : un jour sans duel ne coûte rien.')+'</p>');
+ h+='</section>';
+ h+='<p class="hint">Chaque jour, le Pope affronte un dieu, façon Splendor : on collecte des gemmes d’élément, on achète des cartes qui rapportent des ✦ et des réductions permanentes, et le premier à 15 ✦ l’emporte. Les bonus ci-dessus viennent de la force du Sanctuaire. Une victoire vous laisse garder une carte pour toujours. Une défaite rend le dieu plus fort.</p>';
+ // collection d'artefacts du duel
+ h+='<section class="sec"><div class="sec-h"><h2>Artefacts des astres</h2><span class="aside">'+S.relics.length+' / '+RELICS.length+' · '+lo.length+' / 3 emportés</span></div><p class="hint">Achetés pendant un duel, ils rejoignent votre collection pour toujours. Avant chaque duel, choisissez-en 3 à emporter.</p><div class="relic-grid">';
+ RELICS.forEach(r=>{const own=S.relics.includes(r.id),on=lo.includes(r.id);
+  h+='<button class="relic-card'+(own?'':' locked')+(on?' on':'')+'" data-act="loadout:'+r.id+'"'+(own&&!S.match?'':' disabled')+'><img src="'+cardArt(cardOf(r.id))+'" alt=""><b>'+esc(r.n)+'</b><small>'+(own?esc(r.d):'À découvrir en duel')+'</small>'+(on?'<span class="chip ok">emporté</span>':'')+'</button>';});
+ h+='</div></section>';
  // factions
  h+='<section class="sec"><div class="sec-h"><h2>Factions</h2></div><div class="list">';
  const act=Object.keys(CB).filter(k=>!k.startsWith('U_')&&EFF_N[k]!==undefined&&CB[k]);
@@ -405,7 +382,7 @@ export function installClicks(){
 const ACT_SOUND={tab:'tap',close:'close',dclose:'close',site:'open',knight:'open',ap:'open',guard:'open',armor:'open',houses:'open',settings:'open',trialOpen:'open',
  build:'build',house:'build',restore:'build',hire:'pay',craft:'pay',tool:'build',dtake:'card',dend:'turn',dboost:'pay',
  role:'confirm',assign:'confirm',accept:'confirm',post:'confirm',friend:'confirm',sp:'tap',spauto:'confirm',wjob:'confirm',ajob:'confirm',
- sess:'study',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dkeep:'milestone',dstart:'turn',event:'open',go:'turn',scene:'open',home:'open'};
+ sess:'study',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dstart:'turn',dopen:'open',loadout:'confirm',event:'open',go:'turn',scene:'open',home:'open'};
 function actWithSound(a){
  const k=a.split(':')[0],wasOver=!!(S.match&&S.match.over);
  if(k!=='trial'&&k!=='sound')sfx(ACT_SOUND[k]||'tap');
@@ -437,13 +414,9 @@ export function act(a){
  case'home':{if(!startHomeScene())return;save();render();openScene();return;}
  case'armor':openModal(armorModal(x));return;
  case'guard':openModal(guardModal(+x));return;
- case'dstart':if(!pope())return;startDuel();window.scrollTo(0,0);break;
- case'dtake':{const m=S.match;if(!m||m.over)return;const c=[1,2,3].flatMap(t=>m.market[t]).find(q=>q.id===x);if(!c||!canPay(c,'me'))return;takeCard(c,'me');break;}
- case'dend':endTurn();window.scrollTo(0,0);break;
- case'dboost':{const m=S.match;if(!m||m.over)return;const c=boostCost(x);if(!afford(c))return;pay(c);m.me.boost[x]=(m.me.boost[x]||0)+1;m.me.boosts=(m.me.boosts||0)+1;m.log.unshift('Renfort du Sanctuaire : +1 '+ELEM[x].toLowerCase()+'.');break;}
- case'dforfeit':{if(!S.match||S.match.over)return;if(forfeitArm){forfeitArm=false;finishDuel(true);}else{forfeitArm=true;}break;}
- case'dkeep':keepCard(x);window.scrollTo(0,0);break;
- case'dclose':S.match=null;break;
+ case'dstart':{if(!pope())return;if(!startDuel(S.duel.loadout))return;save();render();openDuel();return;}
+ case'dopen':openDuel();return;
+ case'loadout':{ensureDuel();const lo=S.duel.loadout;if(lo.includes(x))S.duel.loadout=lo.filter(i=>i!==x);else if(lo.length<3&&S.relics.includes(x))lo.push(x);break;}
  case'guardArm':guardArm=+x;break;
  case'guardCancel':guardArm=null;break;
  case'mkguard':{const ap=S.aps.find(q=>q.id===+x);if(!ap||ap.lv<8)return;S.aps.splice(S.aps.indexOf(ap),1);const gd=makeGuardFrom(ap);S.guards.push(gd);guardArm=null;log(ap.name+' prête serment et devient garde du Sanctuaire.');save();closeModal();openModal(guardModal(gd.id));flash=gd.name+' est désormais garde. Choisissez son poste ci-dessous.';render();return;}
