@@ -1,5 +1,6 @@
 /* Portraits procéduraux (générateur de secours). */
 import { looks } from '../core/appearance.js';
+import { goldArt } from '../core/data/art.js';
 import { SIGNS } from '../core/data/world.js';
 import { mulberry32, shade } from '../core/util.js';
 
@@ -7,6 +8,8 @@ export const PC=new Map();
 export const ARMC={bronze:['#7a4420','#c98547','#f0c08a'],argent:['#6c7486','#c4ccd8','#f6f8fb'],or:['#8f6112','#e0ac3c','#fbe7a6'],garde:['#3a2e24','#7a6247','#b49770']};
 export function strand(g,x0,y0,x1,y1,w,bend){g.beginPath();g.moveTo(x0-w/2,y0);g.quadraticCurveTo((x0+x1)/2+bend-w/3,(y0+y1)/2,x1,y1);g.quadraticCurveTo((x0+x1)/2+bend+w/3,(y0+y1)/2,x0+w/2,y0);g.closePath();g.fill();}
 export function portrait(p,rank){
+ // Une illustration peinte existe pour ce chevalier d'or : elle passe avant le dessin procédural.
+ if(rank==='or'){const a=goldArt(p);if(a)return 'img/or/tete-'+a.n+'.webp';}
  const key=p.seed+'|'+(rank||'')+'|'+p.nat+'|'+p.sex;if(PC.has(key))return PC.get(key);
  const W=256,c=document.createElement('canvas');c.width=c.height=W;const g=c.getContext('2d');
  const L=looks(p),r=L.r,F=p.sex==='F';const skin=L.skin,shadeSk=shade(skin,-.18),hair=L.hair,hairHi=shade(hair,L.hk==='noir'?.22:.28),hairLo=shade(hair,-.3);

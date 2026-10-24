@@ -1,5 +1,6 @@
 /* Interface : onglets, fiches, fenêtres et actions du joueur. */
 import { looks } from '../core/appearance.js';
+import { SANCT_VIEWS, goldArt } from '../core/data/art.js';
 import { ARTEFACTS, ART_BY, CARD_BY, EFF_N, UNLOCK_N, effText } from '../core/data/cards.js';
 import { NATS } from '../core/data/countries.js';
 import { ARMOR_COST, ARMOR_FORGE, ARMOR_SMITH, ARMOR_WORK, BORDER, BUILD, IKEYS, ITEMS, RECIPES, REC_BY, RES, RKEYS, ROLES, STATN, TOOL_SITES, TRIAL_LV, WORK } from '../core/data/economy.js';
@@ -197,7 +198,8 @@ export function viewChronique(){
  h+='<div class="count sea"><div class="k">Réveil de Poséidon</div><div class="v" data-until="'+POSEIDON_H+'">'+dur(POSEIDON_H-S.gt)+'</div><div class="hint">Il faudra envoyer des chevaliers contre les Marinas et abattre les piliers.</div></div>';
  h+='<div class="count hell"><div class="k">Guerre sainte contre Hadès</div><div class="v" data-until="'+HADES_H+'">'+dur(HADES_H-S.gt)+'</div><div class="hint">108 spectres monteront à l’assaut des douze maisons.</div></div>';
  h+='<div class="count ath"><div class="k">Athéna</div><div class="v">Sa réincarnation n’a pas encore été révélée.</div><div class="hint">Le Grand Pope scrute les étoiles chaque nuit.</div></div>';
- h+='</div></section><section class="sec"><div class="sec-h"><h2>Journal du Sanctuaire</h2></div><div class="log">'+S.log.map(e=>'<div><span>Jour '+(Math.floor(e.t/24)+1)+'</span>'+esc(e.m)+'</div>').join('')+'</div></section>';
+ h+='</div></section><section class="sec"><div class="sec-h"><h2>Le Sanctuaire restauré</h2></div><p class="hint">Ce que le Grand Pope voit en songe : le Sanctuaire tel qu’il sera quand vous l’aurez relevé.</p><div class="vision">'+SANCT_VIEWS.map(v=>'<figure><img src="'+v.src+'" alt="" loading="lazy" width="832" height="466"><figcaption>'+esc(v.t)+'</figcaption></figure>').join('')+'</div></section>';
+ h+='<section class="sec"><div class="sec-h"><h2>Journal du Sanctuaire</h2></div><div class="log">'+S.log.map(e=>'<div><span>Jour '+(Math.floor(e.t/24)+1)+'</span>'+esc(e.m)+'</div>').join('')+'</div></section>';
  return h;
 }
 export const VIEWS={pope:viewPope,sanctuaire:viewSanctuaire,chevaliers:viewChevaliers,apprentis:viewApprentis,armures:viewArmures,chronique:viewChronique};
@@ -306,6 +308,7 @@ export function housesModal(){
 }
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main"><h2>'+esc(k.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+signChip(k.sign)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
+ const art=k.rank==='or'?goldArt(k):null;if(art)h+='<figure class="fullbody"><img src="img/or/corps-'+art.n+'.webp" alt="'+esc(armorName(c))+'" width="152" height="458"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
  h+=persoBlock(k);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance '+fmt(power(k,k.rank))+'</div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+statsHtml(k,'k');
  h+=itemUse(k,'k');

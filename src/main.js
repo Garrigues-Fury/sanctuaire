@@ -32,6 +32,10 @@ function start(){
  recomputeCB();
  S.tab=S.tab||'sanctuaire';
  installClicks();setMapTapHandler(onMapTap);
+ // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.
+ const title=document.getElementById('title');
+ const enter=()=>{title.classList.add('out');setTimeout(()=>{title.hidden=true;},600);};
+ title.addEventListener('click',enter);title.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')enter();});
  render();
  if(!fresh){const dt=(Date.now()-S.lastReal)/36e5;S.lastReal=Date.now();if(dt>.01)catchUp(dt);}
  setInterval(tick,1000);
