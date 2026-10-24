@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { FLAW, QUAL, traitText } from '../src/core/data/traits.js';
 import { autoResolve, heroStats, newBattle } from '../src/core/combat.js';
 import { compat, compatLabel, tickSocial } from '../src/core/social.js';
-import { TRAININGS, canTrain, train } from '../src/core/training.js';
+import { PAIR_E, TRAININGS, acceptChance, canTrain, pairPartners, train, trainTogether, unavailable } from '../src/core/training.js';
 import { newGame } from '../src/core/people.js';
 import { recomputeCB } from '../src/core/rules.js';
 import { S, setS } from '../src/core/state.js';
@@ -64,6 +64,21 @@ describe('entraînements', () => {
     expect(k.nrg).toBe(75);
     const energyOnly = TRAININGS.filter(t => !t.item && !t.savoir).length;
     expect(energyOnly).toBeGreaterThanOrEqual(5);
+  });
+  it('s’entraîner à deux : disponibilité, accord, et le maître accepte toujours son apprenti', () => {
+    const [k1, k2] = S.knights; k1.nrg = 100; k2.nrg = 10;
+    expect(unavailable(k2)).toMatch(/fatigu/);
+    expect(trainTogether(k1, k2, 0).ok).toBe(false);
+    k2.nrg = 100; const ap = S.pending[0]; S.aps.push(ap); ap.nrg = 100; k1.role = 'maitre'; ap.master = k1.id;
+    expect(acceptChance(ap, k1, -3)).toBe(1);
+    const r = trainTogether(ap, k1, 0);
+    expect(r.ok).toBe(true);
+    expect(ap.nrg).toBe(100 - PAIR_E);
+    expect(pairPartners(ap).map(p => p.id)).toContain(k1.id);
+  });
+  it('un solitaire accepte moins volontiers qu’un sociable', () => {
+    const a = P({}), sol = P({ qual: [{ k: 'solitaire', lv: 2 }] }), soc = P({ qual: [{ k: 'sociable', lv: 2 }] });
+    expect(acceptChance(a, sol, 0)).toBeLessThan(acceptChance(a, soc, 0));
   });
   it('les séances avec objet demandent l’objet fabriqué', () => {
     const k = S.knights[1]; k.nrg = 100; S.items.materiel = 0;

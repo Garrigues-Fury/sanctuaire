@@ -7,7 +7,7 @@ import { EFFPOOL, EFFBASE } from './gods.js';
 
 export const GEMS=['feu','eau','air','terre','or'];
 export const GEM_N={feu:'Feu',eau:'Eau',air:'Air',terre:'Terre',or:'Cosmos d’or (joker)'};
-export const WIN_PTS=15,MAX_ROUNDS=20,HAND_MAX=10,RESERVE_MAX=3,BANK_N=5,JOKERS=5,ROW_N=4;
+export const WIN_PTS=15,MAX_ROUNDS=20,HAND_MAX=10,RESERVE_MAX=3,BANK_N=7,JOKERS=5,ROW_N=4,MAX_BUYS=2;
 
 const NAMES={
  feu:['Braise sacrée','Forge céleste','Flamme d’Hestia','Brasier du Lion','Torche d’Éleusis','Étincelle d’or','Volcan de Lemnos','Fournaise','Comète ardente','Autel de feu','Soleil couchant','Lame rougeoyante','Char d’Hélios','Phénix renaissant','Lampe du temple','Bûcher des héros','Enclume divine','Cœur de magma','Aube incandescente','Salamandre','Foudre rouge','Lave de l’Etna','Couronne solaire'],

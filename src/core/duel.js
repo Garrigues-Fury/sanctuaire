@@ -4,7 +4,7 @@
    Actions libres en plus : un renfort par tour (une gemme contre des ressources du Sanctuaire) et le balayage d'une rangée.
    Les cartes achetées donnent une réduction permanente. Le premier à 15 ✦ en fin de manche gagne. */
 import { BOOST, GODS, GOD_KEYS } from './data/gods.js';
-import { CARDS2, GEMS, HAND_MAX, JOKERS, BANK_N, MAX_ROUNDS, RELICS, RELIC_BY, RESERVE_MAX, ROW_N, SACRED, WIN_PTS } from './data/stars.js';
+import { CARDS2, GEMS, HAND_MAX, JOKERS, BANK_N, MAX_BUYS, MAX_ROUNDS, RELICS, RELIC_BY, RESERVE_MAX, ROW_N, SACRED, WIN_PTS } from './data/stars.js';
 import { EKEYS, ELEM, SIGNS } from './data/world.js';
 import { afford, elemScores, pay, recomputeCB } from './rules.js';
 import { S, log } from './state.js';
@@ -22,8 +22,13 @@ export function ensureDuel(){
 }
 export function duelAvailable(){ensureDuel();if(S.match)return false;if(S.speed!==1)return S.gt-(S.duel.lastGt??-999)>=24;return S.duel.lastDate!==todayStr();}
 export function godState(k){if(!S.gods[k])S.gods[k]={lv:0,wins:0,losses:0,bonus:{feu:0,eau:0,air:0,terre:0}};return S.gods[k];}
-// Bonus de départ du Sanctuaire : selon ses scores d'élément (rangs et cosmos de chacun), 2 au plus par élément.
-export function myStart(){const E=elemScores(),b={};EKEYS.forEach(e=>b[e]=Math.min(2,Math.floor(E[e]/30)));return b;}
+// Réserve de départ du Sanctuaire : pour chaque élément, le score (nombre de personnages de l'élément,
+// pondéré par le rang — apprenti, garde, bronze, argent, or, Pope — et par le cosmos) donne des gemmes, 4 au plus.
+export function myStart(){const E=elemScores(),b={};EKEYS.forEach(e=>b[e]=Math.min(4,Math.round(E[e]/8)));return b;}
+// Niveau de la partie (1 à 5) : il monte avec la puissance totale du Sanctuaire. Plus haut, le dieu est plus fort,
+// mais la carte gardée après une victoire donne un effet permanent plus important.
+export function duelLevel(){const E=elemScores();let t=0;EKEYS.forEach(e=>t+=E[e]);return Math.max(1,Math.min(5,1+Math.floor(t/45)));}
+export const levelMult=L=>1+.25*(L-1);
 const zero=()=>({feu:0,eau:0,air:0,terre:0});
 const zeroG=()=>({feu:0,eau:0,air:0,terre:0,or:0});
 function shuffle(a,r){for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -36,10 +41,11 @@ export function startDuel(loadout){
  const decks={1:[],2:[],3:[]};CARDS2.forEach(c=>decks[c.t].push(c.id));[1,2,3].forEach(t=>shuffle(decks[t],r));
  const rows={1:decks[1].splice(0,ROW_N),2:decks[2].splice(0,ROW_N),3:decks[3].splice(0,ROW_N)};
  const relicDeck=shuffle(RELICS.map(x=>x.id).filter(id=>!S.relics.includes(id)),r);
- const me={gems:zeroG(),bonus:myStart(),pts:0,cards:[],reserved:[],relics:[],sacred:[],cap:HAND_MAX};
- // une gemme de départ par chevalier, de l'élément de son signe (4 au plus)
- S.knights.slice(0,4).forEach(k=>{const e=knightEl(k);me.gems[e]++;});
+ const L=duelLevel(),st=myStart();
+ const me={gems:Object.assign(zeroG(),st),bonus:zero(),pts:0,cards:[],reserved:[],relics:[],sacred:[],cap:HAND_MAX};
  const ai={gems:zeroG(),bonus:zero(),pts:0,cards:[],reserved:[],relics:[],sacred:[],cap:HAND_MAX};
+ // niveau de partie : le dieu reçoit des gemmes en plus, et un bonus permanent à partir du niveau 4
+ for(let i=0;i<L-1;i++)ai.gems[G0.aff[i%2]]++;if(L>=4)ai.bonus[G0.aff[0]]++;
  // Le dieu gagne un bonus de départ tous les six niveaux (niveaux gagnés contre le Sanctuaire),
  // et ses acquis (un par défaite du Sanctuaire) lui donnent des gemmes de départ, 3 au plus par élément.
  for(let i=0;i<Math.floor(g.lv/6);i++)ai.bonus[G0.aff[i%2]]++;
@@ -47,7 +53,8 @@ export function startDuel(loadout){
  ai.gems[G0.aff[0]]+=2;ai.gems[G0.aff[1]]+=1;for(let i=0;i<Math.ceil(g.lv/2);i++)ai.gems[G0.aff[i%2]]++;
  const bank={};EKEYS.forEach(e=>bank[e]=BANK_N);bank.or=JOKERS;
  EKEYS.forEach(e=>{bank[e]=Math.max(0,bank[e]-me.gems[e]-ai.gems[e]);});
- const m={v:2,god,seed,round:1,bank,decks,rows,relicDeck,relicRow:relicDeck.splice(0,2),sacred:shuffle(SACRED.map(s=>s.id),r).slice(0,3),me,ai,
+ EKEYS.forEach(e=>{me.gems[e]=Math.min(me.gems[e],BANK_N);});
+ const m={v:2,god,seed,round:1,level:L,buys:0,bank,decks,rows,relicDeck,relicRow:relicDeck.splice(0,2),sacred:shuffle(SACRED.map(s=>s.id),r).slice(0,3),me,ai,
   log:[],over:false,result:null,sweeps:0,boosted:false,maxRounds:MAX_ROUNDS,loadout:(loadout||S.duel.loadout||[]).filter(id=>S.relics.includes(id)).slice(0,3),fx:[]};
  S.match=m;
  m.loadout.forEach(id=>applyRelic(m,'me',id,true));
@@ -96,7 +103,7 @@ export function canTake(m,P,colors){
  return total(P.gems)+colors.length<=P.cap;
 }
 export function take(side,colors){
- const m=S.match,P=m[side];if(!canTake(m,P,colors))return false;
+ const m=S.match,P=m[side];if(m.buys>0||!canTake(m,P,colors))return false;
  colors.forEach(c=>{m.bank[c]--;P.gems[c]++;});
  const extra=colors.length===2&&colors[0]===colors[1]&&has(P,'lance')&&m.bank[colors[0]]>0&&total(P.gems)<P.cap;
  if(extra){m.bank[colors[0]]--;P.gems[colors[0]]++;}
@@ -105,11 +112,12 @@ export function take(side,colors){
  return true;
 }
 export function buy(side,id){
- const m=S.match,P=m[side],c=cardOf(id);if(!c)return false;
+ const m=S.match,P=m[side],c=cardOf(id);if(!c||(m.buys||0)>=MAX_BUYS)return false;
  if(!(visibleIds(m).includes(id)||P.reserved.includes(id))||!canBuy(c,P))return false;
  const spent=zeroG();
  for(const e in c.cost){let need=Math.max(0,c.cost[e]-(P.bonus[e]||0));const g=Math.min(need,P.gems[e]);P.gems[e]-=g;m.bank[e]+=g;spent[e]+=g;need-=g;P.gems.or-=need;m.bank.or+=need;spent.or+=need;}
  if(P.reserved.includes(id))P.reserved=P.reserved.filter(x=>x!==id);else refill(m,id);
+ m.buys=(m.buys||0)+1;
  P.cards.push(id);let pts=c.pts;if(c.t===3&&has(P,'sceptre'))pts++;P.pts+=pts;
  if(c.el)P.bonus[c.el]++;
  m.fx.push({side,kind:'buy',card:id,spent});
@@ -118,7 +126,7 @@ export function buy(side,id){
  return true;
 }
 export function reserve(side,id){
- const m=S.match,P=m[side];if(P.reserved.length>=RESERVE_MAX||P.noReserve)return false;
+ const m=S.match,P=m[side];if(m.buys>0||P.reserved.length>=RESERVE_MAX||P.noReserve)return false;
  let cid=id;
  if(String(id).startsWith('deck:')){const t=+id.slice(5);if(!m.decks[t].length)return false;cid=m.decks[t].shift();}
  else{if(!visibleIds(m).includes(id)||cardOf(id).relic)return false;refill(m,id);}
@@ -155,8 +163,8 @@ function describeGems(cs){const c={};cs.forEach(x=>c[x]=(c[x]||0)+1);return Obje
 export function endTurn(){
  const m=S.match;if(!m||m.over)return;
  checkSacred(m,'me');
- aiTurn(m);checkSacred(m,'ai');
- m.boosted=false;
+ m.buys=0;aiTurn(m);checkSacred(m,'ai');
+ m.boosted=false;m.buys=0;
  if(m.me.pts>=WIN_PTS||m.ai.pts>=WIN_PTS||m.round>=m.maxRounds){finishDuel();return;}
  m.round++;
 }
@@ -174,7 +182,10 @@ function aiTurn(m){autoMove(m,'ai');}
 export function autoMove(m,side){
  const P=m[side],ids=visibleIds(m).concat(P.reserved);
  const buyable=ids.filter(id=>canBuy(cardOf(id),P)).sort((a,b)=>cardScore(m,cardOf(b),P)-cardScore(m,cardOf(a),P));
- if(buyable.length){buy(side,buyable[0]);return;}
+ if(buyable.length){buy(side,buyable[0]);
+  // un second achat si une autre carte est encore à portée
+  const more=visibleIds(m).concat(P.reserved).filter(id=>canBuy(cardOf(id),P)).sort((a,b)=>cardScore(m,cardOf(b),P)-cardScore(m,cardOf(a),P));
+  if(more.length)buy(side,more[0]);return;}
  // une cible : le meilleur rapport valeur / gemmes manquantes
  const target=ids.map(id=>({id,c:cardOf(id)})).sort((a,b)=>cardScore(m,b.c,P)/(1+deficit(b.c,P)-P.gems.or)-cardScore(m,a.c,P)/(1+deficit(a.c,P)-P.gems.or))[0];
  const needs={};if(target)for(const e in target.c.cost)needs[e]=Math.max(0,target.c.cost[e]-(P.bonus[e]||0)-(P.gems[e]||0));
@@ -193,11 +204,12 @@ export function finishDuel(forfeit){
  const m=S.match;if(!m||m.over)return;m.over=true;const g=godState(m.god),G0=GODS[m.god];
  let res;if(forfeit)res='lose';else if(m.me.pts!==m.ai.pts)res=m.me.pts>m.ai.pts?'win':'lose';else res=m.me.cards.length<m.ai.cards.length?'win':m.me.cards.length>m.ai.cards.length?'lose':'draw';
  m.result=res;
- if(res==='win'){g.losses++;S.faveur=(S.faveur||0)+m.me.pts;log('★ Le Pope l’emporte sur '+G0.n+' ('+m.me.pts+' ✦ contre '+m.ai.pts+').');}
+ if(res==='win'){g.losses++;S.faveur=(S.faveur||0)+m.me.pts+((m.level||1)-1)*2;log('★ Le Pope l’emporte sur '+G0.n+' ('+m.me.pts+' ✦ contre '+m.ai.pts+').');}
  else if(res==='lose'){g.wins++;g.lv++;const bestEl=EKEYS.slice().sort((a,b)=>(m.ai.bonus[b]||0)-(m.ai.bonus[a]||0))[0];g.bonus[bestEl]=(g.bonus[bestEl]||0)+1;log(G0.n+' l’emporte et en sort grandi'+(fem(m.god)?'e':'')+' (niveau '+g.lv+').');}
  else log('Duel indécis contre '+G0.n+'.');
 }
 // Après une victoire : garder une carte de la partie, dont l'effet devient permanent pour le Sanctuaire.
 export function keepCard(id){const m=S.match;if(!m||m.result!=='win')return;const c=cardOf(id);if(!c||c.relic||!m.me.cards.includes(id))return;
- S.perm.push({n:c.n,el:c.el,t:c.t,eff:c.eff,unlock:null,fav:c.pts,god:m.god});recomputeCB();log('Le Sanctuaire garde à jamais « '+c.n+' ».');S.match=null;}
+ const k=levelMult(m.level||1),eff={};for(const x in c.eff)eff[x]=Math.round(c.eff[x]*k);
+ S.perm.push({n:c.n,el:c.el,t:c.t,eff,unlock:null,fav:c.pts,god:m.god});recomputeCB();log('Le Sanctuaire garde à jamais « '+c.n+' ».');S.match=null;}
 export function closeDuel(){S.match=null;}

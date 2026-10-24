@@ -3,7 +3,8 @@
    le dieu joue à son tour. Toucher une gemme affiche son nom. */
 import { GODS } from '../core/data/gods.js';
 import { BOOST } from '../core/data/gods.js';
-import { GEMS, GEM_N, RELIC_BY, RESERVE_MAX, WIN_PTS } from '../core/data/stars.js';
+import { GEMS, GEM_N, MAX_BUYS, RELIC_BY, RESERVE_MAX, WIN_PTS } from '../core/data/stars.js';
+const tipAttr=t=>' data-tip="'+String(t).replace(/"/g,'&quot;')+'"';
 import { EKEYS, ELEM } from '../core/data/world.js';
 import { RES } from '../core/data/economy.js';
 import { effText } from '../core/data/cards.js';
@@ -41,7 +42,7 @@ function draw(){
  const m=S.match;if(!m){close();return;}
  const G0=GODS[m.god],P=m.me,A=m.ai,pp=pope();
  let h='<div class="du-top"><div class="du-side me" data-me><img class="du-av" src="'+(pp?portrait(pp,pp.rank):'')+'" alt=""><div><small>Sanctuaire</small><b class="du-pts" data-pts="me">✦ '+P.pts+'</b></div></div>'+
-  '<div class="du-mid"><span>Manche '+m.round+' / '+m.maxRounds+'</span><small>premier à '+WIN_PTS+' ✦</small></div>'+
+  '<div class="du-mid"><span>Manche '+m.round+' / '+m.maxRounds+'</span><small'+tipAttr('Partie de niveau '+(m.level||1)+' : il dépend de la puissance du Sanctuaire. Plus il est haut, plus le dieu est fort et plus la carte gardée après une victoire est puissante.')+'>niveau '+(m.level||1)+' · premier à '+WIN_PTS+' ✦</small></div>'+
   '<div class="du-side ai" data-ai><div><small>'+esc(G0.n)+'</small><b class="du-pts" data-pts="ai">✦ '+A.pts+'</b></div><span class="du-god">'+esc(G0.n[0])+'</span></div>'+
   '<button class="du-x" data-du="close" aria-label="Fermer (la partie reste en cours)">✕</button></div>';
  // plateau du dieu
@@ -62,11 +63,12 @@ function draw(){
   (P.reserved.length?'<span class="lbl">Réservées</span><div class="row rsvrow">'+P.reserved.map(id=>cardHtml(id,P,{where:'reserved'})).join('')+'</div>':'')+
   (P.relics.length?'<span class="lbl">Artefacts</span><div class="row">'+P.relics.map(id=>'<span class="relic-tag" title="'+esc(RELIC_BY[id].d)+'">✶ '+esc(RELIC_BY[id].n)+'</span>').join('')+'</div>':'')+'</div>';
  // actions
- const takeOk=!m.over&&canTake(m,P,sel);
- h+='<div class="du-acts"><button class="btn" data-du="take"'+(takeOk&&!busy?'':' disabled')+'>Prendre '+(sel.length?sel.map(e=>'<i class="dot g-'+e+'"></i>').join(''):'des gemmes')+'</button>'+
+ const takeOk=!m.over&&!m.buys&&canTake(m,P,sel);
+ if(m.buys)h+='<div class="du-acts"><button class="btn" data-du="endturn"'+(busy?' disabled':'')+'>Terminer le tour</button><button class="btn ghost" data-du="boost"'+(m.boosted||m.over||busy?' disabled':'')+'>Renfort</button><span class="du-buys">1 carte achetée : vous pouvez en acheter une seconde.</span></div>';
+ else h+='<div class="du-acts"><button class="btn" data-du="take"'+(takeOk&&!busy?'':' disabled')+'>Prendre '+(sel.length?sel.map(e=>'<i class="dot g-'+e+'"></i>').join(''):'des gemmes')+'</button>'+
   '<button class="btn ghost" data-du="boost"'+(m.boosted||m.over||busy?' disabled':'')+'>Renfort</button><button class="btn ghost" data-du="pass"'+(m.over||busy?' disabled':'')+'>Passer</button></div>';
  if(boostOpen&&!m.boosted)h+='<div class="du-boost">'+EKEYS.map(e=>{const c=boostCost(e);return '<button class="opt" data-du="boostgo:'+e+'"'+(afford(c)&&m.bank[e]?'':' disabled')+'><b><i class="dot g-'+e+'"></i> +1 '+ELEM[e]+'</b><span class="d">'+Object.keys(c).map(r=>fmt(c[r])+' '+RES[r].n.toLowerCase()).join('')+'</span></button>';}).join('')+'<p class="hint">Une fois par tour, sans perdre votre action.</p></div>';
- h+='<p class="du-help">Votre tour : prenez 3 gemmes d’éléments différents, ou 2 identiques (s’il en reste 4), ou achetez une carte, ou réservez-en une (+1 cosmos d’or). Touchez une carte pour la voir en grand.</p>';
+ h+='<p class="du-help">Votre tour : prenez 3 gemmes d’éléments différents, ou 2 identiques (s’il en reste 4), ou achetez une ou deux cartes, ou réservez-en une (+1 cosmos d’or). Touchez une carte pour la voir en grand.</p>';
  h+='<div class="du-log">'+m.log.slice(0,4).map((l,i)=>'<div'+(i===0?' class="new"':'')+'>'+esc(l)+'</div>').join('')+'</div>';
  h+='<div class="du-quit">'+(confirmQuit?'<button class="btn sm danger" data-du="forfeit">Confirmer l’abandon (défaite)</button> <button class="btn sm ghost" data-du="noquit">Continuer</button>':'<button class="btn sm ghost" data-du="quit">Abandonner la partie</button>')+'</div>';
  if(detail)h+=detailHtml(detail);
@@ -75,7 +77,7 @@ function draw(){
 }
 function detailHtml(id){
  const m=S.match,P=m.me,c=cardOf(id),net=netCost(c,P),ok=canBuy(c,P)&&!m.over,inRes=P.reserved.includes(id);
- const canRes=!inRes&&!c.relic&&P.reserved.length<RESERVE_MAX&&!m.over;
+ const canRes=!inRes&&!c.relic&&P.reserved.length<RESERVE_MAX&&!m.over&&!m.buys;
  return '<div class="du-detail" data-du="nodetail"><div class="dd-card" data-du="stay"><img src="'+cardArt(c)+'" alt=""><div class="dd-info"><h3>'+esc(c.n)+'</h3>'+
   '<p>'+(c.relic?'Artefact · ':'Rang '+['','I','II','III'][c.t]+' · ')+(c.pts?c.pts+' ✦':'aucun ✦')+(c.el?' · bonus permanent <i class="dot g-'+c.el+'"></i> '+ELEM[c.el]:'')+'</p>'+
   (c.relic?'<p class="eff">'+esc(c.d)+'</p><p class="hint">Une fois acheté, il rejoint votre collection pour toujours : vous pourrez l’emporter dans vos prochains duels.</p>':'<p class="hint">Si vous la gardez après une victoire : effet permanent pour le Sanctuaire.</p>')+
@@ -125,6 +127,7 @@ async function play(action,endsTurn=true){
  m.fx=[];let before=snapshot();
  const ok=action();if(!ok){busy=false;draw();return;}
  const mine=m.fx.slice();detail=null;sel=[];boostOpen=false;draw();await animate(mine,before);
+ if(typeof endsTurn==='function')endsTurn=endsTurn();
  if(endsTurn){
   await sleep(380);root.querySelector('[data-ai]')?.classList.add('thinking');await sleep(420);
   m.fx=[];before=snapshot();endTurn();const godFx=m.fx.slice();
@@ -154,7 +157,9 @@ function onClick(e){
    else{if(sel.length===2&&sel[0]===sel[1])sel=[x];else if(sel.length<3)sel.push(x);}
    sfx('tap');draw();return;}
   case'take':{const pick=sel.slice();play(()=>take('me',pick));sfx('confirm');return;}
-  case'buy':sfx('card');play(()=>buy('me',x));return;
+  // Deux achats au plus par tour : le tour se termine au second, ou s'il n'y a plus rien d'achetable.
+  case'buy':sfx('card');play(()=>buy('me',x),()=>m.buys>=MAX_BUYS||![3,2,1].flatMap(t=>m.rows[t]).concat(m.relicRow,m.me.reserved).some(id=>canBuy(cardOf(id),m.me)));return;
+  case'endturn':sfx('turn');play(()=>true);return;
   case'res':sfx('card');play(()=>reserve('me',x));return;
   case'deck':{if(busy||m.over)return;if(m.me.reserved.length>=RESERVE_MAX){tipAt(t,'Déjà 3 cartes réservées');return;}sfx('card');play(()=>reserve('me','deck:'+x));return;}
   case'sweep':sfx('build');play(()=>sweep(+x),false);return;

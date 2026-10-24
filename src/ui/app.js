@@ -8,10 +8,10 @@ import { DUEL_TURNS, DUEL_WIN, GODS, GOD_KEYS } from '../core/data/gods.js';
 import { SITES } from '../core/data/map.js';
 import { FLAW, QUAL, SIG_WORDS, fl, ql, traitText } from '../core/data/traits.js';
 import { TIP, tip } from './tips.js';
-import { TRAININGS, canTrain, train } from '../core/training.js';
+import { ITEM_TRADE, PAIR_E, TRAININGS, acceptChance, canTrain, pairPartners, refusedRecently, train, trainTogether, unavailable } from '../core/training.js';
 import { compat, compatLabel } from '../core/social.js';
 import { CONS, CONS_BY, EKEYS, ELEM, RANKS, RANK_MULT, SIGNS, armorLow, armorName, de } from '../core/data/world.js';
-import { cardOf, duelAvailable, ensureDuel, godState, myStart, startDuel } from '../core/duel.js';
+import { cardOf, duelAvailable, duelLevel, ensureDuel, godState, levelMult, myStart, startDuel } from '../core/duel.js';
 import { RELICS } from '../core/data/stars.js';
 import { cardArt } from '../art/cards.js';
 import { openDuel } from './duel.js';
@@ -52,7 +52,9 @@ export function viewPope(){
  ensureDuel();
  const p=pope(),av=duelAvailable(),st=myStart(),lo=S.duel.loadout;
  let h='<section class="hero pope-hero"><div class="hero-top"><div><div class="lbl">Lecture des astres</div><div class="pow">✦ '+fmt(S.faveur||0)+'</div><div class="hint">Faveur d’Athéna</div></div><div class="row">'+(p?'Le Grand Pope '+esc(p.name)+' veille.':'<span style="color:var(--warn)">Nommez un Grand Pope pour lire dans les astres.</span>')+'</div></div>';
- h+='<div class="bonusrow">'+EKEYS.map(e=>'<div class="bn"><span class="gem g-'+e+'"></span><b>'+st[e]+'</b><small>bonus '+ELEM[e].toLowerCase()+'</small></div>').join('')+'</div>';
+ const E=elemScores(),L=duelLevel();
+ h+='<div class="bonusrow">'+EKEYS.map(e=>'<div class="bn"'+tip('Score '+ELEM[e].toLowerCase()+' : '+fmt(E[e])+'. Il vient du nombre de personnages de cet élément, pondéré par leur rang (apprenti, garde, bronze, argent, or, Pope) et leur cosmos. Il donne vos gemmes de départ.')+'><span class="gem g-'+e+'"></span><b>'+st[e]+'</b><small>gemmes '+ELEM[e].toLowerCase()+'</small></div>').join('')+'</div>';
+ h+='<div class="row"'+tip('Le niveau des parties monte avec la puissance totale du Sanctuaire : dieu plus fort, mais cartes gardées plus puissantes (×'+levelMult(L).toFixed(2).replace('.',',')+') et plus de faveur.')+'>Parties de niveau <b>'+L+'</b> / 5</div>';
  if(S.match)h+='<button class="btn" data-act="dopen">Reprendre la partie contre '+esc(GODS[S.match.god].n)+'</button>';
  else h+=(av&&p?'<button class="btn" data-act="dstart">Défier un dieu</button>':'<p class="hint">'+(S.speed!==1?'Prochaine lecture dans '+dur(24-(S.gt-(S.duel.lastGt??-999))):'Les astres ont parlé pour aujourd’hui. Revenez demain, sans obligation : un jour sans duel ne coûte rien.')+'</p>');
  h+='</section>';
@@ -195,7 +197,18 @@ export function viewChronique(){
  return h;
 }
 export const VIEWS={monde:viewMonde,pope:viewPope,sanctuaire:viewSanctuaire,chevaliers:viewChevaliers,apprentis:viewApprentis,armures:viewArmures,chronique:viewChronique};
-export function render(){S._dirty=false;renderRes();renderTabs();$('#view').innerHTML=VIEWS[S.tab]();mountMap(document.getElementById('mapSlot'));syncAgents();liveUpdate();if(modalFn){const sc=$('.sheet-card').scrollTop;$('#sheetBody').innerHTML=modalFn();$('.sheet-card').scrollTop=sc;}}
+// En cas d'erreur d'affichage, on montre un message lisible (à envoyer en capture d'écran) au lieu d'un écran figé.
+function errorBox(where,e){console.error(e);return '<div class="banner bad"><b>Erreur d’affichage ('+esc(where)+')</b><br>'+esc(String(e&&e.message||e))+'<br><small>'+esc(String(e&&e.stack||'').split('\n').slice(1,3).join(' · '))+'</small><br>Faites une capture d’écran pour Claude. Les autres onglets restent utilisables.</div>';}
+export function render(){
+ S._dirty=false;
+ try{renderRes();renderTabs();}catch(e){console.error(e);}
+ if(!VIEWS[S.tab])S.tab='sanctuaire';
+ let html;try{html=VIEWS[S.tab]();}catch(e){html=errorBox('onglet '+S.tab,e);}
+ $('#view').innerHTML=html;
+ try{mountMap(document.getElementById('mapSlot'));syncAgents();}catch(e){console.error(e);}
+ liveUpdate();
+ if(modalFn){const sc=$('.sheet-card').scrollTop;let mh;try{mh=modalFn();}catch(e){mh=errorBox('fenêtre',e);}$('#sheetBody').innerHTML=mh;$('.sheet-card').scrollTop=sc;}
+}
 export function liveUpdate(){
  document.querySelectorAll('[data-res]').forEach(e=>{const r=e.dataset.res;e.textContent=fmt(S.res[r]);e.closest('.res').classList.toggle('full',S.res[r]>=cap(r)-.5);});
  document.querySelectorAll('[data-item]').forEach(e=>e.textContent=fmt(S.items[e.dataset.item]||0));
@@ -213,7 +226,7 @@ export function liveUpdate(){
 
 /* ---------- fenêtres ---------- */
 export let modalFn=null,flash='';
-export function openModal(fn){modalFn=fn;flash='';$('#sheetBody').innerHTML=fn();$('#sheet').hidden=false;$('.sheet-card').scrollTop=0;}
+export function openModal(fn){modalFn=fn;flash='';let h;try{h=fn();}catch(e){h=errorBox('fenêtre',e);}$('#sheetBody').innerHTML=h;$('#sheet').hidden=false;$('.sheet-card').scrollTop=0;}
 export function closeModal(){modalFn=null;flash='';$('#sheet').hidden=true;}
 export function flashHtml(){if(!flash)return '';const f=flash;flash='';return '<div class="flash">'+esc(f)+'</div>';}
 export function statsHtml(p,kind){
@@ -240,9 +253,18 @@ export function affinityBlock(p){
 // Séances d'entraînement : surtout de l'énergie, parfois un objet fabriqué ou du savoir.
 export function trainingBlock(p,kind){
  let h='<div class="sec-h"><h2>Entraînement</h2></div><p class="hint">Les séances coûtent de l’énergie. Certaines demandent un objet fabriqué à l’artisanat ou à l’herboristerie.'+(fl(p,'distrait')?' Distrait : '+10*fl(p,'distrait')+' % de risque de séance perdue.':'')+'</p><div class="opts">';
- TRAININGS.forEach(t=>{const ok=canTrain(p,t);const extra=[t.e+' énergie'];if(t.item)extra.push('1 '+ITEMS[t.item].n.toLowerCase()+' (en réserve : '+(S.items[t.item]||0)+')');if(t.savoir)extra.push(t.savoir(p)+' savoir');
+ TRAININGS.forEach(t=>{const ok=canTrain(p,t);const extra=[t.e+' énergie'];if(t.item)extra.push('1 '+ITEMS[t.item].n.toLowerCase()+' (en réserve : '+(S.items[t.item]||0)+', fabriqué par les '+ITEM_TRADE[t.item]+')');if(t.savoir)extra.push(t.savoir(p)+' savoir');
   h+='<button class="opt" data-act="train:'+kind+':'+p.id+':'+t.k+'"'+(ok?'':' disabled')+'><b>'+t.n+'</b><span class="chip">'+t.gain+'</span><span class="d">'+extra.join(' · ')+'</span></button>';});
- return h+'</div>';
+ return h+'</div>'+pairBlock(p,kind);
+}
+// S'entraîner à deux : le partenaire doit être disponible et accepter.
+export function pairBlock(p,kind){
+ const list=pairPartners(p);if(!list.length)return '';
+ let h='<details class="dt" open><summary>S’entraîner avec… <span class="aside">'+PAIR_E+' énergie chacun</span></summary><p class="hint">Proposez une séance à deux. Le partenaire doit être disponible, et il peut refuser : ses chances d’accepter dépendent de votre affinité et de son caractère. Un maître accepte toujours avec son propre apprenti. Les deux gagnent de l’entraînement (l’élève un peu plus), et leur amitié grandit.</p><div class="list">';
+ list.forEach(q=>{const c=compat(p,q),why=unavailable(q),ch=Math.round(acceptChance(p,q,c.v)*100),ref=refusedRecently(p,q);
+  const ok=!why&&!ref&&p.nrg>=PAIR_E;
+  h+='<div class="item fr">'+ptImg(q,q.rank||null)+'<div class="main"><div class="name">'+esc(q.name)+' '+(q.rank?rankChip(q.rank):'<span class="chip">Apprenti</span>')+(c.v?' <span class="chip '+(c.v>0?'ok':'f')+'"'+tip(c.why.join('\n'))+'>'+compatLabel(c.v)+'</span>':'')+'</div><div class="meta">'+nrgIcon(q)+'<span class="'+(why||ref?'warn':'ok')+'">'+(why?esc(why):ref?'a refusé tout à l’heure':'disponible · accepte à '+ch+' %')+'</span></div></div><button class="btn sm" data-act="pair:'+kind+':'+p.id+':'+q.id+'"'+(ok?'':' disabled')+'>Proposer</button></div>';});
+ return h+'</div></details>';
 }
 export function selfWork(p,kind){
  let h='<details class="dt"><summary>Travail sur soi</summary><p class="hint">Corriger un défaut coûte 40 d’énergie et un objet préparé à l’herboristerie ou à l’artisanat. Renforcer une qualité coûte 50 d’énergie, un élixir et du savoir. Le succès n’est pas garanti ; la persévérance aide.</p><div class="opts">';
@@ -361,9 +383,7 @@ export function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)re
  if(a.cd>S.gt&&(S.items.onguent||0)>0)h+='<button class="btn sm ghost" data-act="onguent:'+a.id+'">Appliquer un onguent : fin du repos · '+S.items.onguent+' en réserve</button>';
  h+='<div class="hint">Techniques : '+(a.tech.length?a.tech.map(esc).join(' · '):'aucune (première au niveau 10)')+'</div>';
  if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Formation ralentie de moitié. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
- h+='<div class="sec-h"><h2>Entraînement particulier</h2></div><p class="hint">Un chevalier prend '+esc(a.name)+' en tête-à-tête : '+DUO_E+' d’énergie chacun, l’équivalent de 8 h de formation, +1 d’amitié entre eux, et parfois la transmission d’une qualité.</p><div class="opts">';
- S.knights.forEach(k=>{const ok=a.nrg>=DUO_E&&k.nrg>=DUO_E;const af=affinity(a,k);h+='<button class="opt" data-act="duo:'+a.id+':'+k.id+'"'+(ok?'':' disabled')+'><b>'+esc(k.name)+' <span class="sign">'+SIGNS[k.sign].s+'</span></b><span class="chip '+k.rank+'">⚡&#xFE0E; '+Math.floor(k.nrg)+'</span><span class="d">Amitié '+friendLv(a.id,k.id)+'/10'+(af.t?' · '+af.t:'')+(k.qual.length?' · '+k.qual.map(t=>QUAL[t.k].n).join(', '):'')+'</span></button>';});
- h+='</div>'+trainingBlock(a,'a')+selfWork(a,'a')+friendBlock(a);
+ h+=trainingBlock(a,'a')+selfWork(a,'a')+friendBlock(a);
  h+='<div class="sec-h"><h2>Maître</h2></div><div class="opts">';
  const masters=knightsWith('maitre');
  if(!masters.length)h+='<p class="hint">Aucun chevalier n’a le rôle de Maître. Confiez ce rôle à un chevalier dans l’onglet Chevaliers.</p>';
@@ -418,7 +438,7 @@ export function installClicks(){
 const ACT_SOUND={tab:'tap',close:'close',dclose:'close',site:'open',knight:'open',ap:'open',guard:'open',armor:'open',houses:'open',settings:'open',trialOpen:'open',
  build:'build',house:'build',restore:'build',hire:'pay',craft:'pay',tool:'build',dtake:'card',dend:'turn',dboost:'pay',
  role:'confirm',assign:'confirm',accept:'confirm',post:'confirm',friend:'confirm',sp:'tap',spauto:'confirm',wjob:'confirm',ajob:'confirm',
- train:'study',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dstart:'turn',dopen:'open',loadout:'confirm',event:'open',go:'turn',scene:'open',home:'open'};
+ train:'study',pair:'confirm',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dstart:'turn',dopen:'open',loadout:'confirm',event:'open',go:'turn',scene:'open',home:'open'};
 function actWithSound(a){
  const k=a.split(':')[0],wasOver=!!(S.match&&S.match.over);
  if(k!=='trial'&&k!=='sound')sfx(ACT_SOUND[k]||'tap');
@@ -486,6 +506,7 @@ export function act(a){
   kn.role=nr;if(nr)log(kn.name+' devient '+ROLES[nr].n+'.');break;}
  case'accept':{const i=+x,ap=S.pending[i];if(!ap||S.aps.length>=capacity())return;S.pending.splice(i,1);S.aps.push(ap);log(ap.name+' rejoint le Sanctuaire comme apprenti'+G(ap,'e')+'.');break;}
  case'dismiss':{const ap=S.pending.splice(+x,1)[0];if(ap)log(ap.name+' est reconduit'+G(ap,'e')+' chez sa famille.');break;}
+ case'pair':{const p=getP(x,+y),q=byId(+z);if(!p||!q)return;const r=trainTogether(p,q,compat(p,q).v);flash=r.msg;if(r.ok)log(r.msg);break;}
  case'train':{const p=getP(x,+y);if(!p)return;const m=train(p,z);if(!m)return;flash=m;break;}
  case'trialOpen':lastTrial=null;openModal(trialModal(+x));return;
  case'trial':{const ap=S.aps.find(q=>q.id===+x),c=CONS_BY[y];if(!ap||!c)return;const e=trialEval(ap,c);if(!e.ok)return;
