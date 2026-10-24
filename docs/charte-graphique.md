@@ -6,6 +6,8 @@ Version 2 du 24 octobre 2026. Elle s'appuie sur l'image de référence (`docs/re
 - **Le Sanctuaire intact** est le **but à atteindre** : il sert d'écran titre et de « vision ». La partie montre des ruines qui se relèvent peu à peu.
 - **Les 8 chevaliers d'or dessinés sont gardés tels quels** (usage strictement privé).
 
+> **Liste à jour des images à produire : `docs/prompts-images.md`.** Comme n'importe qui peut porter une armure, on y génère séparément les armures seules et des visages variés. Le jeu les associe. Les consignes « portrait de chevalier » de la section 3 sont remplacées par ce principe.
+
 ## 1. Comment produire une image
 
 1. Ouvre ChatGPT, crée une image par message.
