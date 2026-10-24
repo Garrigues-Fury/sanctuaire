@@ -1,15 +1,23 @@
 /* Portraits procéduraux (générateur de secours). */
 import { looks } from '../core/appearance.js';
-import { goldArt } from '../core/data/art.js';
+import { dataUrl, specOf, svgBust, svgFull } from '../art/character.js';
 import { SIGNS } from '../core/data/world.js';
 import { mulberry32, shade } from '../core/util.js';
 
 export const PC=new Map();
 export const ARMC={bronze:['#7a4420','#c98547','#f0c08a'],argent:['#6c7486','#c4ccd8','#f6f8fb'],or:['#8f6112','#e0ac3c','#fbe7a6'],garde:['#3a2e24','#7a6247','#b49770']};
 export function strand(g,x0,y0,x1,y1,w,bend){g.beginPath();g.moveTo(x0-w/2,y0);g.quadraticCurveTo((x0+x1)/2+bend-w/3,(y0+y1)/2,x1,y1);g.quadraticCurveTo((x0+x1)/2+bend+w/3,(y0+y1)/2,x0+w/2,y0);g.closePath();g.fill();}
-export function portrait(p,rank){
- // Une illustration peinte existe pour ce chevalier d'or : elle passe avant le dessin procédural.
- if(rank==='or'){const a=goldArt(p);if(a)return 'img/or/tete-'+a.n+'.webp';}
+// Portrait par le générateur anime (src/art). opts.faction pour un ennemi, opts.elder pour un ancien.
+const PC2=new Map();
+export function portrait(p,rank,opts={}){
+ const key=p.seed+'|'+(rank||'')+'|'+p.nat+'|'+p.sex+'|'+(p.cons||'')+'|'+(opts.faction||'')+'|'+(p.age!=null&&p.age<17?'c':'');
+ if(PC2.has(key))return PC2.get(key);
+ const s=specOf(p,{rank:rank&&rank!=='garde'?rank:null,faction:opts.faction||(rank==='garde'?'bandits':undefined),elder:opts.elder,child:!rank&&!opts.faction&&(p.age!=null?p.age<17:!!p.child)});
+ const url=dataUrl(svgBust(s,{size:256}));PC2.set(key,url);return url;
+}
+export function fullBody(p,rank,opts={}){return dataUrl(svgFull(specOf(p,{rank:rank||null,faction:opts.faction}),{w:300,h:675}));}
+// Ancien générateur (gardé en secours).
+export function portraitOld(p,rank){
  const key=p.seed+'|'+(rank||'')+'|'+p.nat+'|'+p.sex;if(PC.has(key))return PC.get(key);
  const W=256,c=document.createElement('canvas');c.width=c.height=W;const g=c.getContext('2d');
  const L=looks(p),r=L.r,F=p.sex==='F';const skin=L.skin,shadeSk=shade(skin,-.18),hair=L.hair,hairHi=shade(hair,L.hk==='noir'?.22:.28),hairLo=shade(hair,-.3);

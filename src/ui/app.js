@@ -20,7 +20,7 @@ import { setSound, sfx, soundPrefs, unlockAudio } from '../audio/audio.js';
 import { startExpedition, startHomeScene } from '../core/expeditions.js';
 import { eventModal, viewMonde } from './world.js';
 import { openScene } from './scene.js';
-import { portrait } from './portraits.js';
+import { fullBody, portrait } from './portraits.js';
 
 export function $(s){return document.querySelector(s);}
 export function ptImg(p,rank,lg){return '<img class="pt'+(lg?' lg':'')+(rank?' '+rank:'')+'" src="'+portrait(p,rank)+'" alt="Portrait de '+esc(p.name)+'" width="'+(lg?132:58)+'" height="'+(lg?132:58)+'">';}
@@ -324,10 +324,8 @@ export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';
  return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main"><h2>'+esc(k.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+signChip(k.sign)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
- // L'armure illustrée (anime) passe avant l'ancienne planche semi-réaliste.
- const aimg=armorImg(k.cons),art=k.rank==='or'?goldArt(k):null;
- if(aimg)h+='<figure class="fullbody"><img src="'+aimg+'" alt="'+esc(armorName(c))+'" width="400" height="600"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
- else if(art)h+='<figure class="fullbody"><img src="img/or/corps-'+art.n+'.webp" alt="'+esc(armorName(c))+'" width="152" height="458"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
+ // Le personnage en pied, dessiné par le générateur, vêtu de son armure.
+ h+='<figure class="fullbody"><img src="'+fullBody(k,k.rank)+'" alt="'+esc(k.name)+' en '+esc(armorLow(c))+'" width="300" height="675"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
  h+=persoBlock(k);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance '+fmt(power(k,k.rank))+'</div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+statsHtml(k,'k');
  h+=itemUse(k,'k');

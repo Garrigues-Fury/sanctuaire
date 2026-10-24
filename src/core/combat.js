@@ -68,11 +68,11 @@ export function heroAction(b,a,target){
 function foesTurn(b){
  const h=b.hero;
  alive(b).forEach(f=>{
-  if(f.boss&&f.charge===1){f.charge=0;const raw=(f.atk*2.2-h.def*.5)*(h.guard?.45:1);const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));h.hp=Math.max(0,h.hp-d);b.log.push({t:'foe',m:f.n+' libère son attaque terrible : '+d+' dégâts !'+(h.guard?' La garde a tenu.':''),dmg:d,big:true});return;}
-  if(f.boss&&b.turn%3===2){f.charge=1;b.log.push({t:'foe',m:f.n+' prépare un coup terrible… (se mettre en garde !)',warn:true});return;}
-  if(dodge(b,f.spd,h.spd)){b.log.push({t:'foe',m:h.name+' esquive '+f.n+'.',miss:true});return;}
+  if(f.boss&&f.charge===1){f.charge=0;const raw=(f.atk*2.2-h.def*.5)*(h.guard?.45:1);const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));h.hp=Math.max(0,h.hp-d);b.log.push({t:'foe',m:f.n+' libère son attaque terrible : '+d+' dégâts !'+(h.guard?' La garde a tenu.':''),dmg:d,big:true,src:f.i});return;}
+  if(f.boss&&b.turn%3===2){f.charge=1;b.log.push({t:'foe',m:f.n+' prépare un coup terrible… (se mettre en garde !)',warn:true,src:f.i});return;}
+  if(dodge(b,f.spd,h.spd)){b.log.push({t:'foe',m:h.name+' esquive '+f.n+'.',miss:true,src:f.i});return;}
   const raw=(f.atk*elemMult(f.el,h.el)-h.def*.5)*(h.guard?.45:1);const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));
-  h.hp=Math.max(0,h.hp-d);h.cos=Math.min(10,h.cos+1);b.log.push({t:'foe',m:f.n+' frappe : '+d+' dégâts.',dmg:d});
+  h.hp=Math.max(0,h.hp-d);h.cos=Math.min(10,h.cos+1);b.log.push({t:'foe',m:f.n+' frappe : '+d+' dégâts.',dmg:d,src:f.i});
  });
  if(h.hp<=0){b.over=true;b.result='lose';b.log.push({t:'info',m:h.name+' tombe à genoux.',big:true});}
 }

@@ -28,6 +28,12 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
 - Commandes : `npm run dev` (jeu en développement), `npm run build` (site dans `dist/`), `npm run icons` (icônes depuis `public/icon.svg`).
 - Hébergement : `.github/workflows/deploy.yml` publie sur GitHub Pages à chaque envoi sur `main`.
 
+## Refonte graphique « idle RPG » (demandée le 2026-10-24)
+
+- **Personnages** : générateur vectoriel anime `src/art/character.js`. Les personnages restent infinis (choix de Seba), avec une apparence qui suit le pays, le sexe, le rang, la constellation et la faction. Les chevaliers adultes ont un look « sexy » de RPG mobile (taille marquée, ventre et cuisses nus, armures ajustées). **Les apprentis (8 à 16 ans) ne sont jamais sexualisés** : silhouette d'enfant, tunique sobre. La page `galerie.html` (développement seulement) montre un échantillon.
+- **Combat** : scène Phaser animée `src/battle/battle.js` (ruées, impacts, projectiles d'élément, garde, coup ultime avec encart, secousses, chiffres de dégâts). La logique reste dans `src/core/combat.js`.
+- **Phases suivantes prévues** : écrans façon idle RPG (cadres ornés, accueil avec l'équipe), Sanctuaire avec ces personnages, puis décors et effets tirés de banques gratuites (licences dans `CREDITS.md`).
+
 ## Principes de game design (validés)
 
 - **Jeu de patience, pas chronophage, sans pression.** Rien ne punit une absence. Pas de rendez-vous à heure fixe.
