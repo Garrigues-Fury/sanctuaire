@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="sun" cx="50%" cy="62%" r="60%">
+      <stop offset="0" stop-color="#f6d48a"/>
+      <stop offset=".35" stop-color="#d9893f"/>
+      <stop offset=".75" stop-color="#5a2e22"/>
+      <stop offset="1" stop-color="#16110f"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbe7a6"/>
+      <stop offset="1" stop-color="#b07a22"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#sun)"/>
+  <!-- étoile -->
+  <path d="M256 92 L268 132 L308 144 L268 156 L256 196 L244 156 L204 144 L244 132 Z" fill="#fff6dc"/>
+  <!-- temple -->
+  <g fill="url(#gold)">
+    <path d="M136 250 L256 196 L376 250 Z"/>
+    <rect x="132" y="256" width="248" height="16" rx="3"/>
+    <rect x="152" y="282" width="22" height="118"/>
+    <rect x="200" y="282" width="22" height="118"/>
+    <rect x="290" y="282" width="22" height="118"/>
+    <rect x="338" y="282" width="22" height="118"/>
+    <rect x="244" y="282" width="24" height="70"/>
+    <rect x="120" y="404" width="272" height="18" rx="3"/>
+  </g>
+  <!-- colonne brisée -->
+  <path d="M244 352 L268 352 L262 362 L250 358 Z" fill="#b07a22"/>
+</svg>

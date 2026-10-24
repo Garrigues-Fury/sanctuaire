@@ -1,0 +1,97 @@
+# Sanctuaire Renaissant — cahier des charges
+
+Jeu de gestion « idle » personnel, inspiré de l'univers Saint Seiya, à jouer sur un **Google Pixel 9 Pro (Android)**. Usage strictement privé.
+
+Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fichier HTML/JS. Il fait foi pour toutes les règles et formules. Ce document en résume l'intention, ce qui a été validé avec le joueur et la cible technique de la nouvelle version.
+
+## Le joueur et la façon de travailler
+
+- Seba, ingénieur (hydraulique), **ne programme pas et ne veut pas programmer**. Il joue le rôle de maître d'ouvrage : il teste, critique le game design, l'équilibrage et le rendu visuel.
+- Il préfère un travail **itératif et collaboratif** : livrer des versions jouables, lui expliquer les choix et les contradictions éventuelles, le laisser trancher.
+- Écrire en **français**. Pas de jargon technique non expliqué.
+- Claude Code agit en **autonomie** pour : choisir les outils, chercher et intégrer des packs graphiques et sonores **gratuits** (en vérifiant et en notant la licence de chacun dans `CREDITS.md`), proposer et configurer des serveurs MCP utiles (par exemple pour la génération d'images). Ce qui demande Seba : créer un compte, une clé d'API ou tout ce qui est payant.
+
+## Cible technique
+
+- **Moteur** : Phaser 3, ou mieux si c'est justifié. Projet multi-fichiers, avec Vite par exemple.
+- **Livraison sur le Pixel** : application web installable (PWA, hors ligne, icône sur l'écran d'accueil), hébergée gratuitement (GitHub Pages ou équivalent). Un APK via Capacitor est envisageable plus tard.
+- **Orientation portrait**, contrôle tactile, lisible sur un écran d'environ 412 px de large.
+- **Sauvegarde locale**, avec export et import d'un code de sauvegarde. Le code du prototype doit pouvoir être importé : reprendre sa fonction `migrate()` (versions 1 à 6).
+- **Temps réel** : le jeu progresse téléphone fermé et affiche un résumé d'absence au retour. Prévoir un mode test où le temps passe 60 fois plus vite.
+
+## Structure du projet (v0.7, étape 1)
+
+- `src/core/` : règles et données, sans affichage. `rules.js` reprend les formules du prototype telles quelles ; `migrate.js` reprend `migrate()` ; `save.js` gère la sauvegarde et le code (même encodage que le prototype, même clé `localStorage`). L'état `S` vit dans `state.js` et ne se réaffecte que par `setS()`.
+- `src/map/` : carte animée en Phaser 4. Le décor fixe est dessiné en Canvas 2D (`background.js`) puis passé à Phaser ; les personnages sont redessinés à chaque image (`agents.js`, `map.js`).
+- `src/ui/app.js` : interface HTML des onglets et fenêtres (reprise du prototype). Choix assumé : menus en HTML, scènes animées en Phaser.
+- `tests/` : tests Vitest (`npm test`), dont la reprise des sauvegardes v1 à v6.
+- Commandes : `npm run dev` (jeu en développement), `npm run build` (site dans `dist/`), `npm run icons` (icônes depuis `public/icon.svg`).
+- Hébergement : `.github/workflows/deploy.yml` publie sur GitHub Pages à chaque envoi sur `main`.
+
+## Principes de game design (validés)
+
+- **Jeu de patience, pas chronophage, sans pression.** Rien ne punit une absence. Pas de rendez-vous à heure fixe.
+- **Durée d'une partie : plusieurs mois.**
+- **On y revient chaque jour** pour : répartir les points gagnés, lancer des entraînements avec l'énergie accumulée, fabriquer, construire, et faire le duel quotidien.
+
+## Univers et contraintes de licence
+
+- **Personnages 100 % originaux**, fidèles aux 88 constellations du canon : 12 or, 24 argent, 52 bronze. La liste et les éléments sont dans le prototype.
+- **Ne jamais reproduire** les personnages, armures ou visuels officiels de Saint Seiya. Les noms de constellations, les dieux grecs et l'univers en général sont acceptés.
+- **Direction artistique** : style anime, lumière dorée de soleil couchant, ruines grecques. Personnages avec tatouages tribaux, armures segmentées et rivetées, tenues de cuir et de tissu. Image de référence fournie par Seba, à placer dans `docs/reference.jpg`.
+- **Apparence fidèle à l'origine** : peau, cheveux et yeux selon le pays de naissance (193 pays, profils régionaux et exceptions par pays). Prénoms cohérents avec le pays ; prénoms occitans possibles pour la France, systématiques pour les Cévennes.
+
+## Systèmes du jeu
+
+1. **Sanctuaire dévasté à reconstruire**
+   - Bâtiments : oliveraies, carrière, mine, bibliothèque, jardin des simples, herboristerie, ateliers d'artisanat, réserves, dortoirs, arène, atelier des armures, village des artisans.
+   - Les douze maisons du zodiaque se relèvent jusqu'au niveau 5.
+   - Le nombre de chantiers simultanés est limité.
+2. **Ressources** : vivres, marbre, métal, savoir, herbes, plus des objets fabriqués (potion d'endurance, onguent, tisane, élixir, lingot, outils, matériel, ambroisie, huile sacrée).
+3. **Carte animée du Sanctuaire**
+   - Les villageois font la navette entre leur site et les réserves.
+   - Forgerons et artisans travaillent sur place. Les apprentis s'entraînent dans l'arène et les maîtres les surveillent. Les gardes sont à leur poste.
+   - Toucher un site ouvre sa gestion.
+4. **Survivants au départ** : 1 chevalier d'or, 1 d'argent, 2 de bronze. Rôles possibles : Grand Pope (unique), Recruteur, Maître (3 apprentis), Intendant, Maître d'œuvre, ou entraînement personnel.
+5. **Apprentis**
+   - Profil : signe, élément, statistiques (force, vitesse, endurance, cosmos), potentiel caché (environ 1 % peuvent atteindre l'or), impression visible approximative.
+   - Biographie de 3 lignes, nationalité.
+   - Qualités et défauts de niveau I à III. Exemples de qualités : persévérant, fougueux, patient, studieux, loyal, sociable… Exemples de défauts : paresseux, impulsif, peureux, distrait, arrogant, colérique, têtu, fragile, gourmand.
+6. **Progression**
+   - L'XP s'accumule en temps réel. Chaque niveau donne des points de compétence, répartis par le joueur.
+   - Le cosmos s'éveille au niveau 5. Une technique est découverte aux niveaux 10, 20 et 30.
+   - L'affinité de signe ou d'élément avec le maître accélère la formation.
+7. **Énergie**, qui se recharge avec le temps. Elle sert aux :
+   - séances spéciales ;
+   - entraînements particuliers chevalier-apprenti (gain d'amitié, transmission possible d'une qualité) ;
+   - travail sur soi : corriger un défaut ou renforcer une qualité, avec des objets fabriqués.
+8. **Amitiés** : des points à distribuer entre deux personnages, qui accordent un bonus d'XP plafonné.
+9. **Villageois** : ils travaillent sur les sites et progressent dans leur métier. Les apprentis peuvent être envoyés en renfort : ils gagnent une statistique mais se forment moins vite.
+10. **Armures** : on les restaure à l'atelier avec des forgerons d'un niveau minimum, puis un apprenti passe l'épreuve. L'armure d'or n'accepte que les natifs de sa maison.
+11. **Gardes** : un apprenti qui a raté son épreuve ou qui est surpassé devient garde. Il est affecté à une maison, au village ou à un site, et sa valeur de défense comptera lors des attaques.
+12. **Lecture des astres**, le duel quotidien du Pope contre un dieu :
+    - **Fréquence** : une partie par jour réel, toutes les 24 minutes en mode test. Il faut un Grand Pope en poste.
+    - **Format** : 5 à 10 minutes, au tour par tour, mécanique proche de Splendor Marvel.
+    - **Capacités** : elles viennent des scores d'élément du Sanctuaire (feu, eau, air, terre) et du cosmos de chaque constellation portée. Elles **ne se dépensent pas** : elles se rechargent à chaque tour. On achète autant de cartes que la capacité du tour le permet, et les bonus des cartes s'ajoutent au tour suivant.
+    - **Renforts** : on peut les acheter avec de vraies ressources.
+    - **Fin de partie** : le premier à 15 ✦, sinon le meilleur après 12 tours.
+    - **Victoire** : on garde une carte, dont l'effet devient permanent.
+    - **Défaite** : le dieu monte en niveau, garde ses acquis et sera plus dangereux lors de ses attaques.
+13. **Factions** : une page présente le Sanctuaire et chaque dieu, avec niveaux, bilans et bonus. On y trouve aussi 10 artefacts mythologiques, débloqués en accumulant des bonus permanents.
+14. **Comptes à rebours** : réveil de Poséidon au jour 90, guerre sainte contre Hadès au jour 270. La réincarnation d'Athéna sera révélée plus tard.
+
+## Feuille de route
+
+1. **Mise en place** : projet Phaser, PWA, hébergement, reprise des règles du prototype, import des sauvegardes.
+2. **Charte graphique** :
+   - consignes de génération cohérentes (portraits par rang et par origine, fonds, sites, maisons, dieux) ;
+   - génération des images via une API (Gemini « Nano Banana » ou OpenAI), sur clé fournie par Seba ;
+   - le générateur procédural de portraits reste en secours.
+3. **Le Sanctuaire vivant** : carte animée en sprites, cycle jour et nuit, particules de cosmos, sons.
+4. **Le duel des astres** mis en scène comme un vrai combat de cartes.
+5. **Les fiches de personnages** retravaillées.
+6. **Contenus suivants** :
+   - incursions des dieux contre le Sanctuaire (les gardes et les chevaliers défendent) ;
+   - arc de Poséidon (Marinas, 7 piliers, scellement) ;
+   - réincarnation et progression d'Athéna ;
+   - guerre sainte contre les 108 spectres d'Hadès, en tower defense sur les douze maisons.

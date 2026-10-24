@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dev-dist/
+*.log
+.claude/settings.local.json
+# Fichiers privés : le dépôt est public (obligatoire pour GitHub Pages gratuit).
+docs/reference.jpeg
+art/

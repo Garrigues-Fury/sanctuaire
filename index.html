@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sanctuaire Renaissant</title>
+<meta name="description" content="Relevez le Sanctuaire d'Athéna, formez les futurs chevaliers.">
+<meta name="theme-color" content="#16110f">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon-180x180.png">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <h1>Sanctuaire</h1>
+    <span class="day">Jour <b class="num" data-day>1</b></span>
+    <span class="speed" id="speedTag" hidden>Temps ×60</span>
+    <span class="sp"></span>
+    <button class="icon-btn" data-act="settings" aria-label="Réglages et sauvegarde">⚙&#xFE0E;</button>
+  </div>
+  <div class="resbar" id="resbar"></div>
+</div></header>
+
+<main><div class="wrap" id="view"></div></main>
+
+<nav class="tabs" aria-label="Sections"><div class="in" id="tabs"></div></nav>
+
+<div id="sheet" hidden><div class="sheet-card" role="dialog" aria-modal="true"><button class="close" data-act="close" aria-label="Fermer">✕</button><div id="sheetBody" style="display:grid;gap:16px"></div></div></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

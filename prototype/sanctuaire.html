@@ -1,0 +1,1836 @@
+<title>Sanctuaire Renaissant</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#16110f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
+<style>
+/* Mise en page : une colonne mobile, barre de ressources collante en haut, onglets fixés en bas. Thème unique : nuit étoilée sur marbre. */
+:root{
+  --night:#16110f; --night-2:#211915; --night-3:#2d221c; --night-4:#3e2e24;
+  --marble:#f2e7d3; --marble-dim:#b3a48d; --marble-faint:#77695a;
+  --gold:#e1a94f; --gold-hi:#f6d48a; --bronze:#c47e48; --silver:#bfc8d8;
+  --ok:#86c39a; --warn:#e4a852; --bad:#de7563;
+  --feu:#e2804f; --eau:#62a6d8; --air:#c9d5e8; --terre:#b39561;
+  --line:rgba(242,231,211,.11);
+  --f-display:"Marcellus SC","Marcellus",Georgia,"Times New Roman",serif;
+  --f-body:"Alegreya Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--night);color:var(--marble);font:16px/1.45 var(--f-body);padding-block:0 calc(78px + env(safe-area-inset-bottom,0px));-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--night)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:720px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* En-tête */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:linear-gradient(var(--night) 80%,rgba(22,17,15,.92));border-bottom:1px solid var(--line)}
+.top .wrap{padding-block:10px 8px;display:grid;gap:8px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:1.25rem;letter-spacing:.06em;color:var(--gold-hi)}
+.brand .day{font-size:.85rem;color:var(--marble-dim)}
+.brand .speed{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--night);background:var(--warn);border-radius:4px;padding:1px 6px}
+.brand .sp{flex:1}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:8px;width:38px;height:38px;font-size:1.1rem;color:var(--marble-dim)}
+.resbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.res{min-width:0;background:var(--night-2);border-radius:8px;padding:5px 8px}
+.res .k{display:flex;align-items:center;gap:5px;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--marble-dim)}
+.res .k i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.res .v{font-weight:700;font-size:1rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.res .r{font-size:.7rem;color:var(--marble-dim);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res.full .v{color:var(--warn)}
+
+/* Onglets */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--night-2);border-top:1px solid var(--line);padding:0 max(6px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(6px,env(safe-area-inset-left,0px))}
+nav.tabs .in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));max-width:720px;margin:0 auto}
+nav.tabs button{background:none;border:0;padding:9px 2px 10px;display:grid;justify-items:center;gap:2px;color:var(--marble-dim);position:relative;font-size:.72rem;letter-spacing:.02em}
+nav.tabs button .g{font-family:var(--f-display);font-size:1.15rem;line-height:1}
+nav.tabs button[aria-current="page"]{color:var(--gold-hi)}
+nav.tabs button[aria-current="page"]::before{content:"";position:absolute;top:0;left:22%;right:22%;height:2px;background:var(--gold)}
+.badge{position:absolute;top:5px;right:calc(50% - 22px);background:var(--bad);color:#fff;font-size:.65rem;font-weight:800;border-radius:9px;min-width:17px;padding:0 4px;line-height:17px}
+
+/* Contenu */
+main .wrap{padding-block:16px 24px;display:grid;gap:22px}
+.sec{display:grid;gap:10px}
+.sec-h{display:flex;align-items:baseline;gap:10px;justify-content:space-between}
+.sec-h h2{font-size:1.1rem;letter-spacing:.05em;color:var(--marble)}
+.sec-h .aside{font-size:.82rem;color:var(--marble-dim)}
+.hint{font-size:.88rem;color:var(--marble-dim);margin:0}
+.banner{border-left:3px solid var(--warn);background:rgba(228,168,82,.08);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.92rem}
+.banner.info{border-color:var(--gold);background:rgba(217,171,79,.07)}
+.banner.bad{border-color:var(--bad);background:rgba(222,117,99,.08)}
+
+.hero{background:radial-gradient(120% 140% at 85% 0%,var(--night-4),var(--night-2) 60%);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:12px}
+.hero .lbl{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--marble-dim)}
+.hero .pow{font-family:var(--f-display);font-size:2.4rem;line-height:1;color:var(--gold-hi);font-variant-numeric:tabular-nums}
+.hero .row{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.88rem;color:var(--marble-dim)}
+.hero .row b{color:var(--marble);font-weight:700}
+
+.list{display:grid;border-top:1px solid var(--line)}
+.item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.item.tap{cursor:pointer}
+.item .main{min-width:0;display:grid;gap:3px}
+.item .name{font-weight:700;font-size:1rem;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.item .sub{font-size:.84rem;color:var(--marble-dim)}
+.item .meta{font-size:.8rem;color:var(--marble-dim);display:flex;flex-wrap:wrap;gap:4px 10px}
+.item .right{display:grid;justify-items:end;gap:4px;text-align:right}
+.lvl{font-family:var(--f-display);font-size:1.25rem;color:var(--marble);min-width:2.2ch;text-align:center}
+.lvl small{display:block;font-family:var(--f-body);font-size:.62rem;letter-spacing:.1em;color:var(--marble-dim);text-transform:uppercase}
+
+.pt{width:58px;height:58px;border-radius:10px;display:block;background:var(--night-3);object-fit:cover}
+.pt.lg{width:132px;height:132px;border-radius:16px}
+.pt.or{box-shadow:0 0 0 2px var(--gold)}
+.pt.argent{box-shadow:0 0 0 2px var(--silver)}
+.pt.bronze{box-shadow:0 0 0 2px var(--bronze)}
+
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;letter-spacing:.04em;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--marble-dim);white-space:nowrap}
+.chip.or{color:var(--gold-hi);border-color:rgba(217,171,79,.5)}
+.chip.argent{color:var(--silver);border-color:rgba(191,200,216,.45)}
+.chip.bronze{color:#e3a171;border-color:rgba(196,126,72,.5)}
+.chip.role{color:var(--night);background:var(--marble-dim);border-color:transparent;font-weight:700}
+.chip.role.pope{background:var(--gold)}
+.chip.ok{color:var(--ok);border-color:rgba(134,195,154,.45)}
+.chip.warn{color:var(--warn);border-color:rgba(228,168,82,.45)}
+.chip.el-feu{color:var(--feu)}.chip.el-eau{color:var(--eau)}.chip.el-air{color:var(--air)}.chip.el-terre{color:var(--terre)}
+.sign{font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Noto Sans Symbols",var(--f-body);}
+
+.bar{height:5px;background:var(--night-3);border-radius:3px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-hi));border-radius:3px;transition:width .6s linear}
+.bar.blue>i{background:linear-gradient(90deg,#4f7fb8,var(--eau))}
+
+.btn{border:0;border-radius:9px;padding:9px 14px;font-weight:700;font-size:.9rem;background:var(--gold);color:#1a1408;white-space:nowrap}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--marble)}
+.btn.danger{background:var(--bad);color:#1d0d09}
+.btn:disabled{background:var(--night-3);color:var(--marble-faint);cursor:not-allowed}
+.btn.sm{padding:6px 10px;font-size:.82rem}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+
+.cost{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.8rem;font-variant-numeric:tabular-nums}
+.cost span{white-space:nowrap}
+.cost .no{color:var(--bad)}
+.cost i{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:1px}
+
+.bld{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.bld .t{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.bld .t b{font-size:1rem}
+.bld .t .lv{font-family:var(--f-display);color:var(--gold-hi);font-size:.95rem}
+.bld .eff{font-size:.84rem;color:var(--marble-dim)}
+.bld .eff em{font-style:normal;color:var(--marble)}
+.bld .act{grid-row:1 / span 3;grid-column:2;align-self:center;display:grid;justify-items:end;gap:4px}
+.bld .time{font-size:.75rem;color:var(--marble-dim)}
+
+.job{display:grid;gap:5px;padding:10px 12px;background:var(--night-2);border-radius:10px}
+.job .h{display:flex;justify-content:space-between;gap:10px;font-size:.88rem}
+.job .h span:last-child{color:var(--marble-dim);font-variant-numeric:tabular-nums}
+
+.recruit{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:12px;border-radius:12px;background:var(--night-2);border:1px dashed rgba(217,171,79,.35)}
+.recruit .btns{grid-column:1 / -1}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.stat{background:var(--night-2);border-radius:8px;padding:6px 8px}
+.stat .k{font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--marble-dim)}
+.stat .v{font-weight:800;font-size:1.05rem;font-variant-numeric:tabular-nums}
+
+.count{display:grid;gap:4px;padding:14px;border-radius:12px;background:var(--night-2)}
+.count .k{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--marble-dim)}
+.count .v{font-family:var(--f-display);font-size:1.6rem;font-variant-numeric:tabular-nums}
+.count.sea .v{color:var(--eau)}
+.count.hell .v{color:#b593d6}
+.count.ath .v{color:var(--gold-hi);font-size:1.15rem}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+
+.log{display:grid;gap:0;font-size:.88rem}
+.log div{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.log span{color:var(--marble-dim);font-variant-numeric:tabular-nums;font-size:.8rem;padding-top:1px}
+
+/* Fenêtre */
+#sheet[hidden]{display:none}
+#sheet{position:fixed;inset:0;z-index:20;background:rgba(14,8,6,.72);display:flex;align-items:flex-end;justify-content:center}
+.sheet-card{background:var(--night-2);width:100%;max-width:640px;max-height:88%;overflow:auto;border-radius:18px 18px 0 0;border-top:1px solid var(--line);padding:18px max(16px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:16px;align-content:start}
+.sheet-head{display:flex;gap:14px;align-items:center}
+.sheet-head .main{min-width:0;flex:1;display:grid;gap:5px}
+.sheet-head h2{font-size:1.35rem;color:var(--gold-hi)}
+.close{position:sticky;top:0;justify-self:end;margin-bottom:-38px;background:var(--night-3);border:0;border-radius:50%;width:34px;height:34px;color:var(--marble);font-size:1.1rem;z-index:2}
+.opt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:11px 12px;border-radius:10px;background:var(--night-3);border:1px solid transparent;text-align:left;width:100%}
+.opt.sel{border-color:var(--gold)}
+.opt b{font-size:.95rem}
+.opt .d{font-size:.8rem;color:var(--marble-dim);grid-column:1}
+.opt:disabled{opacity:.5;cursor:not-allowed}
+.opts{display:grid;gap:7px}
+textarea{width:100%;min-height:110px;background:var(--night);color:var(--marble);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px/1.4 ui-monospace,Menlo,monospace}
+.result{padding:14px;border-radius:12px;text-align:center;display:grid;gap:6px}
+.result.win{background:rgba(217,171,79,.12);border:1px solid rgba(217,171,79,.5)}
+.result.lose{background:rgba(222,117,99,.1);border:1px solid rgba(222,117,99,.45)}
+.result h3{font-size:1.3rem}
+.empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--marble-dim);font-size:.9rem;text-align:center}
+
+.hero-top{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:flex-end;justify-content:space-between}
+.map-wrap{margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px))) ;border-block:1px solid var(--line);background:#0b0f1d}
+@media (min-width:600px){.map-wrap{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}}
+#map{display:block;width:100%;aspect-ratio:360/400;max-width:100%;cursor:pointer;touch-action:manipulation}
+.sites{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.site-btn{background:var(--night-2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;text-align:left;display:grid;gap:1px;min-width:0}
+.site-btn b{font-size:.86rem}
+.site-btn span{font-size:.72rem;color:var(--marble-dim);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--night-2);border-radius:10px;padding:3px;gap:3px}
+.seg button{background:none;border:0;border-radius:8px;padding:8px 4px;font-weight:700;font-size:.88rem;color:var(--marble-dim)}
+.seg button span{font-weight:400;font-size:.75rem;font-variant-numeric:tabular-nums}
+.seg button[aria-selected="true"]{background:var(--night-4);color:var(--gold-hi)}
+.bio{display:grid;gap:8px;padding:12px 14px;background:var(--night);border-radius:12px;border:1px solid var(--line)}
+.bio-h{display:flex;flex-wrap:wrap;gap:6px}
+.bio p{margin:0;font-size:.92rem;line-height:1.5}
+.bio p.hint{font-size:.82rem}
+.bio-p{grid-column:1 / -1;margin:0;font-size:.85rem;color:var(--marble-dim);line-height:1.45}
+.chip.trait{color:var(--marble);border-color:rgba(236,230,216,.28)}
+.wdot{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--sk) 0 9px,transparent 9.5px),radial-gradient(circle at 50% 30%,var(--hr) 0 10px,transparent 10.5px),linear-gradient(transparent 62%,#8a6a4a 62%);background-color:var(--night-3);display:block;margin-inline:9px}
+
+.chip.q{color:#bfe0c6;border-color:rgba(134,195,154,.45)}
+.chip.f{color:#f0b2a6;border-color:rgba(222,117,99,.45)}
+.chip.sp{color:var(--night);background:var(--gold-hi);border-color:transparent;font-weight:800}
+.nrg{display:grid;grid-template-columns:auto minmax(0,1fr) 2.6em;gap:8px;align-items:center;font-size:.78rem;color:var(--marble-dim)}
+.nrg b{color:var(--marble);font-variant-numeric:tabular-nums;text-align:right}
+.bar.green>i{background:linear-gradient(90deg,#4f8f63,var(--ok))}
+.stat{position:relative}
+.plus{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:var(--gold);color:#1a1408;font-weight:800;font-size:1rem;line-height:1}
+.sp-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;font-size:.88rem;color:var(--gold-hi)}
+.dt{border:1px solid var(--line);border-radius:12px;padding:0 12px;background:var(--night)}
+.dt summary{cursor:pointer;padding:11px 0;font-family:var(--f-display);font-size:1rem;letter-spacing:.04em;display:flex;justify-content:space-between;gap:8px}
+.dt summary .aside{font-family:var(--f-body);font-size:.8rem;color:var(--ok)}
+.dt[open]{padding-bottom:12px}
+.dt .opts,.dt .list{margin-top:8px}
+.tlist{display:grid;gap:6px;font-size:.86rem;color:var(--marble-dim);padding-bottom:4px}
+.tlist b{margin-right:6px}.tlist b.q{color:#bfe0c6}.tlist b.f{color:#f0b2a6}
+.hearts{display:flex;gap:3px}
+.hearts i{width:9px;height:9px;border-radius:2px;background:var(--night-3);transform:rotate(45deg)}
+.hearts i.on{background:#e48a9c}
+.item.fr .pt{width:40px;height:40px;border-radius:8px}
+.fp-box{font-size:.88rem;color:var(--marble-dim);background:rgba(228,138,156,.08);border-left:3px solid #e48a9c;border-radius:0 8px 8px 0;padding:9px 12px}
+.fp-box b{color:#f2b3c0;font-size:1.05rem}
+.flash{background:rgba(217,171,79,.12);border:1px solid rgba(217,171,79,.45);color:var(--gold-hi);border-radius:10px;padding:10px 12px;font-size:.92rem}
+.mh{color:var(--gold-hi);font-size:1.35rem}
+.elems{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.el{background:rgba(20,12,10,.45);border-radius:8px;padding:5px 6px;display:grid;min-width:0}
+.el small{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--marble-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.el b{font-variant-numeric:tabular-nums;font-size:.95rem}
+.el.el-feu b{color:var(--feu)}.el.el-eau b{color:var(--eau)}.el.el-air b{color:var(--air)}.el.el-terre b{color:var(--terre)}
+.inv{display:flex;flex-wrap:wrap;gap:6px}
+.inv-i{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;background:var(--night-2);border-radius:8px;padding:5px 9px;color:var(--marble-dim)}
+.inv-i i{width:7px;height:7px;border-radius:50%}
+.inv-i b{color:var(--marble);font-variant-numeric:tabular-nums}
+.opt .d+.d{grid-column:1 / -1}
+
+.chip.garde{color:#d9c4a2;border-color:rgba(154,125,90,.6)}
+.pt.garde{box-shadow:0 0 0 2px #9a7d5a}
+.elems.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.posts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.posts .opt{padding:8px 10px}
+.posts .opt b{font-size:.86rem}
+.pope-hero .pow{font-size:2rem}
+.bonusrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bn{background:rgba(20,12,10,.45);border-radius:8px;padding:6px 8px;display:grid;justify-items:start;gap:1px;min-width:0}
+.bn b{font-size:1.2rem;font-variant-numeric:tabular-nums;display:inline}
+.bn small{font-size:.66rem;color:var(--marble-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.gem{display:inline-block;width:10px;height:10px;transform:rotate(45deg);border-radius:2px;vertical-align:0;margin:0 4px 0 1px;flex:none}
+.g-feu{background:var(--feu)}.g-eau{background:var(--eau)}.g-air{background:var(--air)}.g-terre{background:var(--terre)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.card{background:var(--night-2);border:1px solid var(--line);border-top:3px solid var(--line);border-radius:12px;padding:11px 12px;display:grid;gap:7px;align-content:start;min-width:0}
+.card.el-feu{border-top-color:var(--feu)}.card.el-eau{border-top-color:var(--eau)}.card.el-air{border-top-color:var(--air)}.card.el-terre{border-top-color:var(--terre)}
+.card.art{border-top-color:var(--gold);background:linear-gradient(180deg,rgba(217,171,79,.07),var(--night-2) 60%)}
+.card.art.own{opacity:.8}
+.ch{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ch b{font-size:.98rem;flex:1;min-width:0}
+.ctier{font-family:var(--f-display);color:var(--marble-dim);font-size:.85rem}
+.fav{color:var(--gold-hi);font-weight:800;font-size:.85rem;white-space:nowrap}
+.cgem{font-size:.8rem;color:var(--marble-dim);display:flex;align-items:center}
+.ceff{font-size:.84rem;color:var(--ok)}
+.ccost{display:flex;flex-wrap:wrap;gap:6px}
+.ccost .u{display:inline-flex;align-items:center;background:var(--night);border-radius:7px;padding:3px 8px;font-weight:700;font-variant-numeric:tabular-nums;font-size:.88rem}
+.ccost .u s{color:var(--marble-faint);font-weight:400;margin-right:3px}
+.ccost .u.met{outline:1px solid rgba(134,195,154,.6)}
+.reqs{display:grid;gap:2px;font-size:.78rem}
+.reqs .ok{color:var(--ok)}.reqs .no{color:var(--bad)}
+.cbuy{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+nav.tabs button{font-size:.68rem}
+
+.duel-head{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;background:radial-gradient(120% 160% at 50% 0%,var(--night-4),var(--night-2) 70%);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.duel-head .side{display:grid;gap:2px}
+.duel-head .side small{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--marble-dim)}
+.duel-head .side b{font-family:var(--f-display);font-size:1.8rem;color:var(--gold-hi);font-variant-numeric:tabular-nums}
+.duel-head .side.god{text-align:right}.duel-head .side.god b{color:#e9a08f}
+.duel-head .mid{display:grid;justify-items:center;font-size:.86rem}
+.duel-head .mid small{color:var(--marble-dim);font-size:.72rem}
+.pool{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.pool.cons{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.pl{background:var(--night-2);border-radius:9px;padding:7px 9px;display:flex;align-items:baseline;gap:5px;min-width:0}
+.pl b{font-size:1.25rem;font-variant-numeric:tabular-nums}
+.pl small{font-size:.7rem;color:var(--marble-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl.empty{opacity:.45}
+.star{color:var(--gold-hi);margin-right:3px}
+.ccost .u.short{color:var(--bad);outline:1px solid rgba(222,117,99,.5)}
+.card.cons{border-top-color:var(--gold-hi);box-shadow:inset 0 0 0 1px rgba(217,171,79,.25)}
+.duel-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--night) 35%);padding-block:14px 6px;z-index:3}
+.duel-actions .btn:first-child{flex:1;padding-block:12px;font-size:1rem}
+.fac{display:grid;gap:5px;padding:12px 0;border-bottom:1px solid var(--line)}
+.fac .fh{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.fac.me b{color:var(--gold-hi)}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <h1>Sanctuaire</h1>
+    <span class="day">Jour <b class="num" data-day>1</b></span>
+    <span class="speed" id="speedTag" hidden>Temps ×60</span>
+    <span class="sp"></span>
+    <button class="icon-btn" data-act="settings" aria-label="Réglages et sauvegarde">⚙&#xFE0E;</button>
+  </div>
+  <div class="resbar" id="resbar"></div>
+</div></header>
+
+<main><div class="wrap" id="view"></div></main>
+
+<nav class="tabs" aria-label="Sections"><div class="in" id="tabs"></div></nav>
+
+<div id="sheet" hidden><div class="sheet-card" role="dialog" aria-modal="true"><button class="close" data-act="close" aria-label="Fermer">✕</button><div id="sheetBody" style="display:grid;gap:16px"></div></div></div>
+
+<script>
+(function(){
+'use strict';
+const KEY='sanctuaire-renaissant-v1';
+const VERSION=6;
+const POSEIDON_H=90*24, HADES_H=270*24;
+
+/* ---------- utilitaires ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const pick=(r,a)=>a[Math.floor(r()*a.length)];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmt(n){n=Math.floor(n);if(Math.abs(n)<10000)return n.toLocaleString('fr-FR');if(Math.abs(n)<1e6)return(n/1000).toLocaleString('fr-FR',{maximumFractionDigits:1})+' k';return(n/1e6).toLocaleString('fr-FR',{maximumFractionDigits:2})+' M';}
+function fmt1(n){return n.toLocaleString('fr-FR',{maximumFractionDigits:1});}
+function dur(h){if(!isFinite(h))return'—';if(h<=0)return'terminé';if(h<1)return Math.max(1,Math.ceil(h*60))+' min';if(h<48){const H=Math.floor(h),M=Math.floor((h-H)*60);return H+' h '+String(M).padStart(2,'0');}return Math.floor(h/24)+' j '+Math.floor(h%24)+' h';}
+function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=amt<0?0:255,p=Math.abs(amt);r=Math.round((f-r)*p+r);g=Math.round((f-g)*p+g);b=Math.round((f-b)*p+b);return'#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function $(s){return document.querySelector(s);}
+const G=(p,s)=>p.sex==='F'?s:'';
+const ROMAN=['','I','II','III'];
+
+/* ---------- monde ---------- */
+const SIGNS=[['Bélier','♈','feu'],['Taureau','♉','terre'],['Gémeaux','♊','air'],['Cancer','♋','eau'],['Lion','♌','feu'],['Vierge','♍','terre'],['Balance','♎','air'],['Scorpion','♏','eau'],['Sagittaire','♐','feu'],['Capricorne','♑','terre'],['Verseau','♒','air'],['Poissons','♓','eau']].map(([n,s,el],i)=>({n,s:s+'︎',el,i}));
+const ELEM={feu:'Feu',eau:'Eau',air:'Air',terre:'Terre'};
+const EKEYS=['feu','eau','air','terre'];
+const RANKS={bronze:'Bronze',argent:'Argent',or:'Or',garde:'Garde'};
+const RANK_MULT={bronze:1,argent:1.7,or:3.2,garde:.8};
+const CONS=[];
+[['pegase','Pégase','air'],['dragon','Dragon','eau'],['cygne','Cygne','eau'],['andromede','Andromède','air'],['phenix','Phénix','feu'],['licorne','Licorne','terre'],['loup','Loup','terre'],['grande-ourse','Grande Ourse','terre'],['petit-lion','Petit Lion','feu'],['hydre','Hydre','eau'],['cameleon','Caméléon','air'],
+ ['machine-pneumatique','Machine pneumatique','air'],['oiseau-paradis','Oiseau de paradis','air'],['burin','Burin','terre'],['girafe','Girafe','terre'],['petit-chien','Petit Chien','feu'],['carene','Carène','eau'],['compas','Compas','terre'],['colombe','Colombe','air'],['chevelure','Chevelure de Bérénice','air'],['couronne-australe','Couronne australe','feu'],['coupe','Coupe','eau'],['croix-sud','Croix du Sud','air'],['dauphin','Dauphin','eau'],['dorade','Dorade','eau'],['eridan','Éridan','eau'],['fourneau','Fourneau','feu'],['grue','Grue','air'],['horloge','Horloge','terre'],['hydre-male','Hydre mâle','eau'],['indien','Indien','terre'],['lievre','Lièvre','air'],['lynx','Lynx','terre'],['table','Table','terre'],['microscope','Microscope','air'],['regle','Règle','terre'],['octant','Octant','air'],['poisson-austral','Poisson austral','eau'],['peintre','Peintre','feu'],['poupe','Poupe','eau'],['boussole','Boussole','terre'],['reticule','Réticule','air'],['sculpteur','Sculpteur','terre'],['ecu','Écu de Sobieski','terre'],['sextant','Sextant','air'],['telescope','Télescope','air'],['triangle-austral','Triangle austral','feu'],['toucan','Toucan','air'],['petite-ourse','Petite Ourse','terre'],['voiles','Voiles','air'],['poisson-volant','Poisson volant','eau'],['petit-renard','Petit Renard','feu']
+].forEach(([k,n,el])=>CONS.push({k,n,el,rank:'bronze'}));
+[['lyre','Lyre','air'],['persee','Persée','terre'],['cerbere','Cerbère','feu'],['cocher','Cocher','air'],['fleche','Flèche','air'],['lezard','Lézard','terre'],['mouche','Mouche','air'],['chiens-chasse','Chiens de chasse','terre'],['centaure','Centaure','feu'],['corbeau','Corbeau','air'],['baleine','Baleine','eau'],['hercule','Hercule','terre'],['aigle','Aigle','air'],['ophiuchus','Ophiuchus','feu'],['cephee','Céphée','eau'],['grand-chien','Grand Chien','feu'],
+ ['autel','Autel','feu'],['orion','Orion','terre'],['paon','Paon','air'],['couronne-boreale','Couronne boréale','feu'],['triangle','Triangle','air'],['petit-cheval','Petit Cheval','terre'],['bouvier','Bouvier','terre'],['cassiopee','Cassiopée','eau']
+].forEach(([k,n,el])=>CONS.push({k,n,el,rank:'argent'}));
+SIGNS.forEach(s=>CONS.push({k:'or-'+s.i,n:s.n,el:s.el,rank:'or',sign:s.i}));
+const CONS_BY={};CONS.forEach(c=>CONS_BY[c.k]=c);
+const ART={'Pégase':'de ','Andromède':'d’','Hydre':'de l’','Licorne':'de la ','Grande Ourse':'de la ','Lyre':'de la ','Persée':'de ','Flèche':'de la ','Mouche':'de la ','Baleine':'de la ','Hercule':'d’','Aigle':'de l’','Ophiuchus':'d’','Céphée':'de ','Vierge':'de la ','Balance':'de la ','Gémeaux':'des ','Poissons':'des ','Chiens de chasse':'des ',
+ 'Machine pneumatique':'de la ','Girafe':'de la ','Carène':'de la ','Colombe':'de la ','Chevelure de Bérénice':'de la ','Couronne australe':'de la ','Coupe':'de la ','Croix du Sud':'de la ','Dorade':'de la ','Éridan':'de l’','Grue':'de la ','Horloge':'de l’','Hydre mâle':'de l’','Indien':'de l’','Table':'de la ','Règle':'de la ','Octant':'de l’','Poupe':'de la ','Boussole':'de la ','Écu de Sobieski':'de l’','Voiles':'des ','Petite Ourse':'de la ','Autel':'de l’','Orion':'d’','Couronne boréale':'de la ','Cassiopée':'de ','Oiseau de paradis':'de l’'};
+function de(n){return(ART[n]||'du ')+n;}
+function armorName(c){return'Armure '+({or:'d’or ',argent:'d’argent ',bronze:'de bronze '})[c.rank]+de(c.n);}
+function armorLow(c){const a=armorName(c);return a.charAt(0).toLowerCase()+a.slice(1);}
+
+/* pays et prénoms */
+const COUNTRY_RAW=`Afghanistan|d’Afghanistan|Kaboul|fa
+Afrique du Sud|d’Afrique du Sud|Pretoria|sa
+Albanie|d’Albanie|Tirana|ba
+Algérie|d’Algérie|Alger|ar
+Allemagne|d’Allemagne|Berlin|de
+Andorre|d’Andorre|Andorre-la-Vieille|es
+Angola|d’Angola|Luanda|pt
+Antigua-et-Barbuda|d’Antigua-et-Barbuda|Saint John’s|en
+Arabie saoudite|d’Arabie saoudite|Riyad|ar
+Argentine|d’Argentine|Buenos Aires|la
+Arménie|d’Arménie|Erevan|ca
+Australie|d’Australie|Canberra|en
+Autriche|d’Autriche|Vienne|de
+Azerbaïdjan|d’Azerbaïdjan|Bakou|tr
+Bahamas|des Bahamas|Nassau|en
+Bahreïn|de Bahreïn|Manama|ar
+Bangladesh|du Bangladesh|Dacca|in
+Barbade|de la Barbade|Bridgetown|en
+Belgique|de Belgique|Bruxelles|fr
+Belize|du Belize|Belmopan|la
+Bénin|du Bénin|Porto-Novo|wa
+Bhoutan|du Bhoutan|Thimphou|in
+Biélorussie|de Biélorussie|Minsk|sl
+Birmanie|de Birmanie|Mandalay|se
+Bolivie|de Bolivie|Sucre|la
+Bosnie-Herzégovine|de Bosnie-Herzégovine|Sarajevo|ba
+Botswana|du Botswana|Gaborone|sa
+Brésil|du Brésil|Salvador de Bahia|pt
+Brunei|du Brunei|Bandar Seri Begawan|se
+Bulgarie|de Bulgarie|Sofia|ba
+Burkina Faso|du Burkina Faso|Ouagadougou|wa
+Burundi|du Burundi|Gitega|sa
+Cambodge|du Cambodge|Phnom Penh|se
+Cameroun|du Cameroun|Douala|wa
+Canada|du Canada|Montréal|en
+Cap-Vert|du Cap-Vert|Praia|pt
+Centrafrique|de Centrafrique|Bangui|wa
+Chili|du Chili|Valparaíso|la
+Chine|de Chine|Xi’an|cn
+Chypre|de Chypre|Nicosie|gr
+Colombie|de Colombie|Medellín|la
+Comores|des Comores|Moroni|ar
+Congo|du Congo|Brazzaville|sa
+Corée du Nord|de Corée du Nord|Pyongyang|kr
+Corée du Sud|de Corée du Sud|Busan|kr
+Costa Rica|du Costa Rica|San José|la
+Côte d’Ivoire|de Côte d’Ivoire|Abidjan|wa
+Croatie|de Croatie|Split|ba
+Cuba|de Cuba|La Havane|la
+Danemark|du Danemark|Copenhague|no
+Djibouti|de Djibouti|Djibouti|ea
+Dominique|de la Dominique|Roseau|en
+Égypte|d’Égypte|Alexandrie|ar
+Émirats arabes unis|des Émirats arabes unis|Dubaï|ar
+Équateur|d’Équateur|Quito|la
+Érythrée|d’Érythrée|Asmara|ea
+Espagne|d’Espagne|Séville|es
+Estonie|d’Estonie|Tallinn|fi
+Eswatini|d’Eswatini|Mbabane|sa
+États-Unis|des États-Unis|La Nouvelle-Orléans|en
+Éthiopie|d’Éthiopie|Lalibela|ea
+Fidji|des Fidji|Suva|pa
+Finlande|de Finlande|Helsinki|fi
+France|de France|Marseille|fr
+Gabon|du Gabon|Libreville|wa
+Gambie|de Gambie|Banjul|wa
+Géorgie|de Géorgie|Tbilissi|ca
+Ghana|du Ghana|Accra|wa
+Grèce|de Grèce|Athènes|gr
+Grenade|de la Grenade|Saint-Georges|en
+Guatemala|du Guatemala|Antigua|la
+Guinée|de Guinée|Conakry|wa
+Guinée-Bissau|de Guinée-Bissau|Bissau|wa
+Guinée équatoriale|de Guinée équatoriale|Malabo|wa
+Guyana|du Guyana|Georgetown|en
+Haïti|d’Haïti|Jacmel|fr
+Honduras|du Honduras|Tegucigalpa|la
+Hongrie|de Hongrie|Budapest|hu
+Inde|d’Inde|Bénarès|in
+Indonésie|d’Indonésie|Yogyakarta|se
+Irak|d’Irak|Bassora|ar
+Iran|d’Iran|Ispahan|fa
+Irlande|d’Irlande|Galway|ce
+Islande|d’Islande|Reykjavik|no
+Israël|d’Israël|Haïfa|he
+Italie|d’Italie|Naples|it
+Jamaïque|de la Jamaïque|Kingston|en
+Japon|du Japon|Kyoto|jp
+Jordanie|de Jordanie|Amman|ar
+Kazakhstan|du Kazakhstan|Almaty|ct
+Kenya|du Kenya|Mombasa|ea
+Kirghizistan|du Kirghizistan|Bichkek|ct
+Kiribati|des Kiribati|Tarawa|pa
+Koweït|du Koweït|Koweït|ar
+Laos|du Laos|Luang Prabang|se
+Lesotho|du Lesotho|Maseru|sa
+Lettonie|de Lettonie|Riga|bt
+Liban|du Liban|Beyrouth|ar
+Liberia|du Liberia|Monrovia|wa
+Libye|de Libye|Benghazi|ar
+Liechtenstein|du Liechtenstein|Vaduz|de
+Lituanie|de Lituanie|Vilnius|bt
+Luxembourg|du Luxembourg|Luxembourg|fr
+Macédoine du Nord|de Macédoine du Nord|Ohrid|ba
+Madagascar|de Madagascar|Antananarivo|sa
+Malaisie|de Malaisie|Malacca|se
+Malawi|du Malawi|Blantyre|sa
+Maldives|des Maldives|Malé|in
+Mali|du Mali|Tombouctou|wa
+Malte|de Malte|La Valette|it
+Maroc|du Maroc|Fès|ar
+Îles Marshall|des îles Marshall|Majuro|pa
+Maurice|de l’île Maurice|Port-Louis|in
+Mauritanie|de Mauritanie|Nouakchott|ar
+Mexique|du Mexique|Oaxaca|la
+Micronésie|de Micronésie|Palikir|pa
+Moldavie|de Moldavie|Chișinău|ro
+Monaco|de Monaco|Monaco|fr
+Mongolie|de Mongolie|Oulan-Bator|ct
+Monténégro|du Monténégro|Kotor|ba
+Mozambique|du Mozambique|Maputo|pt
+Namibie|de Namibie|Windhoek|sa
+Nauru|de Nauru|Yaren|pa
+Népal|du Népal|Katmandou|in
+Nicaragua|du Nicaragua|Granada|la
+Niger|du Niger|Agadez|wa
+Nigeria|du Nigeria|Lagos|wa
+Norvège|de Norvège|Bergen|no
+Nouvelle-Zélande|de Nouvelle-Zélande|Wellington|en
+Oman|d’Oman|Mascate|ar
+Ouganda|d’Ouganda|Kampala|ea
+Ouzbékistan|d’Ouzbékistan|Samarcande|ct
+Pakistan|du Pakistan|Lahore|in
+Palaos|des Palaos|Koror|pa
+Panama|du Panama|Panama|la
+Papouasie-Nouvelle-Guinée|de Papouasie-Nouvelle-Guinée|Port Moresby|pa
+Paraguay|du Paraguay|Asunción|la
+Pays-Bas|des Pays-Bas|Amsterdam|de
+Pérou|du Pérou|Cuzco|la
+Philippines|des Philippines|Manille|se
+Pologne|de Pologne|Cracovie|sl
+Portugal|du Portugal|Lisbonne|pt
+Qatar|du Qatar|Doha|ar
+République dominicaine|de République dominicaine|Saint-Domingue|la
+RD Congo|de RD Congo|Kinshasa|sa
+Tchéquie|de Tchéquie|Prague|sl
+Roumanie|de Roumanie|Brașov|ro
+Royaume-Uni|du Royaume-Uni|Édimbourg|en
+Russie|de Russie|Saint-Pétersbourg|sl
+Rwanda|du Rwanda|Kigali|sa
+Saint-Kitts-et-Nevis|de Saint-Kitts-et-Nevis|Basseterre|en
+Sainte-Lucie|de Sainte-Lucie|Castries|en
+Saint-Marin|de Saint-Marin|Saint-Marin|it
+Saint-Vincent-et-les-Grenadines|de Saint-Vincent|Kingstown|en
+Îles Salomon|des îles Salomon|Honiara|pa
+Salvador|du Salvador|San Salvador|la
+Samoa|des Samoa|Apia|pa
+São Tomé-et-Principe|de São Tomé-et-Principe|São Tomé|pt
+Sénégal|du Sénégal|Saint-Louis|wa
+Serbie|de Serbie|Belgrade|ba
+Seychelles|des Seychelles|Victoria|fr
+Sierra Leone|de Sierra Leone|Freetown|wa
+Singapour|de Singapour|Singapour|cn
+Slovaquie|de Slovaquie|Bratislava|sl
+Slovénie|de Slovénie|Ljubljana|ba
+Somalie|de Somalie|Mogadiscio|ea
+Soudan|du Soudan|Khartoum|ar
+Soudan du Sud|du Soudan du Sud|Djouba|ea
+Sri Lanka|du Sri Lanka|Kandy|in
+Suède|de Suède|Stockholm|no
+Suisse|de Suisse|Lucerne|de
+Suriname|du Suriname|Paramaribo|de
+Syrie|de Syrie|Alep|ar
+Tadjikistan|du Tadjikistan|Douchanbé|fa
+Tanzanie|de Tanzanie|Zanzibar|ea
+Tchad|du Tchad|N’Djamena|wa
+Thaïlande|de Thaïlande|Chiang Mai|se
+Timor oriental|du Timor oriental|Dili|pt
+Togo|du Togo|Lomé|wa
+Tonga|des Tonga|Nuku’alofa|pa
+Trinité-et-Tobago|de Trinité-et-Tobago|Port-d’Espagne|en
+Tunisie|de Tunisie|Tunis|ar
+Turkménistan|du Turkménistan|Achgabat|ct
+Turquie|de Turquie|Istanbul|tr
+Tuvalu|des Tuvalu|Funafuti|pa
+Ukraine|d’Ukraine|Odessa|sl
+Uruguay|de l’Uruguay|Montevideo|la
+Vanuatu|du Vanuatu|Port-Vila|pa
+Venezuela|du Venezuela|Mérida|la
+Viêt Nam|du Viêt Nam|Hué|se
+Yémen|du Yémen|Sanaa|ar
+Zambie|de Zambie|Lusaka|sa
+Zimbabwe|du Zimbabwe|Bulawayo|sa`;
+const NATS={};COUNTRY_RAW.trim().split('\n').forEach(l=>{const [n,d,c,z]=l.split('|');NATS[n]={n,d,c,z};});
+const NAT_KEYS=Object.keys(NATS);
+const ZONES={
+ gr:{F:['Ione','Kallista','Néfélie','Thalia','Lysandra','Elektra','Daphné','Calypso','Rhéa','Iris','Cyrène','Ariadni','Melina','Eleni'],M:['Aris','Damon','Kyros','Léandros','Nikias','Théron','Héliodore','Castor','Orestis','Évandre','Stavros','Yannis','Petros']},
+ it:{F:['Talia','Giulia','Chiara','Livia','Beatrice','Francesca'],M:['Matteo','Elio','Lorenzo','Dario','Federico','Marco']},
+ es:{F:['Inès','Amaya','Lucía','Carmen','Alba','Nuria'],M:['Isidro','Rafael','Íñigo','Álvaro','Mateo','Jaime']},
+ pt:{F:['Leonor','Beatriz','Matilde','Luana','Iara','Bianca'],M:['Vasco','Duarte','Tomás','Tiago','Caio','João']},
+ fr:{F:['Ysolde','Zoé','Sabine','Oriane','Maëlle','Léonie','Margaux','Clémence','Mireille','Jeanne'],M:['Anselme','Yanis','Dorian','Timéo','Gaspard','Lucien','Bastien','Antonin','Firmin','Jules']},
+ de:{F:['Léna','Greta','Frieda','Mila','Anouk'],M:['Bastian','Lukas','Konrad','Jonas','Daan']},
+ no:{F:['Freya','Kaia','Astrid','Liv','Ingrid','Sigrid'],M:['Søren','Eirik','Leif','Magnus','Ragnar']},
+ en:{F:['Harper','Grace','Willow','Ruby','Ivy'],M:['Owen','Jack','Callum','Ethan','Noah']},
+ ce:{F:['Niamh','Saoirse','Aoife','Maeve'],M:['Cian','Ronan','Declan','Oisín']},
+ sl:{F:['Nadia','Katia','Vera','Anouchka','Zofia','Oksana'],M:['Rouslan','Pavel','Ivan','Dmitri','Bohdan','Jakub']},
+ ba:{F:['Jelena','Ana','Vesna','Mila'],M:['Luka','Stefan','Nikola','Dragan']},
+ ro:{F:['Ioana','Irina','Daria'],M:['Andrei','Mihai','Radu']},
+ hu:{F:['Réka','Zsófia','Eszter'],M:['Bence','Levente','Ádám']},
+ fi:{F:['Aino','Helmi','Kerttu'],M:['Eino','Väinö','Mikko']},
+ bt:{F:['Laima','Ieva','Rūta'],M:['Arvīds','Mantas','Rokas']},
+ tr:{F:['Selin','Elif','Defne','Aylin'],M:['Emre','Kerem','Can','Deniz']},
+ ar:{F:['Noor','Yasmine','Salma','Lina','Zineb','Imane','Leïla'],M:['Karim','Tarek','Omar','Idris','Kaïs','Ilyas','Amine']},
+ fa:{F:['Shirin','Darya','Parisa','Roya'],M:['Kian','Dariush','Arash','Farid']},
+ ca:{F:['Nino','Ani','Tamar','Mariam'],M:['Davit','Levan','Aram','Giorgi']},
+ he:{F:['Noa','Yael','Maya'],M:['Eitan','Ariel','Noam','Lior']},
+ ea:{F:['Makeda','Selam','Tigist','Amani','Zawadi','Nia'],M:['Abebe','Dawit','Yonas','Baraka','Jabari']},
+ wa:{F:['Awa','Aminata','Fatou','Adjoa','Ama','Chioma'],M:['Kofi','Kwame','Moussa','Seydou','Chidi','Ousmane']},
+ sa:{F:['Thandiwe','Naledi','Zola','Amahle','Mbali'],M:['Sipho','Themba','Lwazi','Tendai','Kagiso']},
+ in:{F:['Mira','Priya','Anjali','Kavya','Asha','Divya'],M:['Arjun','Ravi','Vikram','Rohan','Aditya']},
+ cn:{F:['Mei','Lan','Xiu','Ying','Lian'],M:['Wei','Jun','Hao','Long','Bo']},
+ jp:{F:['Aiko','Hana','Yui','Sakura','Rin'],M:['Kenji','Akira','Haruto','Ren','Sora']},
+ kr:{F:['Ji-woo','Seo-yeon','Ha-eun','Min-seo'],M:['Min-jun','Do-yun','Seo-jun','Ji-ho']},
+ se:{F:['Linh','Mai','Ayu','Dewi','Malee'],M:['Minh','Arif','Budi','Somchai','Anh']},
+ pa:{F:['Moana','Leilani','Malia','Sina'],M:['Tane','Keoni','Sione','Manu']},
+ ct:{F:['Aigerim','Dana','Saule','Gulnara'],M:['Timur','Nurlan','Askar','Bakhyt']},
+ la:{F:['Ximena','Itzel','Paloma','Valentina','Camila'],M:['Diego','Emiliano','Santiago','Joaquín','Mateo']}
+};
+const OCC={F:['Joana','Mirèio','Rosalina','Bèrta','Azalaïs','Marion'],M:['Guilhem','Peire','Jaume','Bernat','Ramon','Estève']};
+function namePool(p){const N=NATS[p.nat]||NATS['Grèce'];if(N.n==='France'&&p.bio&&/Cévennes/.test(p.bio.join(' ')))return OCC[p.sex];const z=ZONES[N.z][p.sex];return N.n==='France'?z.concat(OCC[p.sex]):z;}
+const OLD_NAT={grece:'Grèce',italie:'Italie',espagne:'Espagne',portugal:'Portugal',france:'France',allemagne:'Allemagne',norvege:'Norvège',irlande:'Irlande',russie:'Russie',turquie:'Turquie',egypte:'Égypte',maroc:'Maroc',ethiopie:'Éthiopie',inde:'Inde',chine:'Chine',japon:'Japon',coree:'Corée du Sud',bresil:'Brésil',mexique:'Mexique'};
+const PARENTS=['d’un pêcheur','d’une boulangère','d’un forgeron','d’une herboriste','de bergers','d’un marchand ruiné','d’une institutrice','de parents inconnus','d’un gardien de phare','d’une musicienne','d’un mineur','d’une famille de potiers','d’une sage-femme','d’un charpentier de marine'];
+const EVENTS=['Recueilli{e} par un moine après un naufrage.','A grandi seul{e} dans les rues après la mort de ses parents.','Une étoile filante est tombée près de sa maison la nuit de sa naissance.','Une force inexplicable l’a sauvé{e} lors d’un éboulement.','A traversé la mer caché{e} dans la cale d’un cargo.','A soulevé une charrette que trois adultes ne pouvaient pas bouger.','Rêve depuis l’enfance de temples de marbre qu’{il} n’a jamais vus.','A perdu un frère aîné pendant la dernière guerre sainte.','A appris à se battre pour protéger les plus jeunes de son orphelinat.','A entendu une voix l’appeler vers la Grèce.','A fugué trois fois avant d’arriver jusqu’ici.','Courait plus vite que les chevaux de son village.'];
+const GOALS=['Veut retrouver son frère disparu.','Rêve de porter une armure d’or.','Veut prouver sa valeur à sa famille.','Cherche à comprendre le cosmos qui brûle en {lui}.','Veut protéger les faibles comme on l’a protégé{e}.','Veut devenir le plus fort, sans trop savoir pourquoi.','Veut rendre au Sanctuaire sa splendeur.','Cherche une famille, et l’a peut-être trouvée ici.','Veut voir Athéna de ses propres yeux.','Veut venger un village détruit par des guerriers inconnus.'];
+const VET_EVENTS=['A tenu sa position jusqu’au bout pendant la guerre sainte.','A été retrouvé{e} inconscient{e} sous les colonnes effondrées.','A porté trois blessés hors des maisons en flammes.','A vu tomber tous ses frères d’armes, un par un.'];
+const VET_GOALS=['Porte encore les cicatrices de la bataille.','Ne parle jamais de ce qu’{il} a vu.','Veut former une génération plus forte que la sienne.','Se sent responsable de chaque vie perdue.'];
+
+/* qualités et défauts (niveaux I à III) */
+const QUAL={
+ perseverant:{n:'Persévérant',d:l=>'Récupère '+15*l+' % d’énergie en plus ; après un échec, garde '+Math.round(33*l)+' % de sa progression.'},
+ fougueux:{n:'Fougueux',d:l=>'+'+5*l+' % d’XP, mais −'+4*l+' points aux épreuves.'},
+ patient:{n:'Patient',d:l=>'+'+4*l+' points de chance aux épreuves.'},
+ studieux:{n:'Studieux',d:l=>'Savoir des séances −'+10*l+' %.'},
+ loyal:{n:'Loyal',d:l=>'+'+7*l+' % d’XP avec son maître.'},
+ solitaire:{n:'Solitaire',d:l=>'Sans maître : '+(40+10*l)+' % au lieu de 40 % ; −'+10*l+' % avec un maître.'},
+ courageux:{n:'Courageux',d:l=>Math.round(33*l)+' % de chance d’un point de force bonus par niveau.'},
+ vif:{n:'Vif',d:l=>Math.round(33*l)+' % de chance d’un point de vitesse bonus par niveau.'},
+ reveur:{n:'Rêveur',d:l=>Math.round(33*l)+' % de chance d’un point de cosmos bonus par niveau.'},
+ travailleur:{n:'Travailleur',d:l=>'Rend '+25*l+' % de plus en renfort sur un site.'},
+ orgueilleux:{n:'Orgueilleux',d:l=>'+'+3*l+' points aux épreuves, mais un échec l’abat 24 h au lieu de 12.'},
+ sociable:{n:'Sociable',d:l=>'Ses amitiés lui rapportent '+25*l+' % de plus.'}
+};
+const FLAW={
+ paresseux:{n:'Paresseux',d:l=>'−'+6*l+' % d’XP.',cure:'elixir'},
+ impulsif:{n:'Impulsif',d:l=>'−'+5*l+' points aux épreuves.',cure:'tisane'},
+ peureux:{n:'Peureux',d:l=>'−'+6*l+' points aux épreuves d’argent et d’or.',cure:'materiel'},
+ distrait:{n:'Distrait',d:l=>10*l+' % de chance de rater une séance spéciale.',cure:'elixir'},
+ arrogant:{n:'Arrogant',d:l=>'Ses amitiés lui rapportent '+20*l+' % de moins.',cure:'tisane'},
+ colerique:{n:'Colérique',d:l=>'Énergie maximale −'+10*l+'.',cure:'tisane'},
+ tetu:{n:'Têtu',d:l=>'−'+8*l+' % d’XP avec un maître.',cure:'tisane'},
+ fragile:{n:'Fragile',d:l=>'Récupère '+15*l+' % d’énergie en moins.',cure:'materiel'},
+ gourmand:{n:'Gourmand',d:l=>'Mange '+l+' vivre'+(l>1?'s':'')+' de plus par heure.',cure:'tisane'}
+};
+const QKEYS=Object.keys(QUAL),FKEYS=Object.keys(FLAW);
+const ql=(p,k)=>{const x=(p.qual||[]).find(t=>t.k===k);return x?x.lv:0;};
+const fl=(p,k)=>{const x=(p.flaw||[]).find(t=>t.k===k);return x?x.lv:0;};
+function genTraits(r){
+ const qs=QKEYS.slice().sort(()=>r()-.5),fs=FKEYS.slice().sort(()=>r()-.5);
+ const qual=[{k:qs[0],lv:r()<.2?2:1}];if(r()<.35)qual.push({k:qs[1],lv:1});
+ const flaw=[{k:fs[0],lv:r()<.3?2:1}];if(r()<.35)flaw.push({k:fs[1],lv:1});
+ return{qual,flaw};
+}
+const TECH={feu:['Poing de braise','Spirale ardente','Couronne de flammes'],eau:['Vague brisante','Marée silencieuse','Lance de givre'],air:['Rafale tranchante','Pas du zéphyr','Cyclone ascendant'],terre:['Frappe tellurique','Rempart de granit','Séisme intérieur']};
+const SIG_WORDS=['Éclat','Souffle','Envol','Griffe','Rugissement','Chant','Spirale','Lumière'];
+
+/* ressources, objets, recettes */
+const RES={vivres:{n:'Vivres',c:'#9cc27a',b:'champs',k:30},marbre:{n:'Marbre',c:'#e5dfd1',b:'carriere',k:16},metal:{n:'Métal',c:'#d0905a',b:'mine',k:9},savoir:{n:'Savoir',c:'#a99be0',b:'biblio',k:4}};
+const RKEYS=['vivres','marbre','metal','savoir'];
+const ITEMS={herbes:{n:'Herbes',c:'#8fb08a'},potion:{n:'Potion d’endurance',c:'#e4a852'},onguent:{n:'Onguent',c:'#d5d9a8'},tisane:{n:'Tisane apaisante',c:'#9fc7b6'},elixir:{n:'Élixir de concentration',c:'#b3a3ea'},lingot:{n:'Lingot',c:'#d0905a'},outil:{n:'Outils',c:'#bfc8d8'},materiel:{n:'Matériel d’entraînement',c:'#c47e48'},ambroisie:{n:'Ambroisie',c:'#f3d58d'},huile:{n:'Huile sacrée',c:'#e9c46a'}};
+const IKEYS=Object.keys(ITEMS);
+const RECIPES=[
+ {k:'potion',ws:'herbo',inp:{herbes:6},work:2,d:'Rend 40 points d’énergie à un personnage.'},
+ {k:'onguent',ws:'herbo',inp:{herbes:4,vivres:20},work:1.5,d:'Soigne un apprenti après une épreuve ratée : il peut retenter aussitôt.'},
+ {k:'tisane',ws:'herbo',inp:{herbes:5},work:1,d:'Pour corriger l’impulsivité, la colère, l’arrogance, l’entêtement ou la gourmandise.'},
+ {k:'elixir',ws:'herbo',inp:{herbes:8,savoir:15},work:3,d:'Pour corriger la paresse ou la distraction, et renforcer une qualité.'},
+ {k:'lingot',ws:'atelier',inp:{metal:30},work:1,d:'Métal coulé, base de l’artisanat.'},
+ {k:'outil',ws:'atelier',inp:{lingot:2,marbre:20},work:3,d:'Améliore l’outillage d’un site de production (+10 % par niveau).'},
+ {k:'materiel',ws:'atelier',inp:{lingot:1,marbre:40},work:2,d:'Pour corriger la peur ou la fragilité par un entraînement dur.'},
+ {k:'ambroisie',ws:'herbo',lock:'ambroisie',inp:{herbes:10,vivres:50,savoir:30},work:4,d:'Énergie au maximum et 12 h de formation d’un coup.'},
+ {k:'huile',ws:'atelier',lock:'huile',inp:{herbes:6,metal:40},work:2,d:'Versée sur une armure en restauration : avance le travail de moitié.'}
+];
+const REC_BY={};RECIPES.forEach(r=>REC_BY[r.k]=r);
+
+const BUILD={
+ champs:{n:'Oliveraies et potagers',base:{marbre:30,vivres:20},t:.33,eff:l=>'base '+fmt(prodBase('vivres',l))+' vivres / h · '+siteSlots('champs',l)+' postes'},
+ carriere:{n:'Carrière de marbre',base:{vivres:45},t:.4,eff:l=>'base '+fmt(prodBase('marbre',l))+' marbre / h · '+siteSlots('carriere',l)+' postes'},
+ mine:{n:'Mine de cuivre et d’étain',base:{vivres:60,marbre:40},t:.5,eff:l=>'base '+fmt(prodBase('metal',l))+' métal / h · '+siteSlots('mine',l)+' postes'},
+ biblio:{n:'Bibliothèque du Pope',base:{marbre:120,metal:40},t:1,eff:l=>l?'base '+fmt(prodBase('savoir',l))+' savoir / h · '+siteSlots('biblio',l)+' postes':'parchemins ensevelis'},
+ jardin:{n:'Jardin des simples',base:{vivres:60,marbre:30},t:.5,eff:l=>l?'base '+fmt1(herbBase(l))+' herbes / h · '+siteSlots('jardin',l)+' postes':'en friche'},
+ herbo:{n:'Herboristerie',base:{marbre:80,vivres:60,savoir:10},t:1,eff:l=>l?siteSlots('herbo',l)+' herboristes · +'+10*l+' % de vitesse':'à bâtir'},
+ atelier:{n:'Ateliers d’artisanat',base:{marbre:120,metal:60},t:1,eff:l=>l?siteSlots('atelier',l)+' artisans · +'+10*l+' % de vitesse':'à bâtir'},
+ arene:{n:'Arène d’entraînement',base:{marbre:140,metal:50},t:1,eff:l=>'+'+15*l+' % d’XP pour tous'},
+ dortoirs:{n:'Dortoirs des apprentis',base:{marbre:90,vivres:80},t:.75,eff:l=>(3+2*l)+' places d’apprentis'},
+ entrepot:{n:'Réserves',base:{marbre:80,metal:25},t:.66,eff:l=>fmt(capFor('marbre',l))+' max · savoir '+fmt(capFor('savoir',l))+' · herbes '+fmt(herbCap(l))},
+ forge:{n:'Atelier des armures',base:{marbre:200,metal:120,savoir:20},t:1.5,eff:l=>l?('armures '+(l>=8?'d’or':l>=4?'d’argent':'de bronze')+' · '+siteSlots('forge',l)+' forgerons · +'+10*l+' % de vitesse'):'en ruines'},
+ artisans:{n:'Village des artisans',base:{marbre:250,vivres:200,metal:100},t:2,eff:l=>slotsFor(l)+' chantier'+(slotsFor(l)>1?'s':'')+' · '+villageCap(l)+' villageois'}
+};
+const BORDER=['champs','carriere','mine','biblio','jardin','herbo','atelier','entrepot','dortoirs','arene','forge','artisans'];
+const WORK={champs:{res:'vivres',stat:'en'},carriere:{res:'marbre',stat:'fo'},mine:{res:'metal',stat:'fo'},biblio:{res:'savoir',stat:'co'},jardin:{item:'herbes',stat:'en'},forge:{stat:'co'},herbo:{stat:'co'},atelier:{stat:'fo'}};
+const TOOL_SITES=['champs','carriere','mine','biblio','jardin'];
+const STATN={fo:'force',vi:'vitesse',en:'endurance',co:'cosmos'};
+const ROLES={
+ pope:{n:'Grand Pope',d:'+10 % de production et d’XP pour tout le Sanctuaire, plus 1 % par 10 points de cosmos. Un seul.'},
+ recruteur:{n:'Recruteur',d:'Parcourt le monde et ramène des candidats apprentis. Plus son cosmos est fort, plus il trouve vite.'},
+ maitre:{n:'Maître',d:'Forme jusqu’à 3 apprentis. Affinité de signe ou d’élément : formation bien plus rapide.'},
+ intendant:{n:'Intendant',d:'+15 % de production des ressources.'},
+ oeuvre:{n:'Maître d’œuvre',d:'Dirige les artisans : chantiers 20 % plus rapides.'}
+};
+const ARMOR_COST={bronze:{metal:150,savoir:40},argent:{marbre:300,metal:700,savoir:250},or:{marbre:1500,metal:3000,savoir:1200}};
+const ARMOR_WORK={bronze:6,argent:24,or:96};
+const ARMOR_FORGE={bronze:1,argent:4,or:8};
+const ARMOR_SMITH={bronze:1,argent:3,or:5};
+const TRIAL_LV={bronze:8,argent:16,or:28};
+const TRIAL_POT={bronze:0,argent:65,or:93};
+const E_REGEN=4;
+
+/* ---------- personnes ---------- */
+let S=null;
+function uid(){return S.idc++;}
+function rollStats(r,base,spread){return{fo:Math.round(base+r()*spread),vi:Math.round(base+r()*spread),en:Math.round(base+r()*spread),co:Math.round(base+r()*spread)};}
+function fillG(t,p){return t.replace(/\{e\}/g,G(p,'e')).replace(/\{il\}/g,p.sex==='F'?'elle':'il').replace(/\{lui\}/g,p.sex==='F'?'elle':'lui');}
+function makeBio(p,r,vet){
+ const N=NATS[p.nat];const place=r()<.55?'à '+N.c:'dans un village '+N.d;
+ const l1='Né'+G(p,'e')+' '+place+' ('+N.n+'), '+(p.sex==='F'?'fille ':'fils ')+pick(r,PARENTS)+'.';
+ return[l1,fillG(pick(r,vet?VET_EVENTS:EVENTS),p),fillG(pick(r,vet?VET_GOALS:GOALS),p)];
+}
+function makePerson(seed,natPref){
+ const r=mulberry32(seed);const sex=r()<.5?'F':'M';
+ const nat=natPref||(r()<.25?'Grèce':pick(r,NAT_KEYS));
+ const t=genTraits(r);
+ return{seed,sex,nat,name:pick(r,nat==='France'&&r()<.3?OCC[sex]:ZONES[NATS[nat].z][sex]),sign:Math.floor(r()*12),qual:t.qual,flaw:t.flaw,sp:0};
+}
+function makeApprentice(){
+ const seed=(Math.random()*2**31)|0;const p=makePerson(seed);const r=mulberry32(seed^0x5bd1e995);
+ const u=r();const pot=u<.01?93+r()*7:u<.2?65+r()*28:25+r()*40;
+ const fp=pot+(r()-.5)*18;const imp=fp<45?'Ordinaire':fp<65?'Solide':fp<86?'Prometteur':'Exceptionnel';
+ const a=Object.assign(p,{id:uid(),age:8+Math.floor(r()*9),pot:Math.round(pot),imp,st:rollStats(r,3,9),lv:1,xp:0,master:null,tech:[],awk:false,cd:0,job:null,wacc:0,bio:makeBio(p,r,false)});
+ a.nrg=emax(a);return a;
+}
+function makeKnight(rank,cons,lv){
+ const seed=(Math.random()*2**31)|0;const p=makePerson(seed);const r=mulberry32(seed^0x1234);
+ if(rank==='or')p.sign=CONS_BY[cons].sign;
+ const base={bronze:14,argent:26,or:48}[rank];
+ const k=Object.assign(p,{id:uid(),rank,cons,lv,xp:0,st:rollStats(r,base,14),role:null,tech:[pick(r,SIG_WORDS)+' '+(rank==='or'?'d’or':de(CONS_BY[cons].n))],origin:'survivant',pot:90,bio:makeBio(p,r,true)});
+ k.nrg=emax(k);return k;
+}
+function makeWorker(job){
+ const seed=(Math.random()*2**31)|0;const p=makePerson(seed,Math.random()<.75?'Grèce':null);
+ return{id:uid(),seed,sex:p.sex,nat:p.nat,name:p.name,sign:p.sign,job:job||null,skill:1,sxp:0};
+}
+function newGame(){
+ S={v:VERSION,idc:1,created:Date.now(),lastReal:Date.now(),gt:0,speed:1,
+  res:{vivres:320,marbre:220,metal:60,savoir:0},items:{herbes:10},
+  b:{champs:1,carriere:1,mine:1,biblio:0,jardin:0,herbo:0,atelier:0,arene:1,dortoirs:1,entrepot:1,forge:0,artisans:0},
+  houses:new Array(12).fill(0),tools:{},craft:{herbo:[],atelier:[]},friend:{},fp:3,fpAcc:0,guards:[],
+  jobs:[],forgeJob:null,knights:[],aps:[],pending:[],workers:[],recruitAcc:0,armors:{},log:[],flags:{},tab:'sanctuaire'};
+ CONS.forEach(c=>S.armors[c.k]='brisee');
+ const goldSign=Math.floor(Math.random()*12);
+ const silvers=CONS.filter(c=>c.rank==='argent'),bronzes=CONS.filter(c=>c.rank==='bronze').slice().sort(()=>Math.random()-.5);
+ const sv=silvers[Math.floor(Math.random()*silvers.length)];
+ [makeKnight('or','or-'+goldSign,38),makeKnight('argent',sv.k,21),makeKnight('bronze',bronzes[0].k,12),makeKnight('bronze',bronzes[1].k,10)].forEach(k=>{S.knights.push(k);S.armors[k.cons]='portee';});
+ S.houses[goldSign]=1;
+ S.friend[fkey(S.knights[0].id,S.knights[1].id)]=3;S.friend[fkey(S.knights[2].id,S.knights[3].id)]=2;
+ S.armors[bronzes[2].k]='restauree';S.armors[bronzes[3].k]='restauree';
+ ['champs','champs','carriere','carriere','mine'].forEach(j=>S.workers.push(makeWorker(j)));
+ S.pending.push(makeApprentice(),makeApprentice());S.perm=[];S.artefacts=[];S.faveur=0;S.gods={};S.duel={lastDate:'',lastGt:-999};S.match=null;
+ log('La guerre sainte est finie. Le Sanctuaire n’est plus que ruines, et quatre chevaliers seulement ont survécu.');
+ log('Cinq villageois sont montés aider aux champs, à la carrière et à la mine.');
+ log('Deux armures de bronze ont été retrouvées intactes sous les décombres : '+bronzes[2].n+' et '+bronzes[3].n+'.');
+ log('Deux enfants se présentent aux portes. Ils veulent devenir chevaliers.');
+}
+/* sauvegardes anciennes → v0.3 */
+const OLD_TRAIT_MAP={fougueux:'fougueux',patient:'patient',studieux:'studieux',loyal:'loyal',solitaire:'solitaire',courageux:'courageux',reveur:'reveur',vif:'vif',travailleur:'travailleur',orgueilleux:'orgueilleux'};
+function migrate(o){
+ if(o.v===VERSION)return o;
+ const prevS=S;S=o;const from=o.v;
+ CONS.forEach(c=>{if(!S.armors[c.k])S.armors[c.k]='brisee';});
+ ['jardin','herbo','atelier'].forEach(k=>{if(S.b[k]==null)S.b[k]=0;});
+ S.items=S.items||{herbes:10};S.tools=S.tools||{};S.craft=S.craft||{herbo:[],atelier:[]};S.friend=S.friend||{};if(S.fp==null)S.fp=5;S.fpAcc=S.fpAcc||0;
+ if(!S.houses){S.houses=new Array(12).fill(0);S.knights.filter(k=>k.rank==='or').forEach(k=>S.houses[k.sign]=1);}
+ const fixNat=p=>{if(OLD_NAT[p.nat])p.nat=OLD_NAT[p.nat];if(!NATS[p.nat])p.nat='Grèce';};
+ const enrich=(p,vet)=>{
+  fixNat(p);
+  if(!p.qual){const r=mulberry32(p.seed^0x99);const t=genTraits(r);p.qual=p.trait&&OLD_TRAIT_MAP[p.trait]?[{k:OLD_TRAIT_MAP[p.trait],lv:1}]:t.qual;p.flaw=t.flaw.slice(0,1);delete p.trait;}
+  if(!p.bio)p.bio=makeBio(p,mulberry32(p.seed^0x77),vet);
+  if(p.sp==null)p.sp=0;if(p.nrg==null)p.nrg=emax(p);
+ };
+ S.knights.forEach(k=>enrich(k,k.origin==='survivant'));
+ S.aps.forEach(a=>{enrich(a,false);if(a.job===undefined)a.job=null;a.wacc=a.wacc||0;});
+ S.pending.forEach(a=>{enrich(a,false);a.job=null;a.wacc=0;});
+ if(!S.workers){S.workers=[];const jobs=['champs','champs','carriere','carriere','mine'];if(S.b.biblio>0)jobs.push('biblio');if(S.b.forge>0)jobs.push('forge');jobs.forEach(j=>S.workers.push(makeWorker(j)));}
+ S.workers.forEach(fixNat);
+ if(S.forgeJob&&S.forgeJob.work==null){const c=CONS_BY[S.forgeJob.cons];const w=ARMOR_WORK[c.rank];const done=S.forgeJob.end&&S.forgeJob.start?clamp((S.gt-S.forgeJob.start)/(S.forgeJob.end-S.forgeJob.start),0,1):0;S.forgeJob={cons:c.k,work:w,prog:w*done};}
+ S.v=VERSION;
+ if(!S.guards)S.guards=[];if(!S.perm){S.perm=(S.cards||[]).map(id=>{const c=CARD_BY[id];return{n:c.n,el:c.el,t:c.t,eff:c.eff||{},unlock:c.unlock||null,fav:c.fav||0};});S.faveur=S.perm.reduce((a,c)=>a+(c.fav||0),0);delete S.cards;delete S.market;delete S.decks;}
+ if(!S.artefacts)S.artefacts=[];
+ const renamed=[];people().concat(S.workers,S.pending).forEach(q=>{const pool=namePool(q);if(!pool.includes(q.name)){const old=q.name;q.name=pool[(q.seed>>>3)%pool.length];renamed.push(old+' → '+q.name);}});if(renamed.length)log('Prénoms accordés à leur pays : '+renamed.join(', ')+'.');if(!S.gods)S.gods={};if(!S.duel)S.duel={lastDate:'',lastGt:-999};if(S.match===undefined)S.match=null;
+ log(from<3?'Nouvelle version : caractères et défauts, énergie, amitiés, herboristerie, artisanat, Chambre du Pope et gardes.':(from<5?'Version 0.6 : la lecture des astres contre les dieux, et des portraits refaits selon l’origine de chacun.':'Version 0.6 : nouveaux portraits, apparence et prénoms fidèles au pays d’origine.'));
+ const out=S;S=prevS;return out;
+}
+function log(m){S.log.unshift({t:S.gt,m});if(S.log.length>150)S.log.length=150;}
+function save(){try{S.lastReal=Date.now();localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function load(){try{const t=localStorage.getItem(KEY);if(t){const o=JSON.parse(t);if(o&&o.v>=1&&o.v<=VERSION)return migrate(o);}}catch(e){}return null;}
+
+/* ---------- règles ---------- */
+const knightsWith=role=>S.knights.filter(k=>k.role===role);
+function people(){return S.knights.concat(S.aps,S.guards||[]);}
+function byId(id){return S.knights.find(k=>k.id===id)||S.aps.find(a=>a.id===id)||(S.guards||[]).find(g=>g.id===id)||null;}
+function isKnight(p){return S.knights.indexOf(p)>=0;}
+function pope(){return S.knights.find(k=>k.role==='pope');}
+function popeBonus(){const p=pope();return p?.1+p.st.co/1000:0;}
+function prodBase(r,l){return l<=0?0:RES[r].k*l*Math.pow(1.08,l);}
+function herbBase(l){return l<=0?0:.6*l*Math.pow(1.08,l);}
+function herbCap(l){return 100+50*Math.max(0,(l==null?S.b.entrepot:l)-1);}
+function prodMult(){return 1+.15*knightsWith('intendant').length+popeBonus();}
+function toolMult(site){return 1+.1*(S.tools[site]||0);}
+function capFor(r,l){return(r==='savoir'?150:600)*Math.pow(1.6,Math.max(0,l-1));}
+function cap(r){return capFor(r,S.b.entrepot)*(1+cb('CAP')/100);}
+function slotsFor(l){return 1+(l>=1?1:0)+(l>=4?1:0)+(l>=8?1:0);}
+function villageCap(l){return 6+3*l;}
+function siteSlots(site,l){if(l==null)l=S.b[site];if(l<=0)return 0;return(site==='forge'||site==='herbo'||site==='atelier')?1+l:2+l;}
+function workersAt(site){return S.workers.filter(w=>w.job===site);}
+function apsAt(site){return S.aps.filter(a=>a.job===site);}
+function usedSlots(site){return workersAt(site).length+apsAt(site).length;}
+function workerEff(w){return 1+.08*(w.skill-1);}
+function apWorkEff(a){return 1.2*(1+.25*ql(a,'travailleur'));}
+function siteEff(site){let e=0;workersAt(site).forEach(w=>e+=workerEff(w));apsAt(site).forEach(a=>e+=apWorkEff(a));return e;}
+function siteFactor(site){return .2+.4*siteEff(site);}
+function upkeep(){let u=S.workers.length;S.aps.forEach(a=>u+=3+fl(a,'gourmand'));S.knights.forEach(k=>u+=2+fl(k,'gourmand'));(S.guards||[]).forEach(g=>u+=2+fl(g,'gourmand'));return u*(1-cb('UPKEEP')/100);}
+function siteProd(site){if(site==='jardin')return herbBase(S.b.jardin)*siteFactor('jardin')*prodMult()*toolMult('jardin')*(1+cb('P_herbes')/100);const r=WORK[site].res;return prodBase(r,S.b[site])*siteFactor(site)*prodMult()*toolMult(site)*(1+(cb('P_'+r)+cb('P_all'))/100);}
+function rates(){const o={};RKEYS.forEach(r=>o[r]=siteProd(RES[r].b));o.vivres-=upkeep();return o;}
+function costOf(id){const l=S.b[id],c={};for(const r in BUILD[id].base)c[r]=Math.ceil(BUILD[id].base[r]*Math.pow(1.55,l)/5)*5;return c;}
+function oeuvreMult(){return 1/(1+.2*knightsWith('oeuvre').length);}
+function timeOf(id){return BUILD[id].t*Math.pow(1.7,S.b[id])*oeuvreMult()*Math.max(.3,1-cb('BUILD')/100);}
+function houseCost(i){const l=S.houses[i];return{marbre:Math.ceil(300*Math.pow(1.8,l)/5)*5,metal:Math.ceil(80*Math.pow(1.8,l)/5)*5};}
+function houseTime(i){return 3*Math.pow(1.8,S.houses[i])*oeuvreMult()*Math.max(.3,1-cb('BUILD')/100);}
+const HOUSE_MAX=5;
+function have(k){return RES[k]?S.res[k]:(S.items[k]||0);}
+function afford(c){for(const r in c)if(have(r)<c[r])return false;return true;}
+function pay(c){for(const r in c){if(RES[r])S.res[r]-=c[r];else S.items[r]=(S.items[r]||0)-c[r];}}
+function capacity(){return 3+2*S.b.dortoirs;}
+function arena(){return 1+.15*S.b.arene;}
+function need(lv){return Math.round(80*Math.pow(1.25,lv-1));}
+function affinity(ap,m){if(!m)return{x:1,t:''};if(m.sign===ap.sign)return{x:1.5,t:'Même signe'};if(SIGNS[m.sign].el===SIGNS[ap.sign].el)return{x:1.25,t:'Même élément'};return{x:1,t:''};}
+function masterOf(ap){return S.knights.find(k=>k.id===ap.master&&k.role==='maitre')||null;}
+function emax(p){return 100-10*fl(p,'colerique');}
+function eregen(p){return E_REGEN*(1+.15*ql(p,'perseverant'))*(1-.15*fl(p,'fragile'))*(1+cb('NRG')/100);}
+function fkey(a,b){return a<b?a+'-'+b:b+'-'+a;}
+function friendLv(a,b){return S.friend[fkey(a,b)]||0;}
+function friendsOf(p){const out=[];for(const k in S.friend){const [a,b]=k.split('-').map(Number);if(a!==p.id&&b!==p.id)continue;const o=byId(a===p.id?b:a);if(o&&S.friend[k]>0)out.push({p:o,lv:S.friend[k]});}return out.sort((x,y)=>y.lv-x.lv);}
+function friendBonus(p){let s=0;friendsOf(p).forEach(f=>{const mentor=(p.master===f.p.id&&f.p.role==='maitre')||(f.p.master===p.id&&p.role==='maitre');s+=f.lv*(mentor?2:1);});s*=.01*(1+.25*ql(p,'sociable'))*(1-.2*fl(p,'arrogant'));return Math.max(0,Math.min(.3+cb('FCAP')/100,s));}
+function xpRate(ap){
+ const m=masterOf(ap);let mm=.4+.1*ql(ap,'solitaire');
+ if(m)mm=(1+m.lv/40+({or:.5,argent:.25,bronze:0})[m.rank])*affinity(ap,m).x*(1+.07*ql(ap,'loyal'))*(1-.1*ql(ap,'solitaire'))*(1-.08*fl(ap,'tetu'));
+ const tr=(1+.05*ql(ap,'fougueux'))*(1-.06*fl(ap,'paresseux'));
+ return 10*arena()*mm*tr*(1+.1*S.houses[ap.sign])*(1+ap.st.en/200)*(1+popeBonus())*(1+friendBonus(ap))*(1+cb('XP')/100)*(S.starve?.5:1)*(ap.job?.5:1);
+}
+function knightRate(k){const rm=k.role===null?1:k.role==='maitre'?.5:.3;return 6*arena()*rm*(1-.06*fl(k,'paresseux'))*(1+popeBonus())*(1+friendBonus(k))*(1+cb('XP')/100)*(S.starve?.5:1);}
+function power(p,rank){const s=p.st;return(s.fo+s.vi+s.en+s.co*2)*(rank?RANK_MULT[rank]:.5)*(1+p.lv/20);}
+function sanctPower(){let t=0;S.knights.forEach(k=>t+=power(k,k.rank));S.aps.forEach(a=>t+=power(a,null)*.5);S.houses.forEach(h=>t+=h*40);return t;}
+const RANK_W={apprenti:.5,garde:1,bronze:2,argent:4,or:8};
+function weightOf(p){return RANK_W[p.rank||'apprenti']*(p.role==='pope'?1.5:1)*(1+p.st.co/50);}
+function elemScores(){const o={feu:0,eau:0,air:0,terre:0};people().forEach(p=>o[SIGNS[p.sign].el]+=weightOf(p));return o;}
+function consScore(){let t=0;S.knights.forEach(k=>t+=weightOf(k)*(1+k.lv/40));return t;}
+function recruitInterval(){const rs=knightsWith('recruteur');if(!rs.length)return Infinity;const co=Math.max(...rs.map(k=>k.st.co));return 10/(1+co/80)/(1+.5*(rs.length-1))/(1+cb('RECRUIT')/100);}
+function cosmosLabel(co){return co<20?'Latent':co<50?'Éveillé':co<100?'Brûlant':co<200?'Ardent':'Aux portes du septième sens';}
+function forgeRate(){return .5*siteEff('forge')*(1+.1*S.b.forge)*(1+cb('FORGE')/100);}
+function craftRate(ws){return S.b[ws]>0?.6*siteEff(ws)*(1+.1*S.b[ws])*(1+cb('CRAFT')/100):0;}
+function bestSmith(){let b=0;workersAt('forge').forEach(w=>b=Math.max(b,w.skill));return b;}
+function workerCost(){return{vivres:Math.ceil((60+25*Math.pow(S.workers.length,1.3))/5)*5};}
+
+function bonusStats(p){[['courageux','fo'],['vif','vi'],['reveur','co']].forEach(([q,s])=>{const l=ql(p,q);if(l&&Math.random()<.33*l)p.st[s]++;});}
+function gainQuality(p,sum){
+ if((p.qual||[]).length>=3||Math.random()>=.5)return;
+ const opts=QKEYS.filter(k=>!ql(p,k));const k=opts[Math.floor(Math.random()*opts.length)];p.qual.push({k,lv:1});
+ const m=p.name+' se découvre une nouvelle qualité : '+QUAL[k].n.toLowerCase()+'.';log(m);sum&&sum.ev.push(m);
+}
+function levelUpAp(ap,sum){
+ ap.xp-=need(ap.lv);ap.lv++;
+ ap.sp=(ap.sp||0)+2+Math.floor(ap.pot/30);bonusStats(ap);if(ap.awk)ap.st.co++;
+ let msg='';
+ if(ap.lv===5&&!ap.awk){ap.awk=true;ap.st.co+=5;msg=ap.name+' a senti brûler son cosmos pour la première fois.';}
+ const ti=[10,20,30].indexOf(ap.lv);
+ if(ti>=0){const tn=TECH[SIGNS[ap.sign].el][ti];ap.tech.push(tn);msg=ap.name+' découvre une technique : '+tn+'.';gainQuality(ap,sum);}
+ if(msg){log(msg);sum&&sum.ev.push(msg);}
+ if(sum)sum.lv[ap.id]=(sum.lv[ap.id]||0)+1;
+ S._dirty=true;
+}
+function levelUpKnight(k){k.xp-=need(k.lv)*1.5;k.lv++;k.sp=(k.sp||0)+{bronze:2,argent:3,or:5}[k.rank];bonusStats(k);S._dirty=true;}
+function step(h,sum){
+ const R=rates();
+ RKEYS.forEach(r=>{const v=S.res[r]+R[r]*h;S.res[r]=clamp(v,0,Math.max(cap(r),S.res[r]));});
+ if(S.b.jardin>0){S.items.herbes=Math.min(Math.max(herbCap(),S.items.herbes||0),(S.items.herbes||0)+siteProd('jardin')*h);}
+ S.starve=S.res.vivres<=0.01&&R.vivres<0;
+ S.aps.forEach(ap=>{ap.xp+=xpRate(ap)*h;let g=0;while(ap.xp>=need(ap.lv)&&g++<50)levelUpAp(ap,sum);
+  if(ap.job){ap.wacc=(ap.wacc||0)+h;while(ap.wacc>=24){ap.wacc-=24;ap.st[WORK[ap.job].stat]++;}}});
+ S.knights.forEach(k=>{k.xp+=knightRate(k)*h;let g=0;while(k.xp>=need(k.lv)*1.5&&g++<50)levelUpKnight(k);});
+ (S.guards||[]).forEach(gd=>{gd.xp+=guardRate(gd)*h;let g=0;while(gd.xp>=need(gd.lv)*1.5&&g++<50){gd.xp-=need(gd.lv)*1.5;gd.lv++;gd.sp=(gd.sp||0)+2;bonusStats(gd);S._dirty=true;}});
+ people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);});
+ S.workers.forEach(w=>{if(!w.job)return;if(w.job==='forge'&&!S.forgeJob)return;if((w.job==='herbo'||w.job==='atelier')&&!S.craft[w.job].length)return;
+  w.sxp+=h;while(w.skill<10&&w.sxp>=24*w.skill){w.sxp-=24*w.skill;w.skill++;if(w.skill===5&&w.job==='forge'){const m=w.name+' est désormais maître forgeron. Les armures d’or ne lui résistent plus.';log(m);sum&&sum.ev.push(m);}S._dirty=true;}});
+ if(S.forgeJob)S.forgeJob.prog+=forgeRate()*h;
+ ['herbo','atelier'].forEach(ws=>{const q=S.craft[ws];if(!q.length)return;let left=craftRate(ws)*h;while(left>0&&q.length){const j=q[0];const r=REC_BY[j.k];const need=r.work-j.prog;if(left>=need){left-=need;q.shift();S.items[j.k]=(S.items[j.k]||0)+1;S._dirty=true;if(sum)sum.made[j.k]=(sum.made[j.k]||0)+1;}else{j.prog+=left;left=0;}}});
+ S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
+ S.gt+=h;
+ for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;if(j.b[0]==='h'){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum&&sum.ev.push(m);S._dirty=true;}}
+ if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum&&sum.ev.push(m);S._dirty=true;}
+ const iv=recruitInterval();
+ if(iv<Infinity){S.recruitAcc+=h;if(S.recruitAcc>=iv){S.recruitAcc-=iv;if(S.pending.length<3){const a=makeApprentice();S.pending.push(a);const m='Un recruteur ramène '+a.name+', '+a.age+' ans, venu'+G(a,'e')+' '+NATS[a.nat].d+'.';log(m);sum&&sum.ev.push(m);S._dirty=true;}else S.recruitAcc=Math.min(S.recruitAcc,iv);}}
+ [[POSEIDON_H-30*24,'p30','Les marées deviennent étranges sur toutes les côtes du monde. Poséidon s’agite dans son sommeil.'],[HADES_H-60*24,'h60','Les étoiles maléfiques brillent plus fort chaque nuit. Hadès prépare son retour.']].forEach(([t,f,m])=>{if(S.gt>=t&&!S.flags[f]){S.flags[f]=true;log(m);sum&&sum.ev.push(m);}});
+}
+function advance(dt,sum){if(dt<=0)return;const stepH=Math.max(1/60,dt/3000);let rem=dt;while(rem>1e-9){const h=Math.min(stepH,rem);step(h,sum);rem-=h;}}
+function newSum(){return{lv:{},ev:[],made:{}};}
+
+/* ---------- portraits ---------- */
+const PC=new Map();
+const SKIN=['#fbe4d4','#f3d0b5','#e4b791','#c98f67','#9a6444','#6b412d'];
+const HAIRC={noir:'#1c1a21',brunfonce:'#3a2620',brun:'#5e3a24',chatain:'#8a5a34',auburn:'#8e3b22',roux:'#b5501f',blond:'#d6ab5f',platine:'#e9dab4'};
+const EYEC={brunfonce:'#3b2416',brun:'#6b4022',noisette:'#8a6a2a',vert:'#3f7a4c',bleu:'#3f78bd',gris:'#7d8c9a'};
+const APPEAR={
+ neu:{skin:[0,1],hair:{blond:3,chatain:3,brun:2,roux:.8,platine:.6,noir:.4},eye:{bleu:3,gris:2,vert:2,brun:1}},
+ ceu:{skin:[0,1],hair:{roux:2.5,auburn:1.5,chatain:2.5,brun:2,blond:1.2,noir:.5},eye:{bleu:3,vert:2.5,gris:1.5,brun:1}},
+ feu:{skin:[0,2],hair:{brun:3,chatain:3,brunfonce:2,noir:1,blond:1.5,auburn:.6,roux:.4},eye:{brun:3,bleu:2,vert:1.5,noisette:1.5,gris:.8}},
+ seu:{skin:[1,2],hair:{brunfonce:4,noir:3,brun:2.5,chatain:1,auburn:.3,blond:.3},eye:{brun:4,noisette:2,brunfonce:2,vert:1,bleu:.6}},
+ sla:{skin:[0,1],hair:{chatain:3,brun:3,blond:2.5,noir:.8,platine:.5,roux:.3},eye:{bleu:3,gris:2.5,vert:2,brun:1}},
+ mena:{skin:[2,3],hair:{noir:4,brunfonce:3.5,brun:1},eye:{brun:3,brunfonce:3,noisette:1.5,vert:.6}},
+ cauc:{skin:[1,2],hair:{noir:3,brunfonce:3,brun:1.5},eye:{brun:3,noisette:1.5,vert:1,brunfonce:2}},
+ afr:{skin:[4,5],hair:{noir:5,brunfonce:1},eye:{brunfonce:4,brun:1.5},curly:1},
+ sas:{skin:[3,4],hair:{noir:5,brunfonce:1.5},eye:{brunfonce:3,brun:2.5}},
+ eas:{skin:[1,1],hair:{noir:4,brunfonce:2},eye:{brunfonce:4,brun:1.5},mono:1},
+ sea:{skin:[2,3],hair:{noir:5,brunfonce:1},eye:{brunfonce:3,brun:2},mono:.5},
+ pac:{skin:[3,4],hair:{noir:4,brunfonce:2},eye:{brunfonce:3,brun:2},wavy:1},
+ cas:{skin:[1,2],hair:{noir:4,brunfonce:2},eye:{brunfonce:3,brun:2},mono:.6},
+ lat:{skin:[1,4],hair:{noir:3.5,brunfonce:3,brun:1.5},eye:{brun:3,brunfonce:2.5,noisette:1.2,vert:.4}}
+};
+const ZONE_APPEAR={gr:'seu',it:'seu',es:'seu',pt:'seu',fr:'feu',de:'neu',no:'neu',en:'neu',ce:'ceu',sl:'sla',ba:'seu',ro:'seu',hu:'sla',fi:'neu',bt:'neu',tr:'mena',ar:'mena',fa:'mena',ca:'cauc',he:'mena',ea:'afr',wa:'afr',sa:'afr',in:'sas',cn:'eas',jp:'eas',kr:'eas',se:'sea',pa:'pac',ct:'cas',la:'lat'};
+const NAT_APPEAR={'Angola':'afr','Mozambique':'afr','Cap-Vert':'afr','Guinée-Bissau':'afr','São Tomé-et-Principe':'afr','Brésil':'lat','Timor oriental':'sea','Jamaïque':'afr','Barbade':'afr','Bahamas':'afr','Trinité-et-Tobago':'afr','Antigua-et-Barbuda':'afr','Saint-Kitts-et-Nevis':'afr','Sainte-Lucie':'afr','Saint-Vincent-et-les-Grenadines':'afr','Grenade':'afr','Dominique':'afr','Guyana':'afr','Haïti':'afr','Seychelles':'afr','Comores':'afr','Soudan':'afr','Mauritanie':'afr','Suriname':'lat','Singapour':'eas','Madagascar':'sea','Maurice':'sas'};
+function wpick(r,o){let t=0;for(const k in o)t+=o[k];let x=r()*t;for(const k in o){x-=o[k];if(x<=0)return k;}return Object.keys(o)[0];}
+function appearOf(p){const N=NATS[p.nat]||NATS['Grèce'];return APPEAR[NAT_APPEAR[N.n]||ZONE_APPEAR[N.z]||'seu'];}
+function looks(p){
+ const r=mulberry32((p.seed^0x2f6b1d)>>>0);const A=appearOf(p);
+ const si=A.skin[0]+Math.floor(r()*(A.skin[1]-A.skin[0]+1));
+ const hk=wpick(r,A.hair),ek=wpick(r,A.eye);
+ return{r,skin:SKIN[si],si,hair:HAIRC[hk],hk,eye:EYEC[ek],curly:A.curly?r()<.85:false,wavy:!!A.wavy,mono:A.mono?r()<A.mono:false,
+  tattoo:r()<.22,earring:r()<(p.sex==='F'?.55:.18),smile:r()<.3,fierce:r()<.35,style:r()};
+}
+const ARMC={bronze:['#7a4420','#c98547','#f0c08a'],argent:['#6c7486','#c4ccd8','#f6f8fb'],or:['#8f6112','#e0ac3c','#fbe7a6'],garde:['#3a2e24','#7a6247','#b49770']};
+function strand(g,x0,y0,x1,y1,w,bend){g.beginPath();g.moveTo(x0-w/2,y0);g.quadraticCurveTo((x0+x1)/2+bend-w/3,(y0+y1)/2,x1,y1);g.quadraticCurveTo((x0+x1)/2+bend+w/3,(y0+y1)/2,x0+w/2,y0);g.closePath();g.fill();}
+function portrait(p,rank){
+ const key=p.seed+'|'+(rank||'')+'|'+p.nat+'|'+p.sex;if(PC.has(key))return PC.get(key);
+ const W=256,c=document.createElement('canvas');c.width=c.height=W;const g=c.getContext('2d');
+ const L=looks(p),r=L.r,F=p.sex==='F';const skin=L.skin,shadeSk=shade(skin,-.18),hair=L.hair,hairHi=shade(hair,L.hk==='noir'?.22:.28),hairLo=shade(hair,-.3);
+ const elc={feu:'#e2804f',eau:'#62a6d8',air:'#dfe6f0',terre:'#c49b5c'}[SIGNS[p.sign].el];
+ // ciel du couchant et ruines
+ const sky=g.createLinearGradient(0,0,0,W);sky.addColorStop(0,'#f4d593');sky.addColorStop(.45,'#de9a5a');sky.addColorStop(1,'#4e2a24');g.fillStyle=sky;g.fillRect(0,0,W,W);
+ const sun=g.createRadialGradient(196,78,4,196,78,120);sun.addColorStop(0,'rgba(255,244,214,.95)');sun.addColorStop(.3,'rgba(255,222,160,.45)');sun.addColorStop(1,'rgba(255,200,120,0)');g.fillStyle=sun;g.fillRect(0,0,W,W);
+ g.fillStyle='rgba(120,70,50,.35)';g.beginPath();g.moveTo(0,170);g.lineTo(40,130);g.lineTo(80,150);g.lineTo(130,118);g.lineTo(190,152);g.lineTo(256,124);g.lineTo(256,256);g.lineTo(0,256);g.fill();
+ g.fillStyle='rgba(70,38,32,.55)';const ru=mulberry32(p.seed&255);for(let i=0;i<5;i++){const x=6+i*13+ru()*4,h=40+ru()*50;g.fillRect(x,190-h,7,h+70);}g.fillRect(2,128,70,8);
+ g.fillRect(212,90,22,160);g.beginPath();g.moveTo(206,92);g.lineTo(223,64);g.lineTo(240,92);g.fill();
+ g.fillStyle=elc;g.globalAlpha=.13;g.fillRect(0,0,W,W);g.globalAlpha=1;
+ for(let i=0;i<24;i++){g.fillStyle='rgba(255,236,190,'+(.15+ru()*.4)+')';g.beginPath();g.arc(ru()*W,ru()*W,ru()*1.4+.4,0,7);g.fill();}
+ g.save();g.translate(128,250);g.scale(1.2,1.2);g.translate(-128,-250);
+ const cx=128,hw=F?37:40,chin=F?168:172,crown=60;
+ const long=F?r()<.72:r()<.18,pony=r()<(F?.25:.12);
+ // cheveux arrière
+ if(L.curly){g.fillStyle=hairLo;for(let i=0;i<26;i++){const a=Math.PI*(.95+i/25*1.1),rr=hw+12+r()*8;g.beginPath();g.arc(cx+Math.cos(a)*rr,108+Math.sin(a)*rr*1.05,11+r()*6,0,7);g.fill();}if(F&&r()<.5){for(let i=0;i<7;i++){g.fillRect(cx-hw-6+i*((hw*2+12)/6)-3,108,7,95+r()*25);}}}
+ else if(long){const lg=g.createLinearGradient(0,70,0,240);lg.addColorStop(0,hair);lg.addColorStop(1,hairLo);g.fillStyle=lg;g.beginPath();g.moveTo(cx-hw-10,92);g.quadraticCurveTo(cx-hw-26,190,cx-hw-14,236);g.lineTo(cx+hw+14,236);g.quadraticCurveTo(cx+hw+26,190,cx+hw+10,92);g.closePath();g.fill();}
+ if(pony&&!L.curly){g.fillStyle=hair;g.save();g.translate(cx+20,60);g.rotate(.5);for(let i=0;i<7;i++){strand(g,0,0,40+r()*30,(i-3)*14+20,16,8);}g.restore();g.fillStyle=hairLo;g.beginPath();g.arc(cx+18,58,9,0,7);g.fill();}
+ // buste et vêtements
+ g.fillStyle=shadeSk;g.beginPath();g.moveTo(cx-17,150);g.lineTo(cx+17,150);g.lineTo(cx+21,200);g.lineTo(cx-21,200);g.closePath();g.fill();
+ g.fillStyle='rgba(60,30,20,.25)';g.beginPath();g.ellipse(cx,166,20,9,0,0,7);g.fill();
+ const sh=(fill)=>{g.fillStyle=fill;g.beginPath();g.moveTo(14,256);g.bezierCurveTo(22,214,52,198,cx-24,188);g.lineTo(cx+24,188);g.bezierCurveTo(204,198,234,214,242,256);g.closePath();g.fill();};
+ if(!rank){
+  const tg=g.createLinearGradient(30,190,230,256);tg.addColorStop(0,'#f4ecdb');tg.addColorStop(1,'#bfb196');sh(tg);
+  g.fillStyle='#2e2621';g.beginPath();g.moveTo(cx-22,190);g.lineTo(cx,236);g.lineTo(cx+22,190);g.closePath();g.fill();
+  g.fillStyle=shadeSk;g.beginPath();g.moveTo(cx-16,190);g.lineTo(cx,218);g.lineTo(cx+16,190);g.closePath();g.fill();
+  g.strokeStyle='#a99a7c';g.lineWidth=3;g.beginPath();g.moveTo(cx-26,188);g.lineTo(cx+8,256);g.moveTo(cx+26,188);g.lineTo(cx-4,248);g.stroke();
+  g.fillStyle='#5b3a5e';g.fillRect(40,244,176,12);
+  g.strokeStyle='rgba(120,100,80,.45)';g.lineWidth=1.5;for(let i=0;i<4;i++){g.beginPath();g.moveTo(44+i*14,222+i*4);g.quadraticCurveTo(60+i*14,236,52+i*12,256);g.stroke();}
+ }else{
+  const [d,m,l]=ARMC[rank];
+  sh('#231c1a');
+  g.fillStyle='#2f2724';g.beginPath();g.moveTo(cx-22,188);g.lineTo(cx,206);g.lineTo(cx+22,188);g.lineTo(cx+20,200);g.lineTo(cx,214);g.lineTo(cx-20,200);g.closePath();g.fill();
+  if(rank==='garde'){
+   g.strokeStyle='#8a6440';g.lineWidth=9;g.beginPath();g.moveTo(cx-60,200);g.lineTo(cx+50,256);g.stroke();
+   g.fillStyle='#c9a46a';g.fillRect(cx-8,224,14,11);g.fillStyle='#231c1a';g.fillRect(cx-4,227,6,5);
+   const pg=g.createLinearGradient(170,190,240,240);pg.addColorStop(0,l);pg.addColorStop(1,d);g.fillStyle=pg;g.beginPath();g.ellipse(196,212,34,22,-.35,0,7);g.fill();
+   g.strokeStyle=d;g.lineWidth=2;g.beginPath();g.ellipse(196,212,26,15,-.35,Math.PI*1.1,Math.PI*1.9);g.stroke();
+  }else{
+   const cg=g.createLinearGradient(cx-50,200,cx+50,256);cg.addColorStop(0,l);cg.addColorStop(.45,m);cg.addColorStop(1,d);g.fillStyle=cg;
+   g.beginPath();g.moveTo(cx-48,212);g.lineTo(cx-16,204);g.lineTo(cx,216);g.lineTo(cx+16,204);g.lineTo(cx+48,212);g.lineTo(cx+54,256);g.lineTo(cx-54,256);g.closePath();g.fill();
+   g.strokeStyle=shade(d,-.3);g.lineWidth=1.6;g.beginPath();g.moveTo(cx,216);g.lineTo(cx,256);for(let i=0;i<2;i++){g.moveTo(cx-46,228+i*14);g.quadraticCurveTo(cx,238+i*14,cx+46,228+i*14);}g.stroke();
+   g.fillStyle=elc;g.beginPath();g.arc(cx,226,4.5,0,7);g.fill();g.fillStyle='rgba(255,255,255,.7)';g.beginPath();g.arc(cx-1.4,224.6,1.4,0,7);g.fill();
+   for(const s of[-1,1]){for(let k=2;k>=0;k--){const px=cx+s*(70+k*4),py=200+k*13;const pg=g.createLinearGradient(px-30,py-20,px+30,py+20);pg.addColorStop(0,s<0?l:m);pg.addColorStop(1,d);g.fillStyle=pg;g.beginPath();g.ellipse(px,py,38-k*3,17,s*-.3,Math.PI*(s<0?.95:1.05)-.6,Math.PI*(s<0?2.05:1.95)+.6);g.fill();g.strokeStyle=shade(d,-.35);g.lineWidth=1.3;g.stroke();
+     g.fillStyle=l;for(let q=-1;q<=1;q++){g.beginPath();g.arc(px+q*14,py+4+Math.abs(q)*2,1.8,0,7);g.fill();}}
+    g.fillStyle=l;g.beginPath();g.moveTo(cx+s*58,188);g.lineTo(cx+s*66,166);g.lineTo(cx+s*72,190);g.closePath();g.fill();}
+  }
+ }
+ // oreilles et visage
+ g.fillStyle=skin;g.beginPath();g.ellipse(cx-hw+1,118,6,10,-.15,0,7);g.fill();g.beginPath();g.ellipse(cx+hw-1,118,6,10,.15,0,7);g.fill();
+ g.beginPath();g.moveTo(cx-hw,96);g.bezierCurveTo(cx-hw,132,cx-hw*.58,(F?156:160),cx,chin);g.bezierCurveTo(cx+hw*.58,(F?156:160),cx+hw,132,cx+hw,96);g.bezierCurveTo(cx+hw,52,cx-hw,52,cx-hw,96);g.closePath();g.fill();
+ g.save();g.clip();const fs=g.createLinearGradient(cx-hw,0,cx+hw,0);fs.addColorStop(0,'rgba(90,40,30,.28)');fs.addColorStop(.55,'rgba(90,40,30,0)');fs.addColorStop(1,'rgba(255,220,170,.18)');g.fillStyle=fs;g.fillRect(0,0,W,W);g.restore();
+ if(F){g.fillStyle='rgba(230,110,100,.18)';g.beginPath();g.ellipse(cx-24,140,9,5,0,0,7);g.fill();g.beginPath();g.ellipse(cx+24,140,9,5,0,0,7);g.fill();}
+ // tatouages
+ if(L.tattoo){g.strokeStyle='rgba(30,22,26,.75)';g.lineWidth=2.4;g.lineCap='round';const side=r()<.5?-1:1;g.beginPath();g.moveTo(cx+side*8,174);g.quadraticCurveTo(cx+side*20,182,cx+side*12,194);g.moveTo(cx+side*14,178);g.arc(cx+side*16,186,5,-1.5,2.6);g.stroke();if(r()<.5){g.beginPath();g.moveTo(cx+side*30,128);g.lineTo(cx+side*34,146);g.moveTo(cx+side*25,131);g.lineTo(cx+side*28,145);g.stroke();}}
+ // yeux
+ const ey=121,ew=F?14:13,eh=(F?9:7.5)*(L.mono?.78:1);
+ for(const s of[-1,1]){const ex=cx+s*19;
+  g.save();g.beginPath();g.moveTo(ex-ew,ey+1);g.bezierCurveTo(ex-ew*.5,ey-eh*1.3,ex+ew*.5,ey-eh*1.3,ex+ew,ey-(L.mono?2:0));g.bezierCurveTo(ex+ew*.5,ey+eh*.95,ex-ew*.5,ey+eh*.95,ex-ew,ey+1);g.closePath();g.fillStyle='#fffaf2';g.fill();g.clip();
+  const ig=g.createLinearGradient(0,ey-eh,0,ey+eh);ig.addColorStop(0,shade(L.eye,-.55));ig.addColorStop(.55,L.eye);ig.addColorStop(1,shade(L.eye,.35));g.fillStyle=ig;g.beginPath();g.ellipse(ex+s*-1,ey+1,7.4,eh*1.05,0,0,7);g.fill();
+  g.fillStyle='#120c0c';g.beginPath();g.ellipse(ex+s*-1,ey+1,3.2,eh*.55,0,0,7);g.fill();
+  g.fillStyle='rgba(0,0,0,.25)';g.fillRect(ex-ew,ey-eh,ew*2,3);
+  g.fillStyle='#fff';g.beginPath();g.arc(ex+s*-1+2.6,ey-2.2,2.3,0,7);g.fill();g.beginPath();g.arc(ex+s*-1-2.4,ey+3.6,1.1,0,7);g.fill();g.restore();
+  g.strokeStyle='#1a1214';g.lineCap='round';g.lineWidth=F?3.4:2.8;g.beginPath();g.moveTo(ex-s*ew,ey+(s<0?1:1));g.bezierCurveTo(ex-s*ew*.5,ey-eh*1.3,ex+s*ew*.5,ey-eh*1.3,ex+s*ew,ey-(L.mono?2:0));g.stroke();
+  if(F){g.lineWidth=2.2;g.beginPath();g.moveTo(ex+s*ew,ey-(L.mono?2:0));g.lineTo(ex+s*(ew+5),ey-5);g.stroke();}
+  g.lineWidth=1;g.strokeStyle='rgba(60,30,30,.6)';g.beginPath();g.moveTo(ex-ew*.6,ey+eh*.85);g.quadraticCurveTo(ex,ey+eh*1.05,ex+ew*.6,ey+eh*.85);g.stroke();
+  const bi=L.fierce?-1:1;g.strokeStyle=hairLo;g.lineWidth=F?2.4:3.6;g.beginPath();g.moveTo(cx+s*8,ey-eh-8+(L.fierce?3:0));g.quadraticCurveTo(cx+s*19,ey-eh-13+(bi>0?0:1),cx+s*31,ey-eh-8-(L.fierce?2:0));g.stroke();}
+ // nez et bouche
+ g.strokeStyle=shade(skin,-.32);g.lineWidth=1.6;g.beginPath();g.moveTo(cx+2,136);g.lineTo(cx-1,143);g.stroke();g.fillStyle='rgba(90,40,30,.18)';g.beginPath();g.ellipse(cx,144,4,1.6,0,0,7);g.fill();
+ if(L.smile){g.fillStyle='#5a1f22';g.beginPath();g.moveTo(cx-9,152);g.quadraticCurveTo(cx,163,cx+9,152);g.closePath();g.fill();g.fillStyle='#fff';g.fillRect(cx-7,152,14,2.2);}
+ else{g.strokeStyle=F?'#a24f55':shade(skin,-.42);g.lineWidth=2;g.beginPath();g.moveTo(cx-8,153);g.quadraticCurveTo(cx,155.5,cx+8,153);g.stroke();g.fillStyle='rgba(120,50,50,.15)';g.beginPath();g.ellipse(cx,157.5,5,1.8,0,0,7);g.fill();}
+ // boucles d’oreilles
+ if(L.earring){g.strokeStyle='#e9c46a';g.lineWidth=2;g.beginPath();g.arc(cx-hw+1,131,3.5,0,7);g.stroke();g.beginPath();g.arc(cx+hw-1,131,3.5,0,7);g.stroke();}
+ // cheveux avant
+ const hg=g.createLinearGradient(cx-hw,40,cx+hw,120);hg.addColorStop(0,hairHi);hg.addColorStop(.6,hair);hg.addColorStop(1,hairLo);g.fillStyle=hg;
+ if(L.curly){for(let i=0;i<22;i++){const a=Math.PI*(1.02+i/21*.96),rr=hw+3+r()*4;g.beginPath();g.arc(cx+Math.cos(a)*rr,100+Math.sin(a)*rr*1.1,10+r()*5,0,7);g.fill();}g.beginPath();g.ellipse(cx,72,hw+4,20,0,0,7);g.fill();}
+ else{
+  g.beginPath();g.ellipse(cx,88,hw+5,32,0,Math.PI,0);g.fill();g.beginPath();g.ellipse(cx,80,hw+2,26,0,0,7);g.fill();
+  const style=Math.floor(L.style*(F?4:4));
+  const n=F?7:6,sp=(hw*2+10)/n;
+  if(!F&&style===0){for(let i=0;i<9;i++){const x0=cx-hw+i*(hw*2)/8;strand(g,x0,70,x0+(i-4)*4+(r()-.5)*10,44+r()*12+Math.abs(i-4)*3,15,(r()-.5)*8);}}
+  for(let i=0;i<n;i++){const x0=cx-hw-2+sp*(i+.5);const tip=(style===2?108:style===3&&F?96:102)+r()*(style===2?4:14);const bend=(style===1?10:style===3?-12:0)+(r()-.5)*8;strand(g,x0,70,x0+bend*.8,tip,sp*1.25,bend);}
+  const sideLen=long?205:F?162:(style===2?150:126);
+  strand(g,cx-hw+2,84,cx-hw-2+(r()-.5)*6,sideLen,16,-6);strand(g,cx+hw-2,84,cx+hw+2+(r()-.5)*6,sideLen,16,6);
+  if(L.wavy){g.strokeStyle=hairLo;g.lineWidth=2;for(let i=0;i<4;i++){g.beginPath();g.moveTo(cx-hw+i*20,76);g.bezierCurveTo(cx-hw+i*20+6,84,cx-hw+i*20-4,92,cx-hw+i*20+3,100);g.stroke();}}
+  g.strokeStyle='rgba(255,236,200,'+(L.hk==='noir'?.32:.42)+')';g.lineWidth=2;for(let i=0;i<3;i++){g.beginPath();g.moveTo(cx-24+i*14,62+i);g.quadraticCurveTo(cx-18+i*14,70,cx-20+i*14,82);g.stroke();}
+ }
+ g.strokeStyle='rgba(255,210,140,.45)';g.lineWidth=2.5;g.beginPath();g.arc(cx,92,hw+6,-1.3,-.15);g.stroke();
+ // diadème
+ if(rank==='or'||rank==='argent'){const [d,m,l]=ARMC[rank];g.strokeStyle=m;g.lineWidth=4;g.beginPath();g.ellipse(cx,84,hw+3,11,0,Math.PI*1.06,Math.PI*1.94);g.stroke();g.fillStyle=l;g.beginPath();g.moveTo(cx,64);g.lineTo(cx+7,73);g.lineTo(cx,82);g.lineTo(cx-7,73);g.closePath();g.fill();g.fillStyle=elc;g.beginPath();g.arc(cx,73,2.6,0,7);g.fill();}
+ g.restore();
+ // vignette
+ const vg=g.createRadialGradient(cx,120,90,cx,128,190);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(30,12,8,.45)');g.fillStyle=vg;g.fillRect(0,0,W,W);
+ const url=c.toDataURL('image/jpeg',.88);PC.set(key,url);return url;
+}
+
+function ptImg(p,rank,lg){return '<img class="pt'+(lg?' lg':'')+(rank?' '+rank:'')+'" src="'+portrait(p,rank)+'" alt="Portrait de '+esc(p.name)+'" width="'+(lg?132:58)+'" height="'+(lg?132:58)+'">';}
+function signChip(i){const s=SIGNS[i];return '<span class="chip el-'+s.el+'"><span class="sign">'+s.s+'</span> '+s.n+'</span>';}
+function rankChip(r){return '<span class="chip '+r+'">'+RANKS[r]+'</span>';}
+function colorOf(k){return RES[k]?RES[k].c:ITEMS[k].c;}
+function nameOf(k){return RES[k]?RES[k].n.toLowerCase():ITEMS[k].n.toLowerCase();}
+function costHtml(c){return '<div class="cost">'+Object.keys(c).map(r=>'<span class="'+(have(r)<c[r]?'no':'')+'"><i style="background:'+colorOf(r)+'"></i>'+fmt(c[r])+' '+nameOf(r)+'</span>').join('')+'</div>';}
+function traitChips(p){return (p.qual||[]).map(t=>'<span class="chip q">'+QUAL[t.k].n+' '+ROMAN[t.lv]+'</span>').join('')+(p.flaw||[]).map(t=>'<span class="chip f">'+FLAW[t.k].n+' '+ROMAN[t.lv]+'</span>').join('');}
+function nrgBar(p){return '<div class="nrg"><span>Énergie</span><div class="bar green"><i data-nrg="'+p.id+'" style="width:'+clamp(p.nrg/emax(p)*100,0,100)+'%"></i></div><b data-nrgv="'+p.id+'">'+Math.floor(p.nrg)+'</b></div>';}
+
+/* ---------- carte animée ---------- */
+const VW=360,VH=400;
+const SITES={
+ carriere:{n:'Carrière',r:[10,184,84,50]},
+ biblio:{n:'Bibliothèque',r:[108,188,70,44]},
+ dortoirs:{n:'Dortoirs',r:[192,190,62,40]},
+ mine:{n:'Mine',r:[268,184,82,50]},
+ champs:{n:'Oliveraies',r:[10,250,96,66]},
+ arene:{n:'Arène',r:[118,252,84,62]},
+ artisans:{n:'Village',r:[214,262,54,52]},
+ forge:{n:'Atelier des armures',r:[276,250,74,64]},
+ jardin:{n:'Jardin des simples',r:[10,330,104,56]},
+ herbo:{n:'Herboristerie',r:[128,332,90,54]},
+ atelier:{n:'Artisanat',r:[232,332,118,54]}
+};
+const DEPOT=[230,244];
+const HOUSE_PTS=[];for(let i=0;i<12;i++)HOUSE_PTS.push([180+(i%2?1:-1)*(58-i*3.8),166-i*11.6]);
+let AG=[],SPARKS=[],mapScale=1,staticCache=null,staticSig='',lastFrame=0;
+function rectPt(rc,r){return[rc[0]+8+r()*(rc[2]-16),rc[1]+10+r()*(rc[3]-18)];}
+function syncAgents(){
+ const want=[];
+ S.workers.forEach(w=>{if(w.job)want.push({id:'w'+w.id,kind:'worker',site:w.job,p:w});else want.push({id:'i'+w.id,kind:'idle',site:'artisans',p:w});});
+ S.aps.forEach(a=>{if(a.job)want.push({id:'a'+a.id,kind:'apworker',site:a.job,p:a});else want.push({id:'s'+a.id,kind:'spar',site:'arene',p:a});});
+ knightsWith('maitre').forEach(k=>want.push({id:'m'+k.id,kind:'master',site:'arene',p:k}));
+ (S.guards||[]).forEach(g=>{if(g.post)want.push({id:'g'+g.id+g.post,kind:'guard',site:g.post,p:g});});
+ const old={};AG.forEach(a=>old[a.id]=a);
+ AG=want.map(wn=>{const o=old[wn.id];if(o&&o.site===wn.site&&o.kind===wn.kind){o.p=wn.p;return o;}const r=Math.random;const pt=wn.kind==='guard'?guardPt(wn.site,wn.p):rectPt(SITES[wn.site].r,r);const L=looks(wn.p);
+  return Object.assign(wn,{x:pt[0],y:pt[1],tx:pt[0],ty:pt[1],st:'work',t:r()*2,carry:false,ph:r()*6,skin:L.skin,hair:L.hair,ang:r()*6.28});});
+}
+const STILL={forge:1,biblio:1,herbo:1,atelier:1};
+function busySite(s){return s==='forge'?!!S.forgeJob:(s==='herbo'||s==='atelier')?S.craft[s].length>0:true;}
+function updateAgents(dt){
+ AG.forEach(a=>{
+  a.ph+=dt*8;if(a.kind==='guard'){a.st='still';moveTo(a,dt,10);return;}const rc=SITES[a.site].r;
+  if(a.kind==='spar'||a.kind==='master'||a.kind==='idle'){
+   const cx=rc[0]+rc[2]/2,cy=rc[1]+rc[3]/2+3;
+   if(a.kind==='spar'){a.ang+=dt*(1.2+(a.p.id%3)*.3);const R=14+(a.p.id%4)*4;a.tx=cx+Math.cos(a.ang)*R;a.ty=cy+Math.sin(a.ang)*R*.55;}
+   else if(a.kind==='master'){a.tx=cx+(a.p.id%2?-28:28);a.ty=cy-14+(a.p.id%3)*8;}
+   else{a.t-=dt;if(a.t<=0){const pt=rectPt(rc,Math.random);a.tx=pt[0];a.ty=pt[1];a.t=2+Math.random()*4;}}
+   moveTo(a,dt,a.kind==='spar'?60:12);return;}
+  if(STILL[a.site]){if(a.st!=='still'){const pt=rectPt(rc,Math.random);a.tx=pt[0];a.ty=pt[1];a.st='still';}moveTo(a,dt,14);
+   if((a.site==='forge'||a.site==='atelier')&&busySite(a.site)&&Math.random()<dt*2.2)for(let i=0;i<4;i++)SPARKS.push({x:a.x+3,y:a.y-4,vx:(Math.random()-.5)*40,vy:-20-Math.random()*30,l:.5+Math.random()*.4,c:'255,200,90'});
+   if(a.site==='herbo'&&busySite('herbo')&&Math.random()<dt*1.2)SPARKS.push({x:a.x+(Math.random()-.5)*6,y:a.y-8,vx:(Math.random()-.5)*6,vy:-12,l:1.2,c:'190,160,240',puff:1});
+   return;}
+  if(a.st==='work'){a.t-=dt;if(a.t<=0){a.st='toDepot';a.carry=true;a.tx=DEPOT[0]+(Math.random()-.5)*10;a.ty=DEPOT[1]+(Math.random()-.5)*6;}}
+  else if(a.st==='toDepot'){if(moveTo(a,dt,22)){a.carry=false;a.st='toSite';const pt=rectPt(rc,Math.random);a.tx=pt[0];a.ty=pt[1];}}
+  else if(a.st==='toSite'){if(moveTo(a,dt,22)){a.st='work';a.t=2.5+Math.random()*3.5;}}
+ });
+ SPARKS.forEach(s=>{s.x+=s.vx*dt;s.y+=s.vy*dt;if(!s.puff)s.vy+=80*dt;s.l-=dt;});SPARKS=SPARKS.filter(s=>s.l>0);
+}
+function moveTo(a,dt,sp){const dx=a.tx-a.x,dy=a.ty-a.y,d=Math.hypot(dx,dy);a.moving=d>.6;if(d<.6)return true;const m=Math.min(d,sp*dt);a.x+=dx/d*m;a.y+=dy/d*m;a.fl=dx<0;return false;}
+function drawFigure(g,a){
+ const walk=a.moving?Math.sin(a.ph):0,bob=(a.st==='work'||a.st==='still')&&!a.moving?Math.abs(Math.sin(a.ph*.6))*1.2:0;
+ const x=a.x,y=a.y;
+ let body='#8a6a4a';
+ if(a.kind==='apworker'||a.kind==='spar')body='#e8dcc0';
+ if(a.kind==='master')body={or:'#e8b84f',argent:'#d0d7e3',bronze:'#c9844f'}[a.p.rank];
+ if(a.site==='herbo'&&a.kind==='worker')body='#7d6aa8';
+ if(a.kind==='guard')body='#6d5a44';
+ g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(x,y+1,3.2,1.2,0,0,7);g.fill();
+ g.strokeStyle='#2a221c';g.lineWidth=1.3;g.beginPath();g.moveTo(x-1,y-3);g.lineTo(x-1-walk*1.6,y);g.moveTo(x+1,y-3);g.lineTo(x+1+walk*1.6,y);g.stroke();
+ g.fillStyle=body;g.beginPath();if(g.roundRect)g.roundRect(x-2.6,y-9-bob,5.2,6.5,1.6);else g.rect(x-2.6,y-9-bob,5.2,6.5);g.fill();
+ if(a.kind==='apworker'||a.kind==='spar'){g.fillStyle='#a8473a';g.fillRect(x-2.6,y-5.6-bob,5.2,1);}
+ g.fillStyle=a.skin;g.beginPath();g.arc(x,y-11.4-bob,2.4,0,7);g.fill();
+ g.fillStyle=a.kind==='guard'?'#9a8a70':a.hair;g.beginPath();g.arc(x,y-12.2-bob,2.4,Math.PI,0);g.fill();if(a.kind==='guard'){g.strokeStyle='#c9bfa8';g.lineWidth=.8;g.beginPath();g.moveTo(x+3.5,y-1);g.lineTo(x+3.5,y-16);g.stroke();}
+ if(a.carry){const W=WORK[a.site];const col=W&&W.res?RES[W.res].c:W&&W.item?ITEMS[W.item].c:'#ccc';g.fillStyle=col;g.beginPath();g.arc(x+(a.fl?-3:3),y-8-bob,1.8,0,7);g.fill();}
+ if((a.site==='forge'||a.site==='atelier')&&a.kind!=='spar'&&busySite(a.site)){const hm=Math.sin(a.ph*1.4);g.strokeStyle='#cfc8bd';g.lineWidth=1;g.beginPath();g.moveTo(x+2.5,y-7);g.lineTo(x+5,y-9+hm*2.5);g.stroke();}
+ if(a.kind==='spar'){const hm=Math.sin(a.ph*1.7);g.strokeStyle=a.skin;g.lineWidth=1.2;g.beginPath();g.moveTo(x,y-7);g.lineTo(x+(a.fl?-4:4),y-8+hm);g.stroke();}
+}
+function siteLabel(g,id,txt){const rc=SITES[id].r;g.font='600 8.5px "Alegreya Sans",system-ui,sans-serif';g.textAlign='center';g.fillStyle='rgba(28,18,14,.75)';const w=g.measureText(txt).width+8;g.fillRect(rc[0]+rc[2]/2-w/2,rc[1]+rc[3]-1,w,11);g.fillStyle='#ece6d8';g.fillText(txt,rc[0]+rc[2]/2,rc[1]+rc[3]+7.5);}
+function ruins(g,rc){g.fillStyle='rgba(120,116,104,.35)';for(let i=0;i<5;i++){g.fillRect(rc[0]+10+i*(rc[2]-20)/5,rc[1]+rc[3]-14-(i%2)*6,5,8+(i%3)*4);}g.strokeStyle='rgba(236,230,216,.18)';g.setLineDash([3,3]);g.strokeRect(rc[0]+2,rc[1]+2,rc[2]-4,rc[3]-4);g.setLineDash([]);}
+function temple(g,x,y,w,lv,gold){
+ if(lv<=0){g.fillStyle='#6f6a60';g.fillRect(x-w/2,y,w,2.5);for(let i=0;i<4;i++){const h=3+((i*7)%5);g.fillRect(x-w/2+1.5+i*(w-3)/3.2,y-h,2,h);}return;}
+ const h=5+lv*1.3;const c=gold?'#e9d7a8':'#d8d1c1';
+ g.fillStyle=shade(c,-.25);g.fillRect(x-w/2-1,y,w+2,2.5);
+ g.fillStyle=c;for(let i=0;i<5;i++)g.fillRect(x-w/2+1+i*(w-3)/4.5,y-h,1.8,h);
+ g.fillRect(x-w/2-1,y-h-1.5,w+2,1.8);
+ g.beginPath();g.moveTo(x-w/2-1.5,y-h-1.5);g.lineTo(x,y-h-1.5-w*.28);g.lineTo(x+w/2+1.5,y-h-1.5);g.closePath();g.fill();
+ if(gold){g.fillStyle='rgba(243,213,141,.55)';g.beginPath();g.arc(x,y-h-3.5,1.6,0,7);g.fill();}
+}
+function buildStatic(cw,ch,dpr){
+ const c=document.createElement('canvas');c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr);const g=c.getContext('2d');g.setTransform(dpr*mapScale,0,0,dpr*mapScale,0,0);
+ const sky=g.createLinearGradient(0,0,0,190);sky.addColorStop(0,'#3b2440');sky.addColorStop(.55,'#b65d3c');sky.addColorStop(1,'#f0b469');g.fillStyle=sky;g.fillRect(0,0,VW,190);const sn=g.createRadialGradient(300,150,4,300,150,90);sn.addColorStop(0,'rgba(255,240,200,.95)');sn.addColorStop(.25,'rgba(255,210,140,.5)');sn.addColorStop(1,'rgba(255,190,120,0)');g.fillStyle=sn;g.fillRect(0,0,VW,190);
+ const r=mulberry32(7);for(let i=0;i<40;i++){g.fillStyle='rgba(255,248,230,'+(.15+r()*.5)+')';g.fillRect(r()*VW,r()*60,r()<.1?1.4:.8,r()<.1?1.4:.8);}
+ const hill=g.createLinearGradient(0,20,0,190);hill.addColorStop(0,'#5a3c35');hill.addColorStop(1,'#33241f');g.fillStyle=hill;
+ g.beginPath();g.moveTo(0,188);g.quadraticCurveTo(110,120,150,40);g.quadraticCurveTo(180,4,210,40);g.quadraticCurveTo(250,120,VW,188);g.closePath();g.fill();
+ const gr=g.createLinearGradient(0,180,0,VH);gr.addColorStop(0,'#4a3b28');gr.addColorStop(1,'#241c14');g.fillStyle=gr;g.fillRect(0,182,VW,VH-182);
+ g.strokeStyle='rgba(216,209,193,.35)';g.lineWidth=2;g.beginPath();g.moveTo(180,184);HOUSE_PTS.forEach(p=>g.lineTo(p[0],p[1]+1));g.lineTo(180,30);g.stroke();
+ HOUSE_PTS.forEach((p,i)=>{const guard=S.knights.some(k=>k.rank==='or'&&k.sign===i);temple(g,p[0],p[1],15,S.houses[i],guard);});
+ temple(g,180,32,26,3,false);
+ g.fillStyle='#d8d1c1';g.fillRect(178.5,6,3,13);g.beginPath();g.arc(180,5.5,2.2,0,7);g.fill();g.fillStyle='rgba(243,213,141,.5)';g.beginPath();g.arc(180,5.5,4.5,0,7);g.fill();
+ const B=S.b;let rc;
+ rc=SITES.carriere.r;g.fillStyle='#77746c';g.beginPath();g.moveTo(rc[0],rc[1]+rc[3]-4);g.lineTo(rc[0]+6,rc[1]+4);g.lineTo(rc[0]+rc[2]-20,rc[1]);g.lineTo(rc[0]+rc[2],rc[1]+rc[3]-4);g.closePath();g.fill();
+ g.fillStyle='#9a968c';g.fillRect(rc[0]+12,rc[1]+10,rc[2]-36,10);g.fillStyle='#ece6d8';for(let i=0;i<Math.min(8,2+B.carriere);i++)g.fillRect(rc[0]+14+(i%4)*12,rc[1]+rc[3]-14-Math.floor(i/4)*7,9,5);
+ rc=SITES.biblio.r;if(B.biblio>0){temple(g,rc[0]+rc[2]/2,rc[1]+rc[3]-6,rc[2]-24,Math.min(6,1+B.biblio),false);g.fillStyle='rgba(169,155,224,.35)';g.beginPath();g.arc(rc[0]+rc[2]/2,rc[1]+rc[3]-14,6,0,7);g.fill();}else ruins(g,rc);
+ rc=SITES.dortoirs.r;g.fillStyle='#bcae92';g.fillRect(rc[0]+6,rc[1]+16,rc[2]-12,rc[3]-24);g.fillStyle='#8a4a36';g.beginPath();g.moveTo(rc[0]+2,rc[1]+17);g.lineTo(rc[0]+rc[2]/2,rc[1]+6);g.lineTo(rc[0]+rc[2]-2,rc[1]+17);g.closePath();g.fill();g.fillStyle='#2a2216';for(let i=0;i<Math.min(5,1+B.dortoirs);i++)g.fillRect(rc[0]+11+i*9,rc[1]+22,4,5);
+ rc=SITES.mine.r;g.fillStyle='#4b4640';g.beginPath();g.moveTo(rc[0],rc[1]+rc[3]-4);g.lineTo(rc[0]+18,rc[1]);g.lineTo(rc[0]+rc[2]-4,rc[1]+6);g.lineTo(rc[0]+rc[2],rc[1]+rc[3]-4);g.closePath();g.fill();
+ g.fillStyle='#0b0a09';g.beginPath();g.arc(rc[0]+rc[2]/2,rc[1]+rc[3]-10,9,Math.PI,0);g.fill();g.fillRect(rc[0]+rc[2]/2-9,rc[1]+rc[3]-10,18,6);
+ rc=SITES.champs.r;g.fillStyle='#3a3a22';g.fillRect(rc[0]+3,rc[1]+4,rc[2]-6,rc[3]-10);g.strokeStyle='#4f4b2c';g.lineWidth=1;for(let y=rc[1]+10;y<rc[1]+rc[3]-8;y+=7){g.beginPath();g.moveTo(rc[0]+5,y);g.lineTo(rc[0]+rc[2]-5,y);g.stroke();}
+ const trees=Math.min(14,3+B.champs*2);for(let i=0;i<trees;i++){const tx=rc[0]+10+(i%5)*18,ty=rc[1]+12+Math.floor(i/5)*16;g.fillStyle='#5a4630';g.fillRect(tx-.6,ty,1.4,5);g.fillStyle=i%2?'#6f8f4e':'#829f5a';g.beginPath();g.arc(tx,ty,4.5,0,7);g.fill();}
+ rc=SITES.arene.r;g.fillStyle='#8f7a55';g.beginPath();g.ellipse(rc[0]+rc[2]/2,rc[1]+rc[3]/2+2,rc[2]/2-2,rc[3]/2-6,0,0,7);g.fill();g.fillStyle='#bba077';g.beginPath();g.ellipse(rc[0]+rc[2]/2,rc[1]+rc[3]/2+2,rc[2]/2-8,rc[3]/2-11,0,0,7);g.fill();
+ rc=SITES.artisans.r;const hs=Math.min(6,2+B.artisans);for(let i=0;i<hs;i++){const hx=rc[0]+8+(i%3)*15,hy=rc[1]+12+Math.floor(i/3)*18;g.fillStyle='#cdbf9f';g.fillRect(hx-5,hy,10,8);g.fillStyle='#a0563c';g.beginPath();g.moveTo(hx-6.5,hy+.5);g.lineTo(hx,hy-5);g.lineTo(hx+6.5,hy+.5);g.closePath();g.fill();}
+ rc=SITES.forge.r;if(B.forge>0){g.fillStyle='#6a5a48';g.fillRect(rc[0]+10,rc[1]+18,rc[2]-20,rc[3]-30);g.fillStyle='#3d3128';g.beginPath();g.moveTo(rc[0]+6,rc[1]+19);g.lineTo(rc[0]+rc[2]/2,rc[1]+8);g.lineTo(rc[0]+rc[2]-6,rc[1]+19);g.closePath();g.fill();g.fillStyle='#4a3e33';g.fillRect(rc[0]+rc[2]-22,rc[1]+2,7,14);g.fillStyle='#1a120c';g.fillRect(rc[0]+rc[2]/2-6,rc[1]+rc[3]-24,12,12);}else ruins(g,rc);
+ rc=SITES.jardin.r;if(B.jardin>0){const cols=['#9a7fd0','#8fb08a','#e8d9a0','#c98aa0'];const beds=Math.min(8,2+B.jardin*2);for(let i=0;i<beds;i++){const bx=rc[0]+6+(i%4)*24,by=rc[1]+8+Math.floor(i/4)*20;g.fillStyle='#3d3424';g.fillRect(bx,by,20,13);g.fillStyle=cols[i%4];for(let j=0;j<6;j++){g.beginPath();g.arc(bx+3+(j%3)*7,by+3.5+Math.floor(j/3)*6,1.8,0,7);g.fill();}}}else ruins(g,rc);
+ rc=SITES.herbo.r;if(B.herbo>0){g.fillStyle='#a89070';g.beginPath();g.ellipse(rc[0]+rc[2]/2,rc[1]+rc[3]-16,26,13,0,Math.PI,0);g.fill();g.fillRect(rc[0]+rc[2]/2-26,rc[1]+rc[3]-16,52,8);g.fillStyle='#5b4a6e';g.beginPath();g.moveTo(rc[0]+rc[2]/2-30,rc[1]+rc[3]-26);g.lineTo(rc[0]+rc[2]/2,rc[1]+6);g.lineTo(rc[0]+rc[2]/2+30,rc[1]+rc[3]-26);g.closePath();g.fill();g.fillStyle='#2b2230';g.beginPath();g.arc(rc[0]+rc[2]/2+18,rc[1]+rc[3]-10,5,0,Math.PI);g.fill();}else ruins(g,rc);
+ rc=SITES.atelier.r;if(B.atelier>0){g.fillStyle='#7a6650';g.fillRect(rc[0]+8,rc[1]+16,rc[2]-40,rc[3]-26);g.fillStyle='#4f3f30';g.beginPath();g.moveTo(rc[0]+4,rc[1]+17);g.lineTo(rc[0]+(rc[2]-32)/2+4,rc[1]+5);g.lineTo(rc[0]+rc[2]-28,rc[1]+17);g.closePath();g.fill();g.fillStyle='#9b7a50';for(let i=0;i<4;i++)g.fillRect(rc[0]+rc[2]-26,rc[1]+18+i*5,20,3);g.fillStyle='#3a3836';g.fillRect(rc[0]+rc[2]-22,rc[1]+rc[3]-14,10,4);}else ruins(g,rc);
+ g.fillStyle='#9c8a6a';g.fillRect(DEPOT[0]-9,DEPOT[1]-7,18,8);g.fillStyle='#b8705a';for(let i=0;i<3;i++){g.beginPath();g.ellipse(DEPOT[0]-6+i*6,DEPOT[1]-9,2.4,3.2,0,0,7);g.fill();}
+ Object.keys(SITES).forEach(id=>{const l=S.b[id];siteLabel(g,id,SITES[id].n+(l?' '+l:id==='artisans'?'':' · ruines'));});
+ return c;
+}
+function drawMap(ts){
+ const cv=document.getElementById('map');if(!cv||document.hidden){lastFrame=ts;return;}
+ const dt=Math.min(.1,(ts-(lastFrame||ts))/1000);lastFrame=ts;
+ const cw=cv.clientWidth;if(!cw)return;const dpr=Math.min(2,window.devicePixelRatio||1);mapScale=cw/VW;const ch=Math.round(VH*mapScale);
+ if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);staticSig='';}
+ const sig=cw+'|'+JSON.stringify(S.b)+S.houses.join()+S.knights.filter(k=>k.rank==='or').map(k=>k.sign).join();
+ if(sig!==staticSig){staticCache=buildStatic(cw,ch,dpr);staticSig=sig;}
+ const g=cv.getContext('2d');g.setTransform(1,0,0,1,0,0);g.drawImage(staticCache,0,0);g.setTransform(dpr*mapScale,0,0,dpr*mapScale,0,0);
+ if(!reduced)updateAgents(dt);
+ if(S.b.forge>0){const rc=SITES.forge.r;const f=.6+.4*Math.sin(ts/120)*Math.sin(ts/330);g.fillStyle='rgba(255,140,60,'+(.35+.35*f)+')';g.beginPath();g.arc(rc[0]+rc[2]/2,rc[1]+rc[3]-18,5+2*f,0,7);g.fill();
+  g.fillStyle='rgba(200,200,210,.18)';for(let i=0;i<3;i++){const sy=(ts/40+i*14)%40;g.beginPath();g.arc(rc[0]+rc[2]-18+Math.sin(ts/600+i)*3,rc[1]-sy*.6,2+sy/12,0,7);g.fill();}}
+ AG.slice().sort((a,b)=>a.y-b.y).forEach(a=>drawFigure(g,a));
+ SPARKS.forEach(s=>{g.fillStyle='rgba('+s.c+','+clamp(s.l*1.2,0,1)+')';if(s.puff){g.beginPath();g.arc(s.x,s.y,1.6+(1.2-s.l)*2,0,7);g.fill();}else g.fillRect(s.x,s.y,1.2,1.2);});
+}
+const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function mapLoop(ts){try{drawMap(ts);}catch(e){}requestAnimationFrame(mapLoop);}
+function mapTap(ev){
+ const cv=ev.currentTarget,rect=cv.getBoundingClientRect();const x=(ev.clientX-rect.left)/mapScale,y=(ev.clientY-rect.top)/mapScale;
+ if(y<46){act('tab:pope');return;}
+ if(y<182){openModal(housesModal);return;}
+ for(const id in SITES){const r=SITES[id].r;if(x>=r[0]-4&&x<=r[0]+r[2]+4&&y>=r[1]-4&&y<=r[1]+r[3]+10){openSite(id);return;}}
+ if(Math.hypot(x-DEPOT[0],y-DEPOT[1])<14)openSite('entrepot');
+}
+function openSite(id){
+ if(id==='dortoirs'){act('tab:apprentis');return;}
+ if(id==='arene'){openModal(()=>bldBlock('arene')+'<p class="hint">Les apprentis qui ont un maître s’entraînent ici. Les maîtres se tiennent au bord de l’arène.</p><button class="btn ghost" data-act="tab:apprentis">Voir les apprentis</button>');return;}
+ if(id==='artisans'){openModal(villageModal);return;}
+ if(id==='entrepot'){openModal(()=>bldBlock('entrepot'));return;}
+ openModal(siteModal(id));
+}
+
+function guardPt(post,p){const j=(p.id%5)*2-4;if(/^h\d+$/.test(post)){const hp=HOUSE_PTS[+post.slice(1)];return[hp[0]+9+j*.4,hp[1]+1];}if(post==='village'){const rc=SITES.artisans.r;return[rc[0]+rc[2]+2+j,rc[1]+rc[3]-6];}const rc=SITES[post].r;return[rc[0]+rc[2]-6+j,rc[1]+rc[3]-4];}
+
+/* ---------- Chambre du Pope : cartes et artefacts ---------- */
+const UNIT={feu:{res:'metal',q:40},terre:{res:'marbre',q:60},eau:{res:'vivres',q:80},air:{res:'savoir',q:15}};
+const TIER_MULT={1:1,2:1.6,3:2.5};
+const EFF_N={P_vivres:'production de vivres',P_marbre:'production de marbre',P_metal:'production de métal',P_savoir:'production de savoir',P_herbes:'récolte d’herbes',P_all:'toute la production',XP:'XP de tous',NRG:'récupération d’énergie',FORGE:'vitesse de l’atelier des armures',CRAFT:'vitesse des fabrications',BUILD:'durée des chantiers',FP:'points d’amitié',TRIAL:'aux épreuves',RECRUIT:'vitesse de recrutement',CAP:'capacité des réserves',DEF:'défense des gardes',UPKEEP:'consommation de vivres',FCAP:'au plafond du bonus d’amitié',REVEAL:''};
+const UNLOCK_N={ambroisie:'Débloque la recette de l’ambroisie (herboristerie).',huile:'Débloque la recette de l’huile sacrée (artisanat).',reveal:'Révèle le potentiel exact des recrues.'};
+function effText(k,v){if(k==='REVEAL')return UNLOCK_N.reveal;if(k==='BUILD'||k==='UPKEEP')return '−'+v+' % '+EFF_N[k];if(k==='TRIAL'||k==='FCAP')return '+'+v+(v>1?' points ':' point ')+EFF_N[k];return '+'+v+' % '+EFF_N[k];}
+const CARDS=[
+ {id:'c01',t:1,n:'Source sacrée',el:'eau',cost:{terre:2,air:1},eff:{P_vivres:5}},
+ {id:'c02',t:1,n:'Veine de cuivre',el:'feu',cost:{eau:2,terre:1},eff:{P_metal:5}},
+ {id:'c03',t:1,n:'Bloc du vieux temple',el:'terre',cost:{eau:1,feu:2},eff:{P_marbre:5}},
+ {id:'c04',t:1,n:'Rouleau d’Hésiode',el:'air',cost:{eau:2,terre:2},eff:{P_savoir:5}},
+ {id:'c05',t:1,n:'Lampe à huile',el:'feu',cost:{air:2,eau:1},eff:{XP:2}},
+ {id:'c06',t:1,n:'Amphores scellées',el:'terre',cost:{eau:3},eff:{CAP:5}},
+ {id:'c07',t:1,n:'Chant des cigales',el:'air',cost:{feu:1,eau:2},eff:{FP:10}},
+ {id:'c08',t:1,n:'Filet de pêcheur',el:'eau',cost:{feu:2,air:1},eff:{P_vivres:3}},
+ {id:'c09',t:1,n:'Enclume ancienne',el:'feu',cost:{terre:3,eau:1},eff:{FORGE:5}},
+ {id:'c10',t:1,n:'Mortier d’herboriste',el:'eau',cost:{terre:1,air:2},eff:{CRAFT:5}},
+ {id:'c11',t:1,n:'Colonne relevée',el:'terre',cost:{feu:2,eau:2},eff:{BUILD:3}},
+ {id:'c12',t:1,n:'Plume de messager',el:'air',cost:{feu:2,terre:1},eff:{RECRUIT:5}},
+ {id:'c13',t:1,n:'Galet d’Éleusis',el:'eau',cost:{air:3},fav:1},
+ {id:'c14',t:1,n:'Braise éternelle',el:'feu',cost:{terre:2,air:2},fav:1},
+ {id:'c15',t:1,n:'Statuette votive',el:'terre',cost:{air:2,feu:2},fav:1},
+ {id:'c16',t:1,n:'Vent du Parnasse',el:'air',cost:{terre:2,eau:2},eff:{NRG:3},fav:1},
+ {id:'c17',t:2,n:'Aqueduc de Rodorio',el:'eau',cost:{terre:3,feu:2,eau:2},eff:{P_vivres:10},fav:1},
+ {id:'c18',t:2,n:'Hauts fourneaux',el:'feu',cost:{terre:3,air:2,feu:2},eff:{P_metal:10},fav:1,req:[{t:'elem',e:'feu',v:15}]},
+ {id:'c19',t:2,n:'Équerre de l’architecte',el:'terre',cost:{feu:3,eau:3},eff:{BUILD:10},fav:1},
+ {id:'c20',t:2,n:'Scriptorium',el:'air',cost:{terre:2,eau:2,air:3},eff:{P_savoir:10},fav:1,req:[{t:'cosmos',v:40}]},
+ {id:'c21',t:2,n:'Serre des simples',el:'eau',cost:{air:3,terre:3},eff:{P_herbes:20},fav:1},
+ {id:'c22',t:2,n:'Secret de l’ambroisie',el:'air',cost:{eau:4,feu:2},unlock:'ambroisie',fav:1,req:[{t:'qual',k:'studieux',v:1}]},
+ {id:'c23',t:2,n:'Soufflet de Lemnos',el:'feu',cost:{terre:4,eau:2},eff:{FORGE:15},fav:1,req:[{t:'rank',v:'argent'}]},
+ {id:'c24',t:2,n:'Bains chauds',el:'eau',cost:{feu:4,terre:2},eff:{NRG:10},fav:1},
+ {id:'c25',t:2,n:'Banquet des héros',el:'terre',cost:{eau:5,feu:2},eff:{FP:25,XP:3},fav:1},
+ {id:'c26',t:2,n:'Pierre de serment',el:'terre',cost:{air:3,feu:3},eff:{TRIAL:4},fav:2,req:[{t:'aps',v:4}]},
+ {id:'c27',t:2,n:'Rite de l’huile sacrée',el:'feu',cost:{air:3,eau:3},unlock:'huile',fav:1,req:[{t:'house',v:2}]},
+ {id:'c28',t:2,n:'Carte des routes du monde',el:'air',cost:{feu:2,terre:3,eau:2},eff:{RECRUIT:20},fav:1,req:[{t:'elem',e:'air',v:15}]},
+ {id:'c29',t:2,n:'Palissade de cyprès',el:'terre',cost:{feu:3,air:3},eff:{DEF:10},fav:2,req:[{t:'guards',v:1}]},
+ {id:'c30',t:2,n:'Miroir de bronze',el:'feu',cost:{eau:3,air:3},eff:{XP:5},fav:2,req:[{t:'elem',e:'eau',v:15}]},
+ {id:'c31',t:3,n:'Phare du cap Sounion',el:'feu',cost:{eau:4,air:4,terre:3},eff:{P_all:10},fav:3,req:[{t:'rank',v:'or'}]},
+ {id:'c32',t:3,n:'Bibliothèque des origines',el:'air',cost:{feu:3,terre:4,eau:4},eff:{XP:10},fav:3,req:[{t:'cosmos',v:80}]},
+ {id:'c33',t:3,n:'Jardins suspendus',el:'eau',cost:{terre:5,air:3,feu:3},eff:{P_vivres:20,P_herbes:30},fav:3},
+ {id:'c34',t:3,n:'Carrière du Pentélique',el:'terre',cost:{feu:5,eau:4,air:2},eff:{P_marbre:20,BUILD:10},fav:3},
+ {id:'c35',t:3,n:'Oracle de Delphes',el:'air',cost:{eau:5,feu:5},eff:{TRIAL:8,RECRUIT:25},fav:4,req:[{t:'elem',e:'air',v:40}]},
+ {id:'c36',t:3,n:'Chêne de Dodone',el:'terre',cost:{air:5,eau:5},eff:{NRG:20},fav:4,req:[{t:'qual',k:'perseverant',v:2}]},
+ {id:'c37',t:3,n:'Fournaise du Titan',el:'feu',cost:{terre:6,air:4},eff:{FORGE:30,CRAFT:20},fav:4,req:[{t:'elem',e:'feu',v:40}]},
+ {id:'c38',t:3,n:'Source de Castalie',el:'eau',cost:{feu:4,terre:4,air:4},eff:{FP:50,NRG:10},fav:4},
+ {id:'c39',t:3,n:'Rempart cyclopéen',el:'terre',cost:{feu:4,eau:4,air:4},eff:{DEF:25},fav:5,req:[{t:'guards',v:3}]},
+ {id:'c40',t:3,n:'Constellation retrouvée',el:'air',cost:{feu:3,eau:3,terre:3,air:3},eff:{XP:8},fav:5,req:[{t:'cons',v:150}]}
+];
+const CARD_BY={};CARDS.forEach(c=>CARD_BY[c.id]=c);
+const ARTEFACTS=[
+ {id:'a1',n:'Égide',need:{terre:4,feu:4},eff:{DEF:30,CAP:25},d:'Le bouclier qui protège la cité.'},
+ {id:'a2',n:'Corne d’abondance',need:{eau:4,terre:4},eff:{P_vivres:30,UPKEEP:20},d:'Les greniers ne se vident plus.'},
+ {id:'a3',n:'Sandales ailées',need:{air:4,feu:3},eff:{BUILD:25,RECRUIT:30},d:'Les messagers volent, les chantiers filent.'},
+ {id:'a4',n:'Lyre d’Orphée',need:{air:4,eau:3},eff:{FP:100,FCAP:10},d:'Sa musique rapproche les cœurs.'},
+ {id:'a5',n:'Toison d’or',need:{feu:3,terre:3,eau:3},eff:{P_all:15},d:'La prospérité gagne tout le Sanctuaire.'},
+ {id:'a6',n:'Feu de Prométhée',need:{feu:6},req:[{t:'rank',v:'argent'}],eff:{FORGE:50,CRAFT:30},d:'La flamme volée aux dieux, au service des forgerons.'},
+ {id:'a7',n:'Tablettes de Mnémosyne',need:{air:6},eff:{P_savoir:40,XP:10},d:'La mémoire du monde.'},
+ {id:'a8',n:'Coupe d’Hébé',need:{eau:6},eff:{NRG:40},d:'Qui y boit retrouve la vigueur de la jeunesse.'},
+ {id:'a9',n:'Ceinture d’Hippolyte',need:{terre:5,feu:5},req:[{t:'rank',v:'or'}],eff:{TRIAL:10,DEF:15},d:'Les armures reconnaissent les cœurs qui la portent.'},
+ {id:'a10',n:'Astrolabe d’Hipparque',need:{air:3,eau:3,feu:3,terre:3},eff:{REVEAL:1,XP:5},d:'Les étoiles de chaque recrue se lisent enfin.'}
+];
+const ART_BY={};ARTEFACTS.forEach(a=>ART_BY[a.id]=a);
+let CB={};
+function cb(k){return CB[k]||0;}
+function recomputeCB(){CB={};const add=e=>{if(!e)return;for(const k in e)CB[k]=(CB[k]||0)+e[k];};(S.perm||[]).forEach(c=>{add(c.eff);if(c.unlock)CB['U_'+c.unlock]=1;});(S.artefacts||[]).forEach(id=>add(ART_BY[id].eff));}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function initChamber(){S.cards=[];S.artefacts=[];S.decks={1:[],2:[],3:[]};S.market={1:[],2:[],3:[]};CARDS.forEach(c=>S.decks[c.t].push(c.id));[1,2,3].forEach(t=>{shuffle(S.decks[t]);refill(t);});}
+function refill(t){while(S.market[t].length<3&&S.decks[t].length)S.market[t].push(S.decks[t].shift());}
+function bonusOf(e){return(S.perm||[]).filter(c=>c.el===e).length;}
+function faveur(){return S.faveur||0;}
+function unitsDue(c){const o={};for(const e in c.cost)o[e]=Math.max(0,c.cost[e]-bonusOf(e));return o;}
+function cardPrice(c){const u=unitsDue(c),p={};for(const e in u)if(u[e]>0){const U=UNIT[e];p[U.res]=(p[U.res]||0)+Math.round(u[e]*U.q*TIER_MULT[c.t]);}return p;}
+function reqOk(r){
+ switch(r.t){
+ case'elem':return elemScores()[r.e]>=r.v;
+ case'rank':return S.knights.some(k=>r.v==='argent'?(k.rank==='argent'||k.rank==='or'):k.rank===r.v);
+ case'cosmos':return people().some(p=>p.st.co>=r.v);
+ case'qual':return people().some(p=>ql(p,r.k)>=r.v);
+ case'guards':return (S.guards||[]).length>=r.v;
+ case'house':return S.houses.some(h=>h>=r.v);
+ case'aps':return S.aps.length>=r.v;
+ case'cons':return consScore()>=r.v;
+ }return false;
+}
+function reqText(r){
+ switch(r.t){
+ case'elem':return 'Score '+ELEM[r.e].toLowerCase()+' ≥ '+r.v+' (actuel '+fmt(elemScores()[r.e])+')';
+ case'rank':return r.v==='or'?'Un chevalier d’or':'Un chevalier d’argent ou d’or';
+ case'cosmos':return 'Un personnage au cosmos ≥ '+r.v;
+ case'qual':return 'Un personnage '+QUAL[r.k].n.toLowerCase()+(r.v>1?' de niveau '+ROMAN[r.v]:'');
+ case'guards':return r.v+' garde'+(r.v>1?'s':'');
+ case'house':return 'Une maison au niveau '+r.v;
+ case'aps':return r.v+' apprentis';
+ case'cons':return 'Score constellations ≥ '+r.v+' (actuel '+fmt(consScore())+')';
+ }return '';
+}
+function reqsHtml(reqs){if(!reqs||!reqs.length)return '';return '<div class="reqs">'+reqs.map(r=>'<span class="'+(reqOk(r)?'ok':'no')+'">'+(reqOk(r)?'✓':'✗')+' '+esc(reqText(r))+'</span>').join('')+'</div>';}
+function effsHtml(o){const parts=[];if(o.eff)for(const k in o.eff)parts.push(effText(k,o.eff[k]));if(o.unlock)parts.push(UNLOCK_N[o.unlock]);return parts.length?'<div class="ceff">'+parts.map(esc).join(' · ')+'</div>':'';}
+function cardHtml(c,buyable){
+ const due=unitsDue(c),price=cardPrice(c);const reqs=(c.req||[]).every(reqOk);const can=buyable&&reqs&&afford(price)&&!!pope();
+ let h='<div class="card el-'+c.el+'"><div class="ch"><span class="ctier">'+ROMAN[c.t]+'</span><b>'+esc(c.n)+'</b>'+(c.fav?'<span class="fav">✦ '+c.fav+'</span>':'')+'</div>';
+ h+='<div class="cgem">Donne +1 <span class="gem g-'+c.el+'"></span> '+ELEM[c.el]+' pour toujours</div>'+effsHtml(c);
+ h+='<div class="ccost">'+Object.keys(c.cost).map(e=>'<span class="u"><span class="gem g-'+e+'"></span>'+(due[e]<c.cost[e]?'<s>'+c.cost[e]+'</s> ':'')+due[e]+'</span>').join('')+'</div>';
+ h+=reqsHtml(c.req);
+ if(buyable)h+='<div class="cbuy">'+(Object.keys(price).length?costHtml(price):'<div class="cost"><span>Gratuite grâce à vos cartes</span></div>')+'<button class="btn sm" data-act="buy:'+c.id+'"'+(can?'':' disabled')+'>Acquérir</button></div>';
+ return h+'</div>';
+}
+function artReady(a){for(const e in a.need)if(bonusOf(e)<a.need[e])return false;return (a.req||[]).every(reqOk);}
+
+/* ---------- Lecture des astres : duel quotidien contre un dieu ---------- */
+const GODS={
+ ares:{n:'Arès',aff:['feu','terre'],d:'Le dieu de la guerre brutale. Ses berserkers rêvent de piller le Sanctuaire.'},
+ eris:{n:'Éris',aff:['air','feu'],d:'La déesse de la discorde sème la zizanie entre les chevaliers.'},
+ apollon:{n:'Apollon',aff:['feu','air'],d:'Le dieu solaire juge les hommes indignes et veut les purifier.'},
+ artemis:{n:'Artémis',aff:['air','eau'],d:'La chasseresse et ses satellites obéissent à son frère.'},
+ hephaistos:{n:'Héphaïstos',aff:['feu','terre'],d:'Le forgeron des dieux convoite le secret des armures.'},
+ hermes:{n:'Hermès',aff:['air','eau'],d:'Le messager rusé espionne le Sanctuaire pour l’Olympe.'},
+ dionysos:{n:'Dionysos',aff:['eau','terre'],d:'Le dieu de l’ivresse attire les hommes loin de leur devoir.'},
+ demeter:{n:'Déméter',aff:['terre','eau'],d:'La moissonneuse peut affamer le Sanctuaire d’un geste.'}
+};
+const GOD_KEYS=Object.keys(GODS);
+const DUEL_WIN=15,DUEL_TURNS=12,AI_MAX=3;
+const NAMES_EL={
+ feu:['Braise sacrée','Forge céleste','Flamme d’Hestia','Brasier du Lion','Torche d’Éleusis','Étincelle d’or','Volcan de Lemnos','Fournaise','Comète ardente','Autel de feu','Soleil couchant','Lame rougeoyante'],
+ eau:['Source sacrée','Marée d’argent','Pluie d’étoiles','Rosée de l’aube','Fleuve Alphée','Perle d’Égée','Brume du cap','Coquillage nacré','Lac gelé','Vague de fond','Fontaine bénie','Larme d’Écho'],
+ air:['Vent du Parnasse','Souffle d’Éole','Nuée d’orage','Chant des cigales','Aile de faucon','Rouleau ancien','Étoile du berger','Murmure des oracles','Brise de Délos','Plume blanche','Éclair lointain','Ciel d’Attique'],
+ terre:['Pierre de serment','Colonne du temple','Racine d’olivier','Marbre blanc','Bouclier de chêne','Montagne sacrée','Fondations cyclopéennes','Statue votive','Grenier de Rodorio','Rempart d’airain','Grotte des ermites','Seuil de granit']
+};
+const EFFPOOL={feu:[['P_metal',1],['FORGE',1.5],['TRIAL',.4],['XP',.5]],eau:[['P_vivres',1],['NRG',1],['P_herbes',2],['FP',3]],air:[['P_savoir',1],['RECRUIT',2],['XP',.5],['CRAFT',1.5]],terre:[['P_marbre',1],['BUILD',.8],['CAP',1.5],['DEF',2]]};
+const EFFBASE={1:3,2:5,3:9};
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function duelAvailable(){if(S.match)return false;if(S.speed!==1)return S.gt-(S.duel.lastGt??-999)>=24;return S.duel.lastDate!==todayStr();}
+function myBase(){const E=elemScores(),o={};EKEYS.forEach(e=>o[e]=2+Math.round(E[e]/3));return o;}
+function myCons(){const o={};S.knights.forEach(k=>{o[k.cons]=(o[k.cons]||0)+Math.max(1,Math.round(k.st.co/4));});return o;}
+function godState(k){if(!S.gods[k])S.gods[k]={lv:0,wins:0,losses:0,bonus:{feu:0,eau:0,air:0,terre:0}};return S.gods[k];}
+function godBase(k,mine){const g=godState(k),G0=GODS[k];let tot=0;EKEYS.forEach(e=>tot+=mine[e]);tot*=(.65+.1*g.lv);const w={};let ws=0;EKEYS.forEach(e=>{w[e]=G0.aff.includes(e)?2:1;ws+=w[e];});const o={};EKEYS.forEach(e=>o[e]=Math.max(1,Math.round(tot*w[e]/ws))+(g.bonus[e]||0));return o;}
+function genDeck(P,rnd){
+ const used={feu:0,eau:0,air:0,terre:0};let id=0;const deck={1:[],2:[],3:[]};
+ const mk=(t)=>{const el=EKEYS[Math.floor(rnd()*4)];const names=NAMES_EL[el];const n=names[used[el]++%names.length]+(used[el]>names.length?' II':'');
+  const nEl=t===1?2:t===2?(rnd()<.5?2:3):(rnd()<.5?3:4);const others=EKEYS.slice().sort(()=>rnd()-.5).slice(0,nEl);
+  const total=Math.max(nEl,Math.round(P*(t===1?1+rnd()*.4:t===2?1.8+rnd()*.6:3+rnd()*.8)));const cost={};let left=total;
+  others.forEach((e,i)=>{const v=i===others.length-1?left:Math.max(1,Math.round(total/nEl*(.6+rnd()*.8)));cost[e]=Math.max(1,Math.min(left-(others.length-1-i),v));left-=cost[e];});
+  const give=Math.max(1,Math.round(P*(.08+.08*t)));const fav=t===1?(rnd()<.25?1:0):t===2?(rnd()<.6?1:2):(rnd()<.5?2:3);
+  const ep=EFFPOOL[el][Math.floor(rnd()*4)];const eff={};eff[ep[0]]=Math.max(1,Math.round(ep[1]*EFFBASE[t]));
+  return{id:'d'+(id++),t,n,el,cost,give,fav,eff};};
+ for(let i=0;i<14;i++)deck[1].push(mk(1));for(let i=0;i<12;i++)deck[2].push(mk(2));for(let i=0;i<8;i++)deck[3].push(mk(3));
+ // cartes de constellation (réservées au Sanctuaire)
+ const cons=myCons();Object.keys(cons).forEach(k=>{if(rnd()<.6){const c=CONS_BY[k];const t=c.rank==='or'?3:2;const e2=c.el;const cap=cons[k];
+  const card={id:'d'+(id++),t,n:'Étoile '+de(c.n),el:e2,cost:{},give:Math.max(1,Math.round(P*(.15+.08*t))),fav:t===3?3:2,eff:{},cons:k};card.cost[e2]=Math.max(1,Math.round(P*.6));card.cost['c:'+k]=Math.max(1,Math.round(cap*.8));
+  const ep=EFFPOOL[e2][Math.floor(rnd()*4)];card.eff[ep[0]]=Math.max(1,Math.round(ep[1]*EFFBASE[t]*1.3));deck[t].push(card);}});
+ if(!cb('U_ambroisie'))deck[2].push({id:'d'+(id++),t:2,n:'Secret de l’ambroisie',el:'air',cost:{eau:Math.round(P*1),air:Math.round(P*.6)},give:1,fav:1,eff:{},unlock:'ambroisie'});
+ if(!cb('U_huile'))deck[2].push({id:'d'+(id++),t:2,n:'Rite de l’huile sacrée',el:'feu',cost:{feu:Math.round(P*.9),terre:Math.round(P*.7)},give:1,fav:1,eff:{},unlock:'huile'});
+ [1,2,3].forEach(t=>deck[t].sort(()=>rnd()-.5));
+ return deck;
+}
+function startDuel(){
+ if(!duelAvailable())return;
+ const godK=GOD_KEYS[Math.floor(Math.random()*GOD_KEYS.length)];
+ const base=myBase();let P=0;EKEYS.forEach(e=>P+=base[e]);P=Math.max(3,P/4);
+ const rnd=mulberry32((Math.random()*2**31)|0);const decks=genDeck(P,rnd);
+ const m={god:godK,turn:1,P,decks,market:{1:[],2:[],3:[]},me:{base,cons:myCons(),bonus:{},boost:{},fav:0,cards:[],spent:{},boosts:0},ai:{base:godBase(godK,base),bonus:{},fav:0,cards:[]},log:[],over:false,result:null};
+ S.match=m;[1,2,3].forEach(t=>mRefill(t));
+ S.duel.lastDate=todayStr();S.duel.lastGt=S.gt;
+ m.log.unshift('Le Pope lève les yeux vers les astres. '+GODS[godK].n+' accepte le défi.');
+ log('Lecture des astres : duel contre '+GODS[godK].n+'.');
+}
+function mRefill(t){const m=S.match;while(m.market[t].length<3&&m.decks[t].length)m.market[t].push(m.decks[t].shift());}
+function pool(side){const m=S.match,s=m[side],o={};EKEYS.forEach(e=>o[e]=(s.base[e]||0)+(s.bonus[e]||0)+(s.boost?s.boost[e]||0:0));if(side==='me')for(const k in s.cons)o['c:'+k]=s.cons[k];return o;}
+function canPay(card,side){if(side==='ai'&&card.cons)return false;const p=pool(side),sp=S.match[side].spent||{};for(const k in card.cost){if((p[k]||0)-(sp[k]||0)<card.cost[k])return false;}return true;}
+function takeCard(card,side){const m=S.match,s=m[side];s.spent=s.spent||{};for(const k in card.cost)s.spent[k]=(s.spent[k]||0)+card.cost[k];
+ m.market[card.t]=m.market[card.t].filter(c=>c.id!==card.id);mRefill(card.t);s.cards.push(card);s.fav+=card.fav;s.pending=(s.pending||[]);s.pending.push(card);}
+function settle(side){const s=S.match[side];(s.pending||[]).forEach(c=>{s.bonus[c.el]=(s.bonus[c.el]||0)+c.give;});s.pending=[];s.spent={};}
+function cardValue(c,side){const aff=GODS[S.match.god].aff.includes(c.el)?.6:0;let cs=0;for(const k in c.cost)cs+=c.cost[k];return(c.fav*3+c.give*1.4+aff)/Math.max(1,cs*.25);}
+function aiTurn(){
+ const m=S.match;m.ai.spent={};const bought=[];
+ for(let g=0;g<AI_MAX;g++){const cand=[1,2,3].flatMap(t=>m.market[t]).filter(c=>canPay(c,'ai'));if(!cand.length)break;cand.sort((a,b)=>cardValue(b)-cardValue(a));const c=cand[0];takeCard(c,'ai');bought.push(c.n+(c.fav?' (✦'+c.fav+')':''));}
+ if(m.turn%3===0){const e=GODS[m.god].aff[Math.floor(Math.random()*2)];m.ai.boost=m.ai.boost||{};m.ai.boost[e]=(m.ai.boost[e]||0)+1;bought.push('invoque +1 '+ELEM[e].toLowerCase());}
+ settle('ai');
+ m.log.unshift('Tour '+m.turn+' · '+GODS[m.god].n+' : '+(bought.length?bought.join(', '):'passe son tour')+'.');
+}
+function endTurn(){
+ const m=S.match;if(!m||m.over)return;
+ const mine=(m.me.pending||[]).map(c=>c.n+(c.fav?' (✦'+c.fav+')':''));
+ m.log.unshift('Tour '+m.turn+' · Sanctuaire : '+(mine.length?mine.join(', '):'aucune carte')+'.');
+ settle('me');aiTurn();
+ if(m.me.fav>=DUEL_WIN||m.ai.fav>=DUEL_WIN||m.turn>=DUEL_TURNS){finishDuel();return;}
+ m.turn++;
+}
+function totalBonus(s){let t=0;for(const e in s.bonus)t+=s.bonus[e];return t;}
+function finishDuel(forfeit){
+ const m=S.match;m.over=true;const g=godState(m.god);
+ let res;if(forfeit)res='lose';else if(m.me.fav!==m.ai.fav)res=m.me.fav>m.ai.fav?'win':'lose';else{const a=totalBonus(m.me),b=totalBonus(m.ai);res=a===b?'draw':a>b?'win':'lose';}
+ m.result=res;
+ if(res==='win'){g.losses++;S.faveur=(S.faveur||0)+m.me.fav;log('★ Le Pope l’emporte sur '+GODS[m.god].n+' ('+m.me.fav+' ✦ contre '+m.ai.fav+').');if(!m.me.cards.length){S.match=null;}}
+ else if(res==='lose'){g.wins++;g.lv++;const bestEl=EKEYS.slice().sort((a,b)=>(m.ai.bonus[b]||0)-(m.ai.bonus[a]||0))[0];g.bonus[bestEl]=(g.bonus[bestEl]||0)+1;log(GODS[m.god].n+' l’emporte et en sort grandi'+(m.god==='eris'||m.god==='artemis'||m.god==='demeter'?'e':'')+' (niveau '+g.lv+').');}
+ else log('Duel indécis contre '+GODS[m.god].n+'.');
+}
+function keepCard(id){const m=S.match;if(!m||m.result!=='win')return;const c=m.me.cards.find(x=>x.id===id);if(!c)return;
+ S.perm.push({n:c.n,el:c.el,t:c.t,eff:c.eff,unlock:c.unlock||null,fav:c.fav,god:m.god});recomputeCB();log('Le Sanctuaire garde à jamais « '+c.n+' ».');S.match=null;}
+function poolHtml(){
+ const m=S.match,p=pool('me'),sp=m.me.spent||{};
+ let h='<div class="pool">'+EKEYS.map(e=>{const left=p[e]-(sp[e]||0);return '<div class="pl'+(left<=0?' empty':'')+'"><span class="gem g-'+e+'"></span><b>'+left+'</b><small>/ '+p[e]+'</small></div>';}).join('')+'</div>';
+ const ck=Object.keys(m.me.cons);if(ck.length)h+='<div class="pool cons">'+ck.map(k=>{const left=p['c:'+k]-(sp['c:'+k]||0);return '<div class="pl'+(left<=0?' empty':'')+'"><span class="star">✦</span><b>'+left+'</b><small>/ '+p['c:'+k]+' cosmos '+esc(CONS_BY[k].n)+'</small></div>';}).join('')+'</div>';
+ return h;
+}
+function costChips(c,side){const p=pool(side),sp=S.match[side].spent||{};return Object.keys(c.cost).map(k=>{const ok=(p[k]||0)-(sp[k]||0)>=c.cost[k];if(k.startsWith('c:'))return '<span class="u'+(ok?'':' short')+'"><span class="star">✦</span>'+c.cost[k]+' '+esc(CONS_BY[k.slice(2)].n)+'</span>';return '<span class="u'+(ok?'':' short')+'"><span class="gem g-'+k+'"></span>'+c.cost[k]+'</span>';}).join('');}
+function dcardHtml(c,mode){
+ const can=mode==='buy'&&canPay(c,'me');
+ let h='<div class="card el-'+c.el+(c.cons?' cons':'')+'"><div class="ch"><span class="ctier">'+ROMAN[c.t]+'</span><b>'+esc(c.n)+'</b>'+(c.fav?'<span class="fav">✦ '+c.fav+'</span>':'')+'</div>';
+ h+='<div class="cgem">+'+c.give+' <span class="gem g-'+c.el+'"></span> '+ELEM[c.el].toLowerCase()+' dès le tour suivant</div>';
+ h+='<div class="ceff">Si gardée : '+(c.unlock?esc(UNLOCK_N[c.unlock]):Object.keys(c.eff).map(k=>esc(effText(k,c.eff[k]))).join(' · '))+'</div>';
+ if(mode==='buy')h+='<div class="cbuy"><div class="ccost">'+costChips(c,'me')+'</div><button class="btn sm" data-act="dtake:'+c.id+'"'+(can?'':' disabled')+'>Prendre</button></div>';
+ if(mode==='keep')h+='<button class="btn sm" data-act="dkeep:'+c.id+'">Garder pour toujours</button>';
+ return h+'</div>';
+}
+const BOOST={feu:{res:'metal',q:60},terre:{res:'marbre',q:90},eau:{res:'vivres',q:120},air:{res:'savoir',q:25}};
+function boostCost(e){const m=S.match;const c={};c[BOOST[e].res]=Math.round(BOOST[e].q*m.P/4*Math.pow(1.5,m.me.boosts||0));return c;}
+function viewDuel(){
+ const m=S.match,G0=GODS[m.god],g=godState(m.god);
+ let h='<section class="duel-head"><div class="side me"><small>Sanctuaire</small><b>✦ '+m.me.fav+'</b></div><div class="mid"><span>Tour '+m.turn+' / '+DUEL_TURNS+'</span><small>premier à '+DUEL_WIN+' ✦</small></div><div class="side god"><small>'+G0.n+' · niv. '+g.lv+'</small><b>✦ '+m.ai.fav+'</b></div></section>';
+ if(m.over){
+  if(m.result==='win'){h+='<div class="result win"><h3>Victoire sur '+G0.n+'</h3><p class="hint">Choisissez une carte de la partie. Son effet devient permanent pour le Sanctuaire.</p></div><div class="cards">'+m.me.cards.map(c=>dcardHtml(c,'keep')).join('')+'</div>';}
+  else h+='<div class="result lose"><h3>'+(m.result==='draw'?'Les astres restent muets':G0.n+' l’emporte')+'</h3><p class="hint">'+(m.result==='draw'?'Personne ne prend l’ascendant aujourd’hui.':G0.n+' gagne en puissance (niveau '+g.lv+'). Il sera plus dur à vaincre, et plus dangereux quand il s’en prendra au Sanctuaire.')+'</p></div><button class="btn" data-act="dclose">Quitter la chambre des astres</button>';
+  return h+logHtml(m);
+ }
+ h+='<div class="sec-h"><h2>Capacités ce tour</h2><span class="aside">'+G0.n+' : '+EKEYS.map(e=>'<span class="gem g-'+e+'"></span>'+((m.ai.base[e]||0)+(m.ai.bonus[e]||0)+((m.ai.boost||{})[e]||0))).join(' ')+'</span></div>'+poolHtml();
+ h+='<p class="hint">Vos points se reposent à chaque tour : prenez autant de cartes que vos capacités le permettent. Leurs bonus s’ajoutent dès le tour suivant.</p>';
+ [1,2,3].forEach(t=>{h+='<div class="sec-h"><h2>Rang '+ROMAN[t]+'</h2><span class="aside">'+m.decks[t].length+' en pioche</span></div>';h+=m.market[t].length?'<div class="cards">'+m.market[t].map(c=>dcardHtml(c,'buy')).join('')+'</div>':'<p class="hint">Plus de cartes.</p>';});
+ h+='<details class="dt"><summary>Renforts du Sanctuaire</summary><p class="hint">Dépensez de vraies ressources pour +1 d’un élément jusqu’à la fin de la partie. Chaque renfort coûte 50 % de plus que le précédent.</p><div class="opts">'+EKEYS.map(e=>{const c=boostCost(e);return '<button class="opt" data-act="dboost:'+e+'"'+(afford(c)?'':' disabled')+'><b>+1 <span class="gem g-'+e+'"></span>'+ELEM[e]+'</b><span class="chip">'+Object.keys(c).map(r=>fmt(c[r])+' '+nameOf(r)).join('')+'</span></button>';}).join('')+'</div></details>';
+ h+='<div class="duel-actions"><button class="btn" data-act="dend">Fin du tour</button>'+(forfeitArm?'<button class="btn sm danger" data-act="dforfeit">Confirmer l’abandon (défaite)</button>':'<button class="btn sm ghost" data-act="dforfeit">Abandonner</button>')+'</div>';
+ if(m.me.cards.length)h+='<details class="dt"><summary>Vos cartes <span class="aside">'+m.me.cards.length+'</span></summary><div class="tlist">'+m.me.cards.map(c=>'<div><span class="gem g-'+c.el+'"></span>'+esc(c.n)+' · +'+c.give+(c.fav?' · ✦'+c.fav:'')+'</div>').join('')+'</div></details>';
+ return h+logHtml(m);
+}
+function logHtml(m){return '<div class="sec-h"><h2>Chronique du duel</h2></div><div class="log">'+m.log.slice(0,14).map(x=>'<div style="grid-template-columns:1fr">'+esc(x)+'</div>').join('')+'</div>';}
+function viewPope(){
+ if(S.match)return viewDuel();
+ const p=pope(),av=duelAvailable(),base=myBase();
+ let h='<section class="hero pope-hero"><div class="hero-top"><div><div class="lbl">Lecture des astres</div><div class="pow">✦ '+fmt(S.faveur||0)+'</div><div class="hint">Faveur d’Athéna</div></div><div class="row">'+(p?'Le Grand Pope '+esc(p.name)+' veille.':'<span style="color:var(--warn)">Nommez un Grand Pope pour lire dans les astres.</span>')+'</div></div>';
+ h+='<div class="bonusrow">'+EKEYS.map(e=>'<div class="bn"><span class="gem g-'+e+'"></span><b>'+base[e]+'</b><small>'+ELEM[e]+'</small></div>').join('')+'</div>';
+ h+=(av&&p?'<button class="btn" data-act="dstart">Défier un dieu</button>':'<p class="hint">'+(S.speed!==1?'Prochaine lecture dans '+dur(24-(S.gt-(S.duel.lastGt??-999))):'Les astres ont parlé pour aujourd’hui. Revenez demain, sans obligation : un jour sans duel ne coûte rien.')+'</p>')+'</section>';
+ h+='<p class="hint">Chaque jour, le Pope affronte un dieu au tour par tour. Vos capacités viennent de la force du Sanctuaire (ci-dessus) et des cosmos de vos chevaliers ; elles se reposent à chaque tour. Une victoire vous laisse garder une carte pour toujours. Une défaite rend le dieu plus fort.</p>';
+ // factions
+ h+='<section class="sec"><div class="sec-h"><h2>Factions</h2></div><div class="list">';
+ const act=Object.keys(CB).filter(k=>!k.startsWith('U_')&&EFF_N[k]!==undefined&&CB[k]);
+ h+='<div class="fac me"><div class="fh"><b>Sanctuaire d’Athéna</b><span class="chip ok">'+(S.perm||[]).length+' bonus · '+(S.artefacts||[]).length+' artefacts</span></div><div class="hint">'+(act.length?act.map(k=>esc(effText(k,CB[k]))).join(' · '):'Aucun bonus permanent pour l’instant.')+'</div></div>';
+ GOD_KEYS.forEach(k=>{const g=godState(k),G0=GODS[k];const bon=EKEYS.filter(e=>g.bonus[e]).map(e=>'+'+g.bonus[e]+' '+ELEM[e].toLowerCase()).join(', ');
+  h+='<div class="fac"><div class="fh"><b>'+G0.n+'</b><span class="chip'+(g.lv?' f':'')+'">niv. '+g.lv+' · '+g.losses+' V / '+g.wins+' D</span></div><div class="hint">'+esc(G0.d)+'</div><div class="hint">Éléments : '+G0.aff.map(e=>ELEM[e].toLowerCase()).join(', ')+(bon?' · acquis : '+bon:'')+(g.lv?' · <span style="color:var(--bad)">+'+10*g.lv+' % de puissance lors d’une attaque</span>':'')+'</div></div>';});
+ h+='</div></section>';
+ h+='<section class="sec"><div class="sec-h"><h2>Artefacts</h2><span class="aside">'+(S.artefacts||[]).length+' / '+ARTEFACTS.length+'</span></div><p class="hint">Ils se débloquent en accumulant des bonus permanents de certains éléments.</p><div class="cards">';
+ ARTEFACTS.forEach(a=>{const own=(S.artefacts||[]).includes(a.id);const ready=!own&&artReady(a);
+  h+='<div class="card art'+(own?' own':'')+'"><div class="ch"><b>'+esc(a.n)+'</b>'+(own?'<span class="chip ok">Obtenu</span>':'')+'</div><div class="hint">'+esc(a.d)+'</div>'+effsHtml(a)+'<div class="ccost">'+Object.keys(a.need).map(e=>'<span class="u'+(bonusOf(e)>=a.need[e]?' met':'')+'"><span class="gem g-'+e+'"></span>'+Math.min(bonusOf(e),a.need[e])+' / '+a.need[e]+'</span>').join('')+'</div>'+reqsHtml(a.req)+(own?'':'<button class="btn sm" data-act="claim:'+a.id+'"'+(ready?'':' disabled')+'>'+(ready?'Recevoir l’artefact':'Bonus insuffisants')+'</button>')+'</div>';});
+ h+='</div></section>';
+ if((S.perm||[]).length)h+='<details class="dt"><summary>Bonus permanents <span class="aside">'+S.perm.length+'</span></summary><div class="tlist">'+S.perm.map(c=>'<div><span class="gem g-'+c.el+'"></span><b>'+esc(c.n)+'</b> '+(c.unlock?esc(UNLOCK_N[c.unlock]):Object.keys(c.eff||{}).map(k=>esc(effText(k,c.eff[k]))).join(' · '))+(c.god?' · gagné contre '+GODS[c.god].n:'')+'</div>').join('')+'</div></details>';
+ return h;
+}
+
+/* ---------- gardes ---------- */
+const POSTS=['village','champs','carriere','mine','jardin','biblio','forge','herbo','atelier'];
+function postName(p){if(!p)return 'sans poste';if(/^h\d+$/.test(p))return 'maison '+de(SIGNS[+p.slice(1)].n);if(p==='village')return 'village de Rodorio';return SITES[p]?SITES[p].n.toLowerCase():p;}
+function defenseOf(post){let d=0;(S.guards||[]).forEach(g=>{if(g.post===post)d+=power(g,'garde');});return d*(1+cb('DEF')/100);}
+function guardRate(g){return 6*arena()*.6*(1-.06*fl(g,'paresseux'))*(1+popeBonus())*(1+friendBonus(g))*(1+cb('XP')/100)*(S.starve?.5:1);}
+function makeGuardFrom(ap){
+ return{id:ap.id,seed:ap.seed,sex:ap.sex,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:'garde',lv:ap.lv,xp:0,st:Object.assign({},ap.st),sp:ap.sp||0,nrg:ap.nrg,tech:ap.tech.slice(),post:null,pot:ap.pot,origin:'apprenti'};
+}
+function viewGuards(){
+ const G0=S.guards||[];
+ let h='<section class="sec"><div class="sec-h"><h2>Gardes du Sanctuaire</h2><span class="aside">'+G0.length+'</span></div>';
+ if(!G0.length)return h+'<p class="hint">Un apprenti de niveau 8 ou plus, qui a raté une épreuve ou qu’un autre surpasse, peut devenir garde depuis sa fiche. Les gardes défendent une maison, le village ou un site.</p></section>';
+ const hs=S.houses.map((x,i)=>defenseOf('h'+i)).reduce((a,b)=>a+b,0);const vs=defenseOf('village');let ss=0;POSTS.slice(1).forEach(p=>ss+=defenseOf(p));
+ h+='<div class="elems three"><span class="el"><small>Maisons</small><b>'+fmt(hs)+'</b></span><span class="el"><small>Village</small><b>'+fmt(vs)+'</b></span><span class="el"><small>Sites</small><b>'+fmt(ss)+'</b></span></div><p class="hint">Valeurs de défense. Elles compteront quand les dieux enverront leurs guerriers.</p><div class="list">';
+ G0.forEach(g=>{h+='<div class="item tap" data-act="guard:'+g.id+'">'+ptImg(g,'garde')+'<div class="main"><div class="name">'+esc(g.name)+' <span class="chip garde">Garde</span>'+(g.sp>0?'<span class="chip sp">+'+g.sp+' pts</span>':'')+'</div><div class="sub">'+(g.post?'Poste : '+esc(postName(g.post)):'<span style="color:var(--warn)">Sans poste</span>')+'</div><div class="meta"><span>⚡&#xFE0E; '+Math.floor(g.nrg)+'</span><span>Défense '+fmt(power(g,'garde'))+'</span></div></div><div class="right"><div class="lvl"><small>niv.</small>'+g.lv+'</div></div></div>';});
+ return h+'</div></section>';
+}
+function guardModal(id){return()=>{const g=(S.guards||[]).find(x=>x.id===id);if(!g)return '<p>Ce garde n’est plus là.</p>';
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(g,'garde',true)+'<div class="main"><h2>'+esc(g.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="chip garde">Garde</span>'+signChip(g.sign)+'</div><div class="hint">'+(g.post?'En poste : '+esc(postName(g.post)):'Sans poste')+'</div></div></div>';
+ h+=persoBlock(g);
+ h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+g.lv+'</b> · défense '+fmt(power(g,'garde'))+'</div>'+bar(g.xp/(need(g.lv)*1.5)*100)+nrgBar(g)+'</div>'+statsHtml(g,'g')+itemUse(g,'g');
+ h+=selfWork(g,'g')+friendBlock(g);
+ h+='<div class="sec-h"><h2>Poste</h2></div><div class="posts">';
+ h+=SIGNS.map((s,i)=>'<button class="opt'+(g.post==='h'+i?' sel':'')+'" data-act="post:'+g.id+':h'+i+'"><b><span class="sign">'+s.s+'</span> '+s.n+'</b><span class="d">déf. '+fmt(defenseOf('h'+i))+'</span></button>').join('');
+ h+=POSTS.map(p=>'<button class="opt'+(g.post===p?' sel':'')+'" data-act="post:'+g.id+':'+p+'"><b>'+esc(postName(p).replace(/^./,c=>c.toUpperCase()))+'</b><span class="d">déf. '+fmt(defenseOf(p))+'</span></button>').join('');
+ return h+'</div>';};}
+
+/* ---------- rendu ---------- */
+const TABS=[['sanctuaire','Sanctuaire','Δ'],['chevaliers','Chevaliers','✦'],['apprentis','Apprentis','☉'],['armures','Armures','⛨'],['pope','Pope','♛'],['chronique','Chronique','⌛']];
+function renderTabs(){
+ const badge={apprentis:S.pending.length+S.aps.filter(a=>a.sp>0).length,chevaliers:S.knights.filter(k=>k.sp>0).length+(S.guards||[]).filter(g=>g.sp>0).length};
+ $('#tabs').innerHTML=TABS.map(([k,n,g])=>'<button data-act="tab:'+k+'"'+(S.tab===k?' aria-current="page"':'')+'><span class="g">'+g+'&#xFE0E;</span>'+n+(badge[k]?'<span class="badge">'+badge[k]+'</span>':'')+'</button>').join('');
+}
+function renderRes(){
+ const R=rates();
+ $('#resbar').innerHTML=RKEYS.map(r=>'<div class="res"><div class="k"><i style="background:'+RES[r].c+'"></i>'+RES[r].n+'</div><div class="v" data-res="'+r+'">'+fmt(S.res[r])+'</div><div class="r">'+(R[r]>=0?'+':'')+fmt(R[r])+'/h · max '+fmt(cap(r))+'</div></div>').join('');
+ $('#speedTag').hidden=S.speed===1;
+}
+function bar(pct,attrs,cls){return '<div class="bar'+(cls?' '+cls:'')+'"><i '+(attrs||'')+' style="width:'+clamp(pct,0,100).toFixed(1)+'%"></i></div>';}
+function bldBlock(id){
+ const B=BUILD[id],l=S.b[id],busy=S.jobs.some(j=>j.b===id),c=costOf(id),full=S.jobs.length>=slotsFor(S.b.artisans);const ok=!busy&&!full&&afford(c);
+ return '<div class="bld"><div class="t"><b>'+B.n+'</b><span class="lv">'+(l?'niv. '+l:'ruines')+'</span></div><div class="eff">'+(l?'<em>'+B.eff(l)+'</em> → ':'')+B.eff(l+1)+'</div>'+costHtml(c)+'<div class="act"><button class="btn sm" data-act="build:'+id+'"'+(ok?'':' disabled')+'>'+(busy?'En cours':full?'Chantiers pleins':l?'Améliorer':'Bâtir')+'</button><span class="time">'+dur(timeOf(id))+'</span></div></div>';
+}
+function invHtml(){const ks=IKEYS.filter(k=>(S.items[k]||0)>=1||k==='herbes');return '<div class="inv">'+ks.map(k=>'<span class="inv-i"><i style="background:'+ITEMS[k].c+'"></i>'+ITEMS[k].n+' <b'+(k==='herbes'?' data-item="herbes"':'')+'>'+fmt(S.items[k]||0)+'</b></span>').join('')+'</div>';}
+function viewSanctuaire(){
+ const slots=slotsFor(S.b.artisans);let h='';const E=elemScores();
+ h+='<section class="hero"><div class="hero-top"><div><div class="lbl">Puissance du Sanctuaire</div><div class="pow" data-power>'+fmt(sanctPower())+'</div></div><div class="row"><span><b>'+S.knights.length+'</b> chevaliers</span><span><b>'+S.aps.length+'</b> apprentis</span><span><b>'+S.workers.length+'</b> villageois</span></div></div>';
+ h+='<div class="elems">'+EKEYS.map(e=>'<span class="el el-'+e+'"><small>'+ELEM[e]+'</small><b>'+fmt(E[e])+'</b></span>').join('')+'<span class="el"><small>Constellations</small><b>'+fmt(consScore())+'</b></span></div>';
+ h+='<div class="row">Poséidon s’éveille dans <b data-until="'+POSEIDON_H+'">'+dur(POSEIDON_H-S.gt)+'</b></div></section>';
+ if(S.starve)h+='<div class="banner bad">Les vivres sont épuisés. L’entraînement tourne au ralenti (−50 %). Envoyez du monde aux oliveraies ou agrandissez-les.</div>';
+ if(!pope())h+='<div class="banner info">Personne ne guide le Sanctuaire. Ouvrez l’onglet Chevaliers et nommez un Grand Pope.</div>';
+ const idle=S.workers.filter(w=>!w.job).length;
+ if(idle)h+='<div class="banner info">'+idle+' villageois attend'+(idle>1?'ent':'')+' une affectation. Touchez un site sur la carte pour l’y envoyer.</div>';
+ h+='<section class="sec"><div class="map-wrap"><canvas id="map" role="img" aria-label="Carte du Sanctuaire : touchez un site pour gérer ses travailleurs"></canvas></div><p class="hint">Touchez un site pour y affecter du monde ou lancer une fabrication. Touchez la colline pour les douze maisons.</p><div class="sites">';
+ ['champs','carriere','mine','biblio','jardin','herbo','atelier','forge','artisans'].forEach(id=>{const l=S.b[id];let info;
+  if(id==='artisans')info=S.workers.length+' / '+villageCap(S.b.artisans)+' villageois';
+  else if(!l)info='ruines';
+  else if(id==='forge')info=usedSlots('forge')+' / '+siteSlots('forge')+(S.forgeJob?' · en cours':'');
+  else if(id==='herbo'||id==='atelier')info=usedSlots(id)+' / '+siteSlots(id)+' · file '+S.craft[id].length;
+  else if(id==='jardin')info=usedSlots(id)+' / '+siteSlots(id)+' · '+fmt1(siteProd(id))+'/h';
+  else info=usedSlots(id)+' / '+siteSlots(id)+' · '+fmt(siteProd(id))+'/h';
+  h+='<button class="site-btn" data-act="site:'+id+'"><b>'+SITES[id].n+'</b><span>'+info+'</span></button>';});
+ h+='</div></section>';
+ h+='<section class="sec"><div class="sec-h"><h2>Réserve d’objets</h2></div>'+invHtml()+'</section>';
+ h+='<section class="sec"><div class="sec-h"><h2>Chantiers</h2><span class="aside">'+S.jobs.length+' / '+slots+' en cours</span></div>';
+ if(S.jobs.length)h+=S.jobs.map(j=>{const tot=j.end-j.start;const nm=j.b[0]==='h'?'Maison '+de(SIGNS[+j.b.slice(1)].n):BUILD[j.b].n;return '<div class="job"><div class="h"><span>'+nm+' → niv. '+j.lvl+'</span><span data-until="'+j.end+'">'+dur(j.end-S.gt)+'</span></div>'+bar((S.gt-j.start)/tot*100,'data-ps="'+j.start+'" data-pe="'+j.end+'"')+'</div>';}).join('');
+ else h+='<p class="hint">Aucun chantier. Les artisans attendent vos ordres.</p>';
+ h+='</section><section class="sec"><div class="sec-h"><h2>Reconstruction</h2></div><div class="list">'+BORDER.map(bldBlock).join('')+'</div></section>';
+ h+='<section class="sec"><div class="sec-h"><h2>Les douze maisons</h2><span class="aside">'+S.houses.filter(x=>x>0).length+' / 12 relevées</span></div><p class="hint">Chaque niveau d’une maison accélère de 10 % la formation des apprentis de son signe.</p><button class="btn ghost" data-act="houses">Gérer les maisons</button></section>';
+ return h;
+}
+function roleChip(k){return k.role?'<span class="chip role '+k.role+'">'+ROLES[k.role].n+'</span>':'<span class="chip">Entraînement personnel</span>';}
+function viewChevaliers(){
+ let h='<section class="sec"><div class="sec-h"><h2>Chevaliers d’Athéna</h2><span class="aside">'+S.knights.length+'</span></div><p class="hint">Touchez un chevalier pour lire son histoire, répartir ses points et lui confier un rôle.</p>';
+ h+='<div class="fp-box"><b>'+S.fp+'</b> point'+(S.fp>1?'s':'')+' d’amitié à offrir · +1 toutes les 6 h (veillées autour du feu). Ouvrez une fiche pour renforcer un lien.</div><div class="list">';
+ S.knights.slice().sort((a,b)=>RANK_MULT[b.rank]-RANK_MULT[a.rank]||b.lv-a.lv).forEach(k=>{const c=CONS_BY[k.cons];const nAp=S.aps.filter(a=>a.master===k.id).length;
+  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+(k.sp>0?'<span class="chip sp">+'+k.sp+' pts</span>':'')+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(k.role==='maitre'?'<span>'+nAp+' / 3 apprentis</span>':'')+'<span>⚡&#xFE0E; '+Math.floor(k.nrg)+'</span></div></div><div class="right"><div class="lvl"><small>niv.</small>'+k.lv+'</div></div></div>';});
+ return h+'</div></section>'+viewGuards();
+}
+function viewApprentis(){
+ let h='';
+ if(S.pending.length){h+='<section class="sec"><div class="sec-h"><h2>Aux portes du Sanctuaire</h2><span class="aside">'+S.pending.length+' / 3</span></div>';
+  S.pending.forEach((a,i)=>{const full=S.aps.length>=capacity();h+='<div class="recruit">'+ptImg(a,null)+'<div class="main" style="min-width:0;display:grid;gap:4px"><div class="name" style="font-weight:700">'+esc(a.name)+' <span class="hint" style="font-weight:400">'+a.age+' ans · '+NATS[a.nat].n+'</span></div><div class="meta" style="display:flex;flex-wrap:wrap;gap:6px">'+signChip(a.sign)+'<span class="chip '+(a.imp==='Exceptionnel'?'or':a.imp==='Prometteur'?'argent':'')+'">'+a.imp+(cb('REVEAL')?' · '+a.pot:'')+'</span>'+traitChips(a)+'</div><div class="hint">Force '+a.st.fo+' · Vitesse '+a.st.vi+' · Endurance '+a.st.en+' · Cosmos '+a.st.co+'</div></div><p class="bio-p">'+a.bio.map(esc).join(' ')+'</p><div class="btns"><button class="btn sm" data-act="accept:'+i+'"'+(full?' disabled':'')+'>'+(full?'Dortoirs pleins':'Accueillir')+'</button><button class="btn sm ghost" data-act="dismiss:'+i+'">Renvoyer chez '+(a.sex==='F'?'elle':'lui')+'</button></div></div>';});
+  h+='</section>';}
+ const iv=recruitInterval();
+ h+='<section class="sec"><div class="sec-h"><h2>Apprentis</h2><span class="aside">'+S.aps.length+' / '+capacity()+' places</span></div>';
+ h+='<p class="hint">'+(iv<Infinity?'Prochain candidat dans environ <b data-until="'+(S.gt+iv-S.recruitAcc)+'">'+dur(iv-S.recruitAcc)+'</b>'+(S.pending.length>=3?' (trois candidats patientent déjà)':'')+'.':'Aucun recruteur ne parcourt le monde. Nommez-en un dans l’onglet Chevaliers.')+'</p>';
+ if(!S.aps.length)h+='<div class="empty">Aucun apprenti pour l’instant. Accueillez les candidats qui se présentent aux portes.</div>';
+ else{h+='<div class="list">';S.aps.slice().sort((a,b)=>b.lv-a.lv).forEach(a=>{const m=masterOf(a);const af=affinity(a,m);
+  let sub=m?'Maître : '+esc(m.name)+(af.t?' · '+af.t:''):'<span style="color:var(--warn)">Sans maître (formation lente)</span>';
+  if(a.job)sub+=' · <span style="color:var(--gold-hi)">en renfort : '+SITES[a.job].n.toLowerCase()+'</span>';
+  h+='<div class="item tap" data-act="ap:'+a.id+'">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+'<span class="sign" style="color:var(--'+SIGNS[a.sign].el+')">'+SIGNS[a.sign].s+'</span>'+(a.sp>0?'<span class="chip sp">+'+a.sp+' pts</span>':'')+'</div><div class="sub">'+sub+'</div>'+bar(a.xp/need(a.lv)*100,'data-apbar="'+a.id+'"')+'<div class="meta"><span>⚡&#xFE0E; '+Math.floor(a.nrg)+'</span><span>Cosmos '+a.st.co+'</span><span>'+a.imp+'</span>'+(a.cd>S.gt?'<span style="color:var(--bad)">au repos</span>':'')+'</div></div><div class="right"><div class="lvl"><small>niv.</small><span data-aplv="'+a.id+'">'+a.lv+'</span></div></div></div>';});h+='</div>';}
+ return h+'</section>';
+}
+function armorState(c){const s=S.armors[c.k];if(s==='portee'){const k=S.knights.find(k=>k.cons===c.k);return '<span class="chip ok">Portée'+(k?' par '+esc(k.name):'')+'</span>';}if(s==='restauree')return '<span class="chip '+c.rank+'">Restaurée, sans porteur</span>';if(S.forgeJob&&S.forgeJob.cons===c.k)return '<span class="chip warn">En restauration</span>';return '<span class="chip">Brisée</span>';}
+let armorFilter='or';
+function viewArmures(){
+ const smiths=usedSlots('forge');const fr=forgeRate();
+ let h='<section class="sec"><div class="sec-h"><h2>Atelier des armures</h2><span class="aside">'+(S.b.forge?'niv. '+S.b.forge:'en ruines')+'</span></div>';
+ if(!S.b.forge)h+='<p class="hint">Bâtissez l’Atelier des armures (onglet Sanctuaire) puis envoyez-y des forgerons pour restaurer les armures brisées.</p>';
+ else h+='<p class="hint">'+smiths+' forgeron'+(smiths>1?'s':'')+' à l’atelier · meilleur niveau '+bestSmith()+'. Argent : forgeron niv. 3. Or : maître forgeron niv. 5.</p><button class="btn sm ghost" data-act="site:forge">Gérer les forgerons</button>';
+ if(S.forgeJob){const c=CONS_BY[S.forgeJob.cons];const rem=(S.forgeJob.work-S.forgeJob.prog)/(fr||1e-9);h+='<div class="job"><div class="h"><span>'+armorName(c)+'</span><span'+(fr>0?' data-forge-eta':'')+'>'+(fr>0?dur(rem):'en pause : aucun forgeron')+'</span></div>'+bar(S.forgeJob.prog/S.forgeJob.work*100,'data-forgebar','blue')+'</div>';if((S.items.huile||0)>0)h+='<button class="btn sm ghost" data-act="huile">Verser une huile sacrée : la moitié du travail d’un coup · '+S.items.huile+'</button>';}
+ h+='</section>';
+ const counts={};['or','argent','bronze'].forEach(rk=>{const l=CONS.filter(c=>c.rank===rk);counts[rk]=[l.filter(c=>S.armors[c.k]==='portee').length,l.length];});
+ h+='<section class="sec"><div class="sec-h"><h2>Les 88 armures</h2><span class="aside">'+(counts.or[0]+counts.argent[0]+counts.bronze[0])+' / 88 portées</span></div><div class="seg" role="tablist">'+['or','argent','bronze'].map(rk=>'<button role="tab" aria-selected="'+(armorFilter===rk)+'" data-act="afilter:'+rk+'">'+RANKS[rk]+' <span>'+counts[rk][0]+'/'+counts[rk][1]+'</span></button>').join('')+'</div>';
+ const rk=armorFilter;
+ h+='<p class="hint">'+({or:'Douze armures, une par maison. Seul un apprenti né sous le signe de la maison peut prétendre à l’une d’elles.',argent:'Vingt-quatre armures d’argent.',bronze:'Cinquante-deux armures de bronze.'})[rk]+'</p><div class="list">';
+ CONS.filter(c=>c.rank===rk).forEach(c=>{const s=S.armors[c.k];let act='';const restoring=S.forgeJob&&S.forgeJob.cons===c.k;
+  if(s==='brisee'&&!restoring){const cost=ARMOR_COST[rk];const why=S.b.forge<ARMOR_FORGE[rk]?'Atelier niv. '+ARMOR_FORGE[rk]:bestSmith()<ARMOR_SMITH[rk]?'Forgeron niv. '+ARMOR_SMITH[rk]:S.forgeJob?'Atelier occupé':'';const can=!why&&afford(cost);
+   act='<div style="display:grid;gap:4px;justify-items:end"><button class="btn sm" data-act="restore:'+c.k+'"'+(can?'':' disabled')+'>Restaurer</button>'+(why?'<span class="time">'+why+'</span>':'')+'</div>';}
+  h+='<div class="item" style="grid-template-columns:minmax(0,1fr) auto"><div class="main"><div class="name">'+(rk==='or'?'<span class="sign" style="color:var(--gold-hi)">'+SIGNS[c.sign].s+'</span> ':'')+c.n+' <span class="chip el-'+c.el+'">'+ELEM[c.el]+'</span></div><div class="meta">'+armorState(c)+'</div>'+(s==='brisee'&&!restoring?costHtml(ARMOR_COST[rk]):'')+'</div>'+act+'</div>';});
+ return h+'</div></section>';
+}
+function viewChronique(){
+ let h='<section class="sec"><div class="sec-h"><h2>Présages</h2></div><div class="grid2">';
+ h+='<div class="count sea"><div class="k">Réveil de Poséidon</div><div class="v" data-until="'+POSEIDON_H+'">'+dur(POSEIDON_H-S.gt)+'</div><div class="hint">Il faudra envoyer des chevaliers contre les Marinas et abattre les piliers.</div></div>';
+ h+='<div class="count hell"><div class="k">Guerre sainte contre Hadès</div><div class="v" data-until="'+HADES_H+'">'+dur(HADES_H-S.gt)+'</div><div class="hint">108 spectres monteront à l’assaut des douze maisons.</div></div>';
+ h+='<div class="count ath"><div class="k">Athéna</div><div class="v">Sa réincarnation n’a pas encore été révélée.</div><div class="hint">Le Grand Pope scrute les étoiles chaque nuit.</div></div>';
+ h+='</div></section><section class="sec"><div class="sec-h"><h2>Journal du Sanctuaire</h2></div><div class="log">'+S.log.map(e=>'<div><span>Jour '+(Math.floor(e.t/24)+1)+'</span>'+esc(e.m)+'</div>').join('')+'</div></section>';
+ return h;
+}
+const VIEWS={pope:viewPope,sanctuaire:viewSanctuaire,chevaliers:viewChevaliers,apprentis:viewApprentis,armures:viewArmures,chronique:viewChronique};
+function render(){S._dirty=false;renderRes();renderTabs();$('#view').innerHTML=VIEWS[S.tab]();const cv=document.getElementById('map');if(cv){cv.addEventListener('click',mapTap);staticSig='';}syncAgents();liveUpdate();if(modalFn){const sc=$('.sheet-card').scrollTop;$('#sheetBody').innerHTML=modalFn();$('.sheet-card').scrollTop=sc;}}
+function liveUpdate(){
+ document.querySelectorAll('[data-res]').forEach(e=>{const r=e.dataset.res;e.textContent=fmt(S.res[r]);e.closest('.res').classList.toggle('full',S.res[r]>=cap(r)-.5);});
+ document.querySelectorAll('[data-item]').forEach(e=>e.textContent=fmt(S.items[e.dataset.item]||0));
+ document.querySelectorAll('[data-until]').forEach(e=>e.textContent=dur(+e.dataset.until-S.gt));
+ document.querySelectorAll('[data-ps]').forEach(e=>{const a=+e.dataset.ps,b=+e.dataset.pe;e.style.width=clamp((S.gt-a)/(b-a)*100,0,100)+'%';});
+ document.querySelectorAll('[data-apbar]').forEach(e=>{const a=S.aps.find(x=>x.id==e.dataset.apbar);if(a)e.style.width=clamp(a.xp/need(a.lv)*100,0,100)+'%';});
+ document.querySelectorAll('[data-kbar]').forEach(e=>{const k=S.knights.find(x=>x.id==e.dataset.kbar);if(k)e.style.width=clamp(k.xp/(need(k.lv)*1.5)*100,0,100)+'%';});
+ document.querySelectorAll('[data-nrg]').forEach(e=>{const p=byId(+e.dataset.nrg);if(p)e.style.width=clamp(p.nrg/emax(p)*100,0,100)+'%';});
+ document.querySelectorAll('[data-nrgv]').forEach(e=>{const p=byId(+e.dataset.nrgv);if(p)e.textContent=Math.floor(p.nrg);});
+ document.querySelectorAll('[data-craftbar]').forEach(e=>{const q=S.craft[e.dataset.craftbar];if(q&&q.length)e.style.width=clamp(q[0].prog/REC_BY[q[0].k].work*100,0,100)+'%';});
+ if(S.forgeJob){document.querySelectorAll('[data-forgebar]').forEach(e=>e.style.width=clamp(S.forgeJob.prog/S.forgeJob.work*100,0,100)+'%');const fr=forgeRate();document.querySelectorAll('[data-forge-eta]').forEach(e=>e.textContent=dur((S.forgeJob.work-S.forgeJob.prog)/fr));}
+ document.querySelectorAll('[data-power]').forEach(e=>e.textContent=fmt(sanctPower()));
+ document.querySelectorAll('[data-day]').forEach(e=>e.textContent=Math.floor(S.gt/24)+1);
+}
+
+/* ---------- fenêtres ---------- */
+let modalFn=null,flash='';
+function openModal(fn){modalFn=fn;flash='';$('#sheetBody').innerHTML=fn();$('#sheet').hidden=false;$('.sheet-card').scrollTop=0;}
+function closeModal(){modalFn=null;flash='';$('#sheet').hidden=true;}
+function flashHtml(){if(!flash)return '';const f=flash;flash='';return '<div class="flash">'+esc(f)+'</div>';}
+function statsHtml(p,kind){
+ const sp=p.sp||0;
+ let h='<div class="stats">'+[['fo','Force'],['vi','Vitesse'],['en','Endurance'],['co','Cosmos']].map(([k,n])=>'<div class="stat"><div class="k">'+n+'</div><div class="v">'+p.st[k]+'</div>'+(sp>0?'<button class="plus" data-act="sp:'+kind+':'+p.id+':'+k+'" aria-label="+1 '+n+'">+</button>':'')+'</div>').join('')+'</div>';
+ if(sp>0)h+='<div class="sp-row"><span><b>'+sp+'</b> point'+(sp>1?'s':'')+' de compétence à répartir</span><button class="btn sm ghost" data-act="spauto:'+kind+':'+p.id+'">Répartir automatiquement</button></div>';
+ return h;
+}
+function persoBlock(p){
+ let h='<div class="bio"><div class="bio-h"><span class="chip">'+esc(NATS[p.nat].n)+'</span>'+traitChips(p)+'</div><p>'+p.bio.map(esc).join('<br>')+'</p></div>';
+ h+='<details class="dt"><summary>Qualités et défauts</summary><div class="tlist">'+(p.qual||[]).map(t=>'<div><b class="q">'+QUAL[t.k].n+' '+ROMAN[t.lv]+'</b> '+QUAL[t.k].d(t.lv)+'</div>').join('')+(p.flaw||[]).map(t=>'<div><b class="f">'+FLAW[t.k].n+' '+ROMAN[t.lv]+'</b> '+FLAW[t.k].d(t.lv)+'</div>').join('')+'</div></details>';
+ return h;
+}
+function selfWork(p,kind){
+ let h='<details class="dt"><summary>Travail sur soi</summary><p class="hint">Corriger un défaut coûte 40 d’énergie et un objet préparé à l’herboristerie ou à l’artisanat. Renforcer une qualité coûte 50 d’énergie, un élixir et du savoir. Le succès n’est pas garanti ; la persévérance aide.</p><div class="opts">';
+ (p.flaw||[]).forEach(t=>{const F=FLAW[t.k];const ch=Math.round(clamp(.45+.1*ql(p,'perseverant')-.1*(t.lv-1),.1,.9)*100);const ok=p.nrg>=40&&(S.items[F.cure]||0)>=1;
+  h+='<button class="opt" data-act="cure:'+kind+':'+p.id+':'+t.k+'"'+(ok?'':' disabled')+'><b>Corriger : '+F.n.toLowerCase()+' '+ROMAN[t.lv]+'</b><span class="chip">'+ch+' %</span><span class="d">40 énergie · 1 '+ITEMS[F.cure].n.toLowerCase()+' (en réserve : '+(S.items[F.cure]||0)+')</span></button>';});
+ (p.qual||[]).filter(t=>t.lv<3).forEach(t=>{const sav=30*t.lv;const ch=Math.round(clamp(.4+.05*ql(p,'perseverant'),.1,.9)*100);const ok=p.nrg>=50&&(S.items.elixir||0)>=1&&S.res.savoir>=sav;
+  h+='<button class="opt" data-act="boost:'+kind+':'+p.id+':'+t.k+'"'+(ok?'':' disabled')+'><b>Renforcer : '+QUAL[t.k].n.toLowerCase()+' → '+ROMAN[t.lv+1]+'</b><span class="chip">'+ch+' %</span><span class="d">50 énergie · 1 élixir · '+sav+' savoir</span></button>';});
+ if(!(p.flaw||[]).length&&!(p.qual||[]).some(t=>t.lv<3))h+='<p class="hint">Rien à travailler pour l’instant.</p>';
+ return h+'</div></details>';
+}
+function friendBlock(p){
+ const fs=friendsOf(p);const fb=friendBonus(p);
+ let h='<details class="dt"><summary>Amitiés <span class="aside">+'+Math.round(fb*100)+' % d’XP</span></summary>';
+ h+='<p class="hint">Chaque niveau d’amitié donne +1 % d’XP aux deux personnes (+2 % entre un maître et son apprenti), plafonné à 30 %. Points disponibles : <b style="color:var(--gold-hi)">'+S.fp+'</b>.</p><div class="list">';
+ people().filter(o=>o.id!==p.id).sort((a,b)=>friendLv(p.id,b.id)-friendLv(p.id,a.id)).forEach(o=>{const lv=friendLv(p.id,o.id);
+  h+='<div class="item fr">'+ptImg(o,o.rank||null)+'<div class="main"><div class="name">'+esc(o.name)+'</div><div class="hearts" aria-label="Amitié '+lv+' sur 10">'+'<i class="on"></i>'.repeat(lv)+'<i></i>'.repeat(10-lv)+'</div></div><button class="btn sm ghost" data-act="friend:'+p.id+':'+o.id+'"'+(S.fp<1||lv>=10?' disabled':'')+'>+1</button></div>';});
+ return h+'</div></details>';
+}
+function itemUse(p,kind){
+ let h='';const pot=S.items.potion||0;
+ if(pot>0)h+='<button class="btn sm ghost" data-act="potion:'+kind+':'+p.id+'"'+(p.nrg>=emax(p)?' disabled':'')+'>Boire une potion d’endurance (+40) · '+pot+' en réserve</button>';
+ if((S.items.ambroisie||0)>0)h+='<button class="btn sm ghost" data-act="ambroisie:'+kind+':'+p.id+'">Goûter l’ambroisie : énergie pleine et 12 h de formation · '+S.items.ambroisie+'</button>';
+ return h;
+}
+function siteModal(id){return()=>{
+ const l=S.b[id],W=WORK[id],cap=siteSlots(id),used=usedSlots(id);
+ let h=flashHtml()+'<div><h2 class="mh">'+BUILD[id].n+'</h2>';
+ if(id==='forge')h+='<p class="hint">Les forgerons restaurent les armures et progressent en travaillant.</p></div>';
+ else if(id==='herbo'||id==='atelier')h+='<p class="hint">Lancez des fabrications ; les '+(id==='herbo'?'herboristes':'artisans')+' affectés ici les réalisent l’une après l’autre. Rythme : '+(craftRate(id)?fmt1(craftRate(id))+' h de travail par heure':'aucun, personne n’y travaille')+'.</p></div>';
+ else h+='<p class="hint">Production : <b style="color:var(--marble)">'+(id==='jardin'?fmt1(siteProd(id))+' herbes':fmt(siteProd(id))+' '+RES[W.res].n.toLowerCase())+' / h</b>. Sans personne, le site tourne à 20 %. Chaque travailleur ajoute environ 40 % de la base.</p></div>';
+ if(!l)return h+'<div class="empty">Ce site est en ruines. Bâtissez-le d’abord.</div>'+bldBlock(id);
+ if(id==='herbo'||id==='atelier'){
+  const q=S.craft[id];
+  h+='<div class="sec-h"><h2>File de fabrication</h2><span class="aside">'+q.length+' / 6</span></div>';
+  if(q.length)h+=q.map((j,i)=>'<div class="job"><div class="h"><span>'+ITEMS[j.k].n+'</span><span>'+(i===0?(craftRate(id)?dur((REC_BY[j.k].work-j.prog)/craftRate(id)):'en pause'):'en attente')+'</span></div>'+(i===0?bar(j.prog/REC_BY[j.k].work*100,'data-craftbar="'+id+'"','green'):'')+'</div>').join('');
+  else h+='<p class="hint">Rien en cours.</p>';
+  h+='<div class="sec-h"><h2>Recettes</h2></div><div class="opts">';
+  RECIPES.filter(r=>r.ws===id&&(!r.lock||cb('U_'+r.lock))).forEach(r=>{const ok=q.length<6&&afford(r.inp);h+='<button class="opt" data-act="craft:'+r.k+'"'+(ok?'':' disabled')+'><b>'+ITEMS[r.k].n+'</b><span class="chip">'+fmt(S.items[r.k]||0)+' en réserve</span><span class="d">'+r.d+'</span><span class="d">'+Object.keys(r.inp).map(k=>r.inp[k]+' '+nameOf(k)+' ('+fmt(have(k))+')').join(' · ')+' · '+r.work+' h de travail</span></button>';});
+  h+='</div>';
+ }
+ if(TOOL_SITES.includes(id)){const tl=S.tools[id]||0;const need=tl+1;h+='<div class="sec-h"><h2>Outillage</h2><span class="aside">niv. '+tl+' / 5 · +'+10*tl+' %</span></div>'+(tl<5?'<div class="btns" style="align-items:center"><button class="btn sm" data-act="tool:'+id+'"'+((S.items.outil||0)>=need?'':' disabled')+'>Améliorer les outils</button><span class="hint">'+need+' outil'+(need>1?'s':'')+' requis · '+(S.items.outil||0)+' en réserve</span></div>':'<p class="hint">Outillage au maximum.</p>');}
+ h+='<div class="sec-h"><h2>Au travail</h2><span class="aside">'+used+' / '+cap+' postes</span></div><div class="list">';
+ workersAt(id).forEach(w=>{h+='<div class="item">'+workerDot(w)+'<div class="main"><div class="name">'+esc(w.name)+'</div><div class="sub">Villageois · '+esc(NATS[w.nat].n)+' · niveau '+w.skill+'</div></div><button class="btn sm ghost" data-act="wjob:'+w.id+':none">Rappeler</button></div>';});
+ apsAt(id).forEach(a=>{h+='<div class="item">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+' <span class="chip">Apprenti</span></div><div class="sub">Formation −50 % · +1 '+STATN[W.stat]+' par jour'+(ql(a,'travailleur')?' · Travailleur':'')+'</div></div><button class="btn sm ghost" data-act="ajob:'+a.id+':none">Rappeler</button></div>';});
+ if(!used)h+='<p class="hint" style="padding:10px 0">Personne ici pour l’instant.</p>';
+ h+='</div>';
+ const idle=S.workers.filter(w=>!w.job);
+ h+='<div class="sec-h"><h2>Envoyer un villageois</h2><span class="aside">'+idle.length+' disponible'+(idle.length>1?'s':'')+'</span></div>';
+ if(idle.length)h+='<div class="opts">'+idle.map(w=>'<button class="opt" data-act="wjob:'+w.id+':'+id+'"'+(used>=cap?' disabled':'')+'><b>'+esc(w.name)+'</b><span class="chip">niv. '+w.skill+'</span><span class="d">'+esc(NATS[w.nat].n)+'</span></button>').join('')+'</div>';
+ else h+='<p class="hint">Aucun villageois libre. Recrutez-en au village des artisans, ou rappelez-en un d’un autre site.</p><button class="btn sm ghost" data-act="site:artisans">Aller au village</button>';
+ const free=S.aps.filter(a=>!a.job);
+ h+='<div class="sec-h"><h2>Envoyer un apprenti en renfort</h2></div><p class="hint">Il travaille ici et gagne de la '+STATN[W.stat]+', mais se forme deux fois moins vite.</p>';
+ if(free.length)h+='<div class="opts">'+free.map(a=>'<button class="opt" data-act="ajob:'+a.id+':'+id+'"'+(used>=cap?' disabled':'')+'><b>'+esc(a.name)+'</b><span class="chip">niv. '+a.lv+'</span><span class="d">'+(ql(a,'travailleur')?'Travailleur : rendement ×'+fmt1(1+.25*ql(a,'travailleur')):'')+'</span></button>').join('')+'</div>';
+ else h+='<p class="hint">Aucun apprenti disponible.</p>';
+ return h+bldBlock(id);
+};}
+function workerDot(w){const L=looks(w);return '<span class="wdot" style="--sk:'+L.skin+';--hr:'+L.hair+'" aria-hidden="true"></span>';}
+function villageModal(){
+ const c=workerCost(),capV=villageCap(S.b.artisans),full=S.workers.length>=capV;
+ let h='<div><h2 class="mh">Village des artisans</h2><p class="hint">Les villageois de Rodorio montent travailler au Sanctuaire. Chacun mange 1 vivre par heure.</p></div>';
+ h+='<div class="btns" style="align-items:center"><button class="btn" data-act="hire"'+(full||!afford(c)?' disabled':'')+'>'+(full?'Village plein':'Recruter un villageois')+'</button>'+(full?'':costHtml(c))+'</div>';
+ h+='<div class="sec-h"><h2>Villageois</h2><span class="aside">'+S.workers.length+' / '+capV+'</span></div><div class="list">';
+ S.workers.forEach(w=>{h+='<div class="item">'+workerDot(w)+'<div class="main"><div class="name">'+esc(w.name)+'</div><div class="sub">'+esc(NATS[w.nat].n)+' · niveau '+w.skill+' · '+(w.job?SITES[w.job].n:'<span style="color:var(--warn)">sans affectation</span>')+'</div></div>'+(w.job?'<button class="btn sm ghost" data-act="wjob:'+w.id+':none">Rappeler</button>':'')+'</div>';});
+ return h+'</div>'+bldBlock('artisans');
+}
+function housesModal(){
+ let h='<div><h2 class="mh">Les douze maisons</h2><p class="hint">Du Bélier aux Poissons, l’escalier monte jusqu’au palais du Pope. Chaque niveau accélère de 10 % la formation des apprentis du signe.</p></div><div class="list">';
+ const full=S.jobs.length>=slotsFor(S.b.artisans);
+ SIGNS.forEach((s,i)=>{const l=S.houses[i],busy=S.jobs.some(j=>j.b==='h'+i),c=houseCost(i);const guard=S.knights.find(k=>k.rank==='or'&&k.sign===i);const ok=!busy&&!full&&l<HOUSE_MAX&&afford(c);
+  h+='<div class="bld"><div class="t"><b><span class="sign" style="color:var(--gold-hi)">'+s.s+'</span> Maison '+de(s.n)+'</b><span class="lv">'+(l?'niv. '+l:'ruines')+'</span></div><div class="eff">'+(guard?'Gardée par '+esc(guard.name):'Sans gardien')+' · formation '+s.n+' +'+10*l+' %</div>'+(l<HOUSE_MAX?costHtml(c):'<div class="cost"><span>Niveau maximal</span></div>')+'<div class="act">'+(l<HOUSE_MAX?'<button class="btn sm" data-act="house:'+i+'"'+(ok?'':' disabled')+'>'+(busy?'En cours':full?'Chantiers pleins':l?'Améliorer':'Relever')+'</button><span class="time">'+dur(houseTime(i))+'</span>':'')+'</div></div>';});
+ return h+'</div>';
+}
+function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main"><h2>'+esc(k.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+signChip(k.sign)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
+ h+=persoBlock(k);
+ h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance '+fmt(power(k,k.rank))+'</div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+statsHtml(k,'k');
+ h+=itemUse(k,'k');
+ h+='<div class="hint">Techniques : '+(k.tech.length?k.tech.map(esc).join(' · '):'aucune')+'</div>';
+ h+=selfWork(k,'k')+friendBlock(k);
+ h+='<div class="sec-h"><h2>Rôle</h2></div><div class="opts">';
+ h+='<button class="opt'+(k.role===null?' sel':'')+'" data-act="role:'+k.id+':none"><b>Entraînement personnel</b><span class="d">Pas de rôle : progresse à pleine vitesse.</span></button>';
+ const p=pope();
+ Object.entries(ROLES).forEach(([rk,R])=>{const taken=rk==='pope'&&p&&p.id!==k.id;h+='<button class="opt'+(k.role===rk?' sel':'')+'" data-act="role:'+k.id+':'+rk+'"'+(taken?' disabled':'')+'><b>'+R.n+'</b><span class="d">'+R.d+(taken?' Déjà confié à '+esc(p.name)+'.':'')+'</span></button>';});
+ h+='</div>';
+ if(k.role==='maitre'){h+='<div class="sec-h"><h2>Ses apprentis</h2><span class="aside">'+aps.length+' / 3</span></div>'+(aps.length?'<div class="list">'+aps.map(a=>{const af=affinity(a,k);return '<div class="item tap" data-act="ap:'+a.id+'">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+'</div><div class="sub">Niv. '+a.lv+(af.t?' · '+af.t:'')+'</div></div><div></div></div>';}).join('')+'</div>':'<p class="hint">Aucun pour l’instant. Assignez-lui des apprentis depuis l’onglet Apprentis.</p>');}
+ return h;};}
+const SESS=[
+ {k:'fo',n:'Combat au rocher',gain:'+2 force',cost:a=>({vivres:Math.round(40*(1+a.st.fo/20)),metal:Math.round(10*(1+a.st.fo/20))})},
+ {k:'vi',n:'Course dans les escaliers',gain:'+2 vitesse',cost:a=>({vivres:Math.round(30*(1+a.st.vi/20)),marbre:Math.round(20*(1+a.st.vi/20))})},
+ {k:'en',n:'Endurance sous la cascade',gain:'+2 endurance',cost:a=>({vivres:Math.round(60*(1+a.st.en/20))})},
+ {k:'co',n:'Méditation sur les étoiles',gain:'+2 cosmos',cost:a=>({savoir:Math.round(25*(1+a.st.co/20)*(1-.1*ql(a,'studieux')))})},
+ {k:'xp',n:'Retraite d’étude des parchemins',gain:'+6 h de formation',cost:a=>({savoir:Math.round(15*a.lv*(1-.1*ql(a,'studieux'))),vivres:Math.round(20*a.lv)})}
+];
+const SESS_E=20,DUO_E=30;
+function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)return '<p>Cet apprenti n’est plus là.</p>';const rate=xpRate(a);
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(a,null,true)+'<div class="main"><h2>'+esc(a.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+signChip(a.sign)+'<span class="chip">'+a.age+' ans</span><span class="chip '+(a.imp==='Exceptionnel'?'or':a.imp==='Prometteur'?'argent':'')+'">'+a.imp+(cb('REVEAL')?' · potentiel '+a.pot:'')+'</span></div><div class="hint">Cosmos '+cosmosLabel(a.st.co).toLowerCase()+(a.awk?'':' · pas encore éveillé (niv. 5)')+'</div></div></div>';
+ h+=persoBlock(a);
+ h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)" data-aplv="'+a.id+'">'+a.lv+'</b> · '+fmt(rate)+' XP / h'+(friendBonus(a)?' · amitiés +'+Math.round(friendBonus(a)*100)+' %':'')+(S.houses[a.sign]?' · maison +'+10*S.houses[a.sign]+' %':'')+'</div>'+bar(a.xp/need(a.lv)*100,'data-apbar="'+a.id+'"')+nrgBar(a)+'</div>'+statsHtml(a,'a');
+ h+=itemUse(a,'a');
+ if(a.cd>S.gt&&(S.items.onguent||0)>0)h+='<button class="btn sm ghost" data-act="onguent:'+a.id+'">Appliquer un onguent : fin du repos · '+S.items.onguent+' en réserve</button>';
+ h+='<div class="hint">Techniques : '+(a.tech.length?a.tech.map(esc).join(' · '):'aucune (première au niveau 10)')+'</div>';
+ if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Formation ralentie de moitié. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
+ h+='<div class="sec-h"><h2>Entraînement particulier</h2></div><p class="hint">Un chevalier prend '+esc(a.name)+' en tête-à-tête : '+DUO_E+' d’énergie chacun, l’équivalent de 8 h de formation, +1 d’amitié entre eux, et parfois la transmission d’une qualité.</p><div class="opts">';
+ S.knights.forEach(k=>{const ok=a.nrg>=DUO_E&&k.nrg>=DUO_E;const af=affinity(a,k);h+='<button class="opt" data-act="duo:'+a.id+':'+k.id+'"'+(ok?'':' disabled')+'><b>'+esc(k.name)+' <span class="sign">'+SIGNS[k.sign].s+'</span></b><span class="chip '+k.rank+'">⚡&#xFE0E; '+Math.floor(k.nrg)+'</span><span class="d">Amitié '+friendLv(a.id,k.id)+'/10'+(af.t?' · '+af.t:'')+(k.qual.length?' · '+k.qual.map(t=>QUAL[t.k].n).join(', '):'')+'</span></button>';});
+ h+='</div><div class="sec-h"><h2>Séances spéciales</h2></div><p class="hint">'+SESS_E+' d’énergie et des ressources pour forger une aptitude précise.'+(fl(a,'distrait')?' Distrait : '+10*fl(a,'distrait')+' % de risque d’échec.':'')+'</p><div class="opts">';
+ SESS.forEach(s=>{const c=s.cost(a);h+='<button class="opt" data-act="sess:'+a.id+':'+s.k+'"'+(afford(c)&&a.nrg>=SESS_E?'':' disabled')+'><b>'+s.n+'</b><span class="chip">'+s.gain+'</span><span class="d">'+SESS_E+' énergie · '+Object.keys(c).map(r=>fmt(c[r])+' '+nameOf(r)).join(' · ')+'</span></button>';});
+ h+='</div>'+selfWork(a,'a')+friendBlock(a);
+ h+='<div class="sec-h"><h2>Maître</h2></div><div class="opts">';
+ const masters=knightsWith('maitre');
+ if(!masters.length)h+='<p class="hint">Aucun chevalier n’a le rôle de Maître. Confiez ce rôle à un chevalier dans l’onglet Chevaliers.</p>';
+ masters.forEach(k=>{const n=S.aps.filter(x=>x.master===k.id).length;const af=affinity(a,k);const full=n>=3&&a.master!==k.id;
+  h+='<button class="opt'+(a.master===k.id?' sel':'')+'" data-act="assign:'+a.id+':'+k.id+'"'+(full?' disabled':'')+'><b>'+esc(k.name)+' <span class="sign">'+SIGNS[k.sign].s+'</span></b><span class="chip '+k.rank+'">'+RANKS[k.rank]+'</span><span class="d">'+n+' / 3 apprentis'+(af.t?' · <span style="color:var(--gold-hi)">'+af.t+' (×'+af.x+')</span>':'')+'</span></button>';});
+ if(a.master)h+='<button class="btn sm ghost" data-act="assign:'+a.id+':none">Retirer du maître</button>';
+ h+='</div><div class="sec-h"><h2>Épreuve de l’armure</h2></div>';
+ if(a.cd>S.gt)h+='<p class="hint">'+esc(a.name)+' se remet de sa dernière épreuve. Nouvel essai dans <b data-until="'+a.cd+'">'+dur(a.cd-S.gt)+'</b>.</p>';
+ else if(a.lv<TRIAL_LV.bronze)h+='<p class="hint">Dès le niveau '+TRIAL_LV.bronze+', '+esc(a.name)+' pourra tenter d’obtenir une armure restaurée.</p>';
+ else h+='<button class="btn" data-act="trialOpen:'+a.id+'">Choisir une armure</button>';
+ if(a.lv>=8){h+='<div class="sec-h"><h2>Devenir garde</h2></div><p class="hint">Si '+esc(a.name)+' a raté son épreuve ou qu’un autre est plus prometteur, il peut servir comme garde : il quitte les apprentis, garde ses stats et défendra une maison, le village ou un site.</p>'+(guardArm===a.id?'<div class="btns"><button class="btn sm danger" data-act="mkguard:'+a.id+'">Confirmer : '+esc(a.name)+' devient garde</button><button class="btn sm ghost" data-act="guardCancel">Annuler</button></div>':'<button class="btn sm ghost" data-act="guardArm:'+a.id+'">Faire de '+esc(a.name)+' un garde</button>');}
+ return h;};}
+function trialEval(a,c){
+ if(S.armors[c.k]!=='restauree')return{ok:false,why:'Armure non disponible'};
+ if(a.lv<TRIAL_LV[c.rank])return{ok:false,why:'Niveau '+TRIAL_LV[c.rank]+' requis'};
+ if(c.rank==='or'&&c.sign!==a.sign)return{ok:false,why:'Réservée aux natifs '+de(SIGNS[c.sign].n)};
+ if(c.rank==='or'&&!a.awk)return{ok:false,why:'Cosmos non éveillé'};
+ if(a.pot<TRIAL_POT[c.rank])return{ok:false,why:'Son cosmos ne résonne pas avec cette armure'};
+ const el=c.el===SIGNS[a.sign].el;
+ const tr=-.04*ql(a,'fougueux')+.04*ql(a,'patient')+.03*ql(a,'orgueilleux')-.05*fl(a,'impulsif')-(c.rank!=='bronze'?.06*fl(a,'peureux'):0);
+ const ch=clamp(.4+.04*(a.lv-TRIAL_LV[c.rank])+(el?.15:0)+a.st.co/300+tr+cb('TRIAL')/100,.1,.95);
+ return{ok:true,ch,el};
+}
+let lastTrial=null;
+function trialModal(id){return()=>{const a=S.aps.find(x=>x.id===id);
+ if(lastTrial&&lastTrial.id===id){const t=lastTrial;return '<div class="result '+(t.win?'win':'lose')+'"><h3>'+(t.win?'L’armure a choisi '+esc(t.name):'L’armure reste muette')+'</h3><p class="hint">'+(t.win?esc(t.name)+' devient chevalier de '+RANKS[t.rank].toLowerCase()+' '+esc(de(t.cons))+'. Retrouvez-'+(t.sex==='F'?'la':'le')+' dans l’onglet Chevaliers.':esc(t.name)+' a échoué cette fois et doit se reposer '+t.cd+' h. Un onguent peut abréger ce repos.')+'</p></div><button class="btn" data-act="close">Continuer</button>';}
+ if(!a)return '<p>Cet apprenti n’est plus là.</p>';
+ const avail=CONS.filter(c=>S.armors[c.k]==='restauree');
+ let h='<div class="sheet-head">'+ptImg(a,null)+'<div class="main"><h2>Épreuve de '+esc(a.name)+'</h2><div class="hint">Niveau '+a.lv+' · '+signChip(a.sign)+'</div></div></div>';
+ if(!avail.length)return h+'<div class="empty">Aucune armure restaurée n’attend de porteur. Restaurez-en une à l’Atelier des armures.</div>';
+ h+='<p class="hint">Une armure dont l’élément correspond au signe de l’apprenti l’accepte plus volontiers. Le caractère compte aussi.</p><div class="opts">';
+ avail.forEach(c=>{const e=trialEval(a,c);h+='<button class="opt" data-act="trial:'+a.id+':'+c.k+'"'+(e.ok?'':' disabled')+'><b>'+armorName(c)+'</b><span class="chip '+c.rank+'">'+(e.ok?Math.round(e.ch*100)+' %':RANKS[c.rank])+'</span><span class="d">'+ELEM[c.el]+(e.ok?(e.el?' · affinité d’élément':''):' · '+e.why)+'</span></button>';});
+ return h+'</div>';};}
+function absenceModal(dt,before,sum){return()=>{
+ let h='<div><h2 class="mh">Pendant votre absence</h2><p class="hint">'+dur(dt)+' se sont écoulées au Sanctuaire.</p></div>';
+ h+='<div class="stats">'+RKEYS.map(r=>{const d=S.res[r]-before[r];return '<div class="stat"><div class="k">'+RES[r].n+'</div><div class="v" style="color:'+(d>=0?'var(--ok)':'var(--bad)')+'">'+(d>=0?'+':'')+fmt(d)+'</div></div>';}).join('')+'</div>';
+ const made=Object.keys(sum.made);if(made.length)h+='<div class="hint">Fabriqué : '+made.map(k=>sum.made[k]+' × '+ITEMS[k].n.toLowerCase()).join(' · ')+'</div>';
+ const lvs=Object.entries(sum.lv);
+ if(lvs.length)h+='<div class="hint">'+lvs.map(([id,n])=>{const a=S.aps.find(x=>x.id==id);return a?esc(a.name)+' +'+n+' niv.':'';}).filter(Boolean).join(' · ')+'</div>';
+ const pts=people().filter(p=>p.sp>0);if(pts.length)h+='<div class="banner info">'+pts.length+' personnage'+(pts.length>1?'s ont':' a')+' des points de compétence à répartir (pastilles « pts » dans les listes).</div>';
+ if(sum.ev.length)h+='<div class="log">'+sum.ev.slice(0,30).map(m=>'<div style="grid-template-columns:1fr">'+esc(m)+'</div>').join('')+'</div>';
+ if(RKEYS.some(r=>S.res[r]>=cap(r)-.5))h+='<div class="banner">Certaines réserves sont pleines. Agrandissez les Réserves pour ne rien perdre la prochaine fois.</div>';
+ return h+'<button class="btn" data-act="close">Reprendre</button>';};}
+let resetArmed=false,ioMsg='';
+function settingsModal(){
+ let h='<div><h2 class="mh">Réglages</h2><p class="hint">Version 0.6 · partie commencée il y a '+dur((Date.now()-S.created)/36e5)+' (temps réel).</p></div>';
+ h+='<div class="sec"><div class="sec-h"><h2>Vitesse du temps</h2></div><p class="hint">Le mode test accélère tout par 60 (1 minute = 1 heure de jeu) pour juger l’équilibrage. Revenez au temps normal pour jouer.</p><div class="btns"><button class="btn sm'+(S.speed===1?'':' ghost')+'" data-act="speed:1">Temps normal</button><button class="btn sm'+(S.speed===60?'':' ghost')+'" data-act="speed:60">Mode test ×60</button></div></div>';
+ h+='<div class="sec"><div class="sec-h"><h2>Sauvegarde</h2></div><p class="hint">La partie est enregistrée dans ce navigateur. Copiez régulièrement le code ci-dessous et gardez-le dans une note : il permet de restaurer la partie si les données de Chrome sont effacées.</p><textarea id="saveIo" aria-label="Code de sauvegarde" spellcheck="false"></textarea><div class="btns"><button class="btn sm" data-act="exportSave">Générer et copier le code</button><button class="btn sm ghost" data-act="importSave">Charger le code collé</button></div>'+(ioMsg?'<p class="hint" style="color:var(--gold-hi)">'+esc(ioMsg)+'</p>':'')+'</div>';
+ h+='<div class="sec"><div class="sec-h"><h2>Nouvelle partie</h2></div>'+(resetArmed?'<div class="banner bad">Toute la progression sera perdue. Confirmez-vous ?</div><div class="btns"><button class="btn sm danger" data-act="resetGo">Oui, tout recommencer</button><button class="btn sm ghost" data-act="resetCancel">Annuler</button></div>':'<button class="btn sm ghost" data-act="resetArm">Recommencer une partie</button>')+'</div>';
+ return h;
+}
+
+/* ---------- actions ---------- */
+function getP(kind,id){return kind==='k'?S.knights.find(q=>q.id===id):kind==='g'?(S.guards||[]).find(q=>q.id===id):S.aps.find(q=>q.id===id);}
+let guardArm=null,forfeitArm=false;
+function act(a){
+ const [k,x,y,z]=a.split(':');
+ switch(k){
+ case'tab':S.tab=x;closeModal();render();window.scrollTo(0,0);return;
+ case'close':lastTrial=null;closeModal();render();return;
+ case'site':openSite(x);return;
+ case'houses':openModal(housesModal);return;
+ case'afilter':armorFilter=x;render();return;
+ case'build':{const c=costOf(x);if(!afford(c)||S.jobs.length>=slotsFor(S.b.artisans)||S.jobs.some(j=>j.b===x))return;pay(c);S.jobs.push({b:x,start:S.gt,end:S.gt+timeOf(x),lvl:S.b[x]+1});log('Chantier lancé : '+BUILD[x].n+' (niveau '+(S.b[x]+1)+').');break;}
+ case'house':{const i=+x,c=houseCost(i);if(S.houses[i]>=HOUSE_MAX||!afford(c)||S.jobs.length>=slotsFor(S.b.artisans)||S.jobs.some(j=>j.b==='h'+i))return;pay(c);S.jobs.push({b:'h'+i,start:S.gt,end:S.gt+houseTime(i),lvl:S.houses[i]+1});log('Chantier lancé : maison '+de(SIGNS[i].n)+' (niveau '+(S.houses[i]+1)+').');break;}
+ case'hire':{const c=workerCost();if(S.workers.length>=villageCap(S.b.artisans)||!afford(c))return;pay(c);const w=makeWorker(null);S.workers.push(w);log(w.name+' arrive du village pour travailler au Sanctuaire.');break;}
+ case'wjob':{const w=S.workers.find(q=>q.id===+x);if(!w)return;if(y==='none'){w.job=null;break;}if(usedSlots(y)>=siteSlots(y))return;if(w.job!==y)w.sxp=0;w.job=y;break;}
+ case'ajob':{const ap=S.aps.find(q=>q.id===+x);if(!ap)return;if(y==='none'){ap.job=null;break;}if(usedSlots(y)>=siteSlots(y))return;ap.job=y;ap.wacc=0;break;}
+ case'craft':{const r=REC_BY[x];if(!r||S.craft[r.ws].length>=6||!afford(r.inp))return;pay(r.inp);S.craft[r.ws].push({k:x,prog:0});break;}
+ case'tool':{const tl=S.tools[x]||0;if(tl>=5||(S.items.outil||0)<tl+1)return;S.items.outil-=tl+1;S.tools[x]=tl+1;log('Les outils '+de(BUILD[x].n.split(' ')[0]).replace('du Oliveraies','des oliveraies')+' passent au niveau '+(tl+1)+'.');flash='Outillage amélioré : +'+10*(tl+1)+' % de production.';break;}
+ case'knight':openModal(knightModal(+x));return;
+ case'guard':openModal(guardModal(+x));return;
+ case'dstart':if(!pope())return;startDuel();window.scrollTo(0,0);break;
+ case'dtake':{const m=S.match;if(!m||m.over)return;const c=[1,2,3].flatMap(t=>m.market[t]).find(q=>q.id===x);if(!c||!canPay(c,'me'))return;takeCard(c,'me');break;}
+ case'dend':endTurn();window.scrollTo(0,0);break;
+ case'dboost':{const m=S.match;if(!m||m.over)return;const c=boostCost(x);if(!afford(c))return;pay(c);m.me.boost[x]=(m.me.boost[x]||0)+1;m.me.boosts=(m.me.boosts||0)+1;m.log.unshift('Renfort du Sanctuaire : +1 '+ELEM[x].toLowerCase()+'.');break;}
+ case'dforfeit':{if(!S.match||S.match.over)return;if(forfeitArm){forfeitArm=false;finishDuel(true);}else{forfeitArm=true;}break;}
+ case'dkeep':keepCard(x);window.scrollTo(0,0);break;
+ case'dclose':S.match=null;break;
+ case'guardArm':guardArm=+x;break;
+ case'guardCancel':guardArm=null;break;
+ case'mkguard':{const ap=S.aps.find(q=>q.id===+x);if(!ap||ap.lv<8)return;S.aps.splice(S.aps.indexOf(ap),1);const gd=makeGuardFrom(ap);S.guards.push(gd);guardArm=null;log(ap.name+' prête serment et devient garde du Sanctuaire.');save();closeModal();openModal(guardModal(gd.id));flash=gd.name+' est désormais garde. Choisissez son poste ci-dessous.';render();return;}
+ case'post':{const gd=(S.guards||[]).find(q=>q.id===+x);if(!gd)return;gd.post=y;flash=gd.name+' prend son poste : '+postName(y)+'.';break;}
+ case'buy':{const c=CARD_BY[x];if(!c||!pope()||!S.market[c.t].includes(x))return;if(!(c.req||[]).every(reqOk))return;const pr=cardPrice(c);if(!afford(pr))return;pay(pr);S.market[c.t]=S.market[c.t].filter(i=>i!==x);S.cards.push(x);refill(c.t);recomputeCB();log('Le Pope acquiert la carte « '+c.n+' ».');break;}
+ case'stars':{const t=+x;if(S.res.savoir<40||!S.decks[t].length)return;S.res.savoir-=40;S.decks[t]=S.decks[t].concat(S.market[t]);S.market[t]=[];refill(t);break;}
+ case'claim':{const ar=ART_BY[x];if(!ar||(S.artefacts||[]).includes(x)||!artReady(ar))return;S.artefacts.push(x);recomputeCB();log('★ Le Sanctuaire reçoit un artefact : '+ar.n+'.');break;}
+ case'ambroisie':{const p=getP(x,+y);if(!p||(S.items.ambroisie||0)<1)return;S.items.ambroisie--;p.nrg=emax(p);if(S.aps.includes(p)){p.xp+=xpRate(p)*12;let g=0;while(p.xp>=need(p.lv)&&g++<50)levelUpAp(p,null);}else if(S.knights.includes(p))p.xp+=knightRate(p)*12;else p.xp+=guardRate(p)*12;flash=p.name+' goûte l’ambroisie.';break;}
+ case'huile':{if(!S.forgeJob||(S.items.huile||0)<1)return;S.items.huile--;S.forgeJob.prog=Math.min(S.forgeJob.work,S.forgeJob.prog+S.forgeJob.work*.5);break;}
+ case'ap':openModal(apModal(+x));return;
+ case'sp':{const p=getP(x,+y);if(!p||!(p.sp>0)||!STATN[z])return;p.sp--;p.st[z]++;break;}
+ case'spauto':{const p=getP(x,+y);if(!p)return;while(p.sp>0){const ks=['fo','vi','en','co'];let m=ks[0];ks.forEach(s=>{if(p.st[s]<p.st[m])m=s;});p.st[m]++;p.sp--;}break;}
+ case'potion':{const p=getP(x,+y);if(!p||(S.items.potion||0)<1)return;S.items.potion--;p.nrg=Math.min(emax(p),p.nrg+40);flash=p.name+' boit une potion d’endurance.';break;}
+ case'onguent':{const ap=S.aps.find(q=>q.id===+x);if(!ap||(S.items.onguent||0)<1)return;S.items.onguent--;ap.cd=S.gt;flash='Les blessures de '+ap.name+' sont soignées. Nouvelle épreuve possible.';break;}
+ case'cure':{const p=getP(x,+y);if(!p)return;const t=(p.flaw||[]).find(f=>f.k===z);if(!t)return;const F=FLAW[z];if(p.nrg<40||(S.items[F.cure]||0)<1)return;p.nrg-=40;S.items[F.cure]--;
+  const ch=clamp(.45+.1*ql(p,'perseverant')-.1*(t.lv-1),.1,.9);
+  if(Math.random()<ch){t.lv--;if(t.lv<=0){p.flaw=p.flaw.filter(f=>f!==t);flash=p.name+' n’est plus '+F.n.toLowerCase()+' !';log(flash);}else flash=p.name+' progresse : '+F.n.toLowerCase()+' '+ROMAN[t.lv]+'.';}
+  else flash=p.name+' n’y arrive pas cette fois. L’énergie et l’objet sont perdus.';break;}
+ case'boost':{const p=getP(x,+y);if(!p)return;const t=(p.qual||[]).find(q=>q.k===z);if(!t||t.lv>=3)return;const sav=30*t.lv;if(p.nrg<50||(S.items.elixir||0)<1||S.res.savoir<sav)return;p.nrg-=50;S.items.elixir--;S.res.savoir-=sav;
+  if(Math.random()<clamp(.4+.05*ql(p,'perseverant'),.1,.9)){t.lv++;flash=p.name+' : '+QUAL[z].n.toLowerCase()+' '+ROMAN[t.lv]+' !';log(flash);}else flash='Pas de progrès cette fois pour '+p.name+'.';break;}
+ case'friend':{const a1=byId(+x),b1=byId(+y);if(!a1||!b1||S.fp<1)return;const fk=fkey(a1.id,b1.id);if((S.friend[fk]||0)>=10)return;S.fp--;S.friend[fk]=(S.friend[fk]||0)+1;break;}
+ case'duo':{const ap=S.aps.find(q=>q.id===+x),kn=S.knights.find(q=>q.id===+y);if(!ap||!kn||ap.nrg<DUO_E||kn.nrg<DUO_E)return;ap.nrg-=DUO_E;kn.nrg-=DUO_E;
+  const rate=10*arena()*(1+kn.lv/40+({or:.5,argent:.25,bronze:0})[kn.rank])*affinity(ap,kn).x*(1+friendBonus(ap))*(1-.06*fl(ap,'paresseux'));
+  ap.xp+=rate*8;let g=0;while(ap.xp>=need(ap.lv)&&g++<50)levelUpAp(ap,null);
+  const fk=fkey(ap.id,kn.id);S.friend[fk]=Math.min(10,(S.friend[fk]||0)+1);
+  flash=kn.name+' entraîne '+ap.name+' : +'+fmt(rate*8)+' XP, amitié '+S.friend[fk]+'/10.';
+  const teach=kn.qual.filter(t=>!ql(ap,t.k));if(teach.length&&ap.qual.length<3&&Math.random()<.15){const t=teach[Math.floor(Math.random()*teach.length)];ap.qual.push({k:t.k,lv:1});flash+=' '+ap.name+' apprend à être '+QUAL[t.k].n.toLowerCase()+' !';log(kn.name+' transmet sa qualité ('+QUAL[t.k].n.toLowerCase()+') à '+ap.name+'.');}
+  break;}
+ case'assign':{const ap=S.aps.find(q=>q.id===+x);if(!ap)return;if(y==='none'){ap.master=null;break;}const kn=S.knights.find(q=>q.id===+y);if(!kn||kn.role!=='maitre')return;if(S.aps.filter(q=>q.master===kn.id).length>=3&&ap.master!==kn.id)return;ap.master=kn.id;break;}
+ case'role':{const kn=S.knights.find(q=>q.id===+x);if(!kn)return;const nr=y==='none'?null:y;if(nr==='pope'&&pope()&&pope().id!==kn.id)return;
+  if(kn.role==='maitre'&&nr!=='maitre')S.aps.forEach(ap=>{if(ap.master===kn.id)ap.master=null;});
+  if(nr==='recruteur'&&kn.role!=='recruteur'&&!knightsWith('recruteur').length)S.recruitAcc=0;
+  kn.role=nr;if(nr)log(kn.name+' devient '+ROLES[nr].n+'.');break;}
+ case'accept':{const i=+x,ap=S.pending[i];if(!ap||S.aps.length>=capacity())return;S.pending.splice(i,1);S.aps.push(ap);log(ap.name+' rejoint le Sanctuaire comme apprenti'+G(ap,'e')+'.');break;}
+ case'dismiss':{const ap=S.pending.splice(+x,1)[0];if(ap)log(ap.name+' est reconduit'+G(ap,'e')+' chez sa famille.');break;}
+ case'sess':{const ap=S.aps.find(q=>q.id===+x),s=SESS.find(q=>q.k===y);if(!ap||!s)return;const c=s.cost(ap);if(!afford(c)||ap.nrg<SESS_E)return;pay(c);ap.nrg-=SESS_E;
+  if(Math.random()<.1*fl(ap,'distrait')){flash=ap.name+' a la tête ailleurs : séance ratée.';break;}
+  if(y==='xp'){ap.xp+=xpRate(ap)*6;let g=0;while(ap.xp>=need(ap.lv)&&g++<50)levelUpAp(ap,null);flash='Retraite terminée : +6 h de formation.';}else{ap.st[y]+=2;flash='+2 '+STATN[y]+' pour '+ap.name+'.';}break;}
+ case'trialOpen':lastTrial=null;openModal(trialModal(+x));return;
+ case'trial':{const ap=S.aps.find(q=>q.id===+x),c=CONS_BY[y];if(!ap||!c)return;const e=trialEval(ap,c);if(!e.ok)return;
+  const win=Math.random()<e.ch;const cd=ql(ap,'orgueilleux')?24:12;
+  if(win){S.aps.splice(S.aps.indexOf(ap),1);S.armors[c.k]='portee';
+   const kn={id:ap.id,seed:ap.seed,sex:ap.sex,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:c.rank,cons:c.k,lv:ap.lv,xp:0,st:Object.assign({},ap.st),role:null,tech:ap.tech.concat([SIG_WORDS[ap.seed%SIG_WORDS.length]+' '+(c.rank==='or'?'d’or':de(c.n))]),origin:'forme',pot:ap.pot,sp:ap.sp||0,nrg:ap.nrg};
+   S.knights.push(kn);if(c.rank==='or'&&!S.houses[c.sign])S.houses[c.sign]=1;
+   log('★ '+ap.name+' obtient l’'+armorLow(c)+' et devient chevalier de '+RANKS[c.rank].toLowerCase()+' !');}
+  else{ap.xp*=Math.min(1,.33*ql(ap,'perseverant'));ap.cd=S.gt+cd;log(ap.name+' échoue à l’épreuve de l’'+armorLow(c)+'.');}
+  lastTrial={id:ap.id,win,name:ap.name,rank:c.rank,cons:c.n,sex:ap.sex,cd};save();render();return;}
+ case'restore':{const c=CONS_BY[x];const cost=ARMOR_COST[c.rank];if(S.forgeJob||S.b.forge<ARMOR_FORGE[c.rank]||bestSmith()<ARMOR_SMITH[c.rank]||!afford(cost)||S.armors[x]!=='brisee')return;pay(cost);S.forgeJob={cons:x,work:ARMOR_WORK[c.rank],prog:0};log('L’atelier commence la restauration de l’'+armorLow(c)+'.');break;}
+ case'settings':resetArmed=false;ioMsg='';openModal(settingsModal);return;
+ case'speed':S.speed=+x;break;
+ case'exportSave':{save();const code=btoa(unescape(encodeURIComponent(JSON.stringify(S))));const ta=$('#saveIo');ta.value=code;ta.select();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(()=>{ioMsg='Code copié dans le presse-papiers.';$('#sheetBody').innerHTML=settingsModal();$('#saveIo').value=code;},()=>{ioMsg='Copie automatique impossible : le code est sélectionné, copiez-le à la main.';});}else ioMsg='Le code est sélectionné, copiez-le à la main.';return;}
+ case'importSave':{const v=$('#saveIo').value.trim();try{const o=JSON.parse(decodeURIComponent(escape(atob(v))));if(!o||!(o.v>=1&&o.v<=VERSION))throw 0;S=migrate(o);recomputeCB();S.lastReal=Date.now();save();ioMsg='Partie chargée.';}catch(e){ioMsg='Ce code n’est pas reconnu. Vérifiez qu’il a été collé en entier.';}break;}
+ case'resetArm':resetArmed=true;break;
+ case'resetCancel':resetArmed=false;break;
+ case'resetGo':try{localStorage.removeItem(KEY);}catch(e){}newGame();recomputeCB();save();closeModal();render();return;
+ }
+ save();render();
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled){act(t.dataset.act);return;}if(e.target.id==='sheet'){lastTrial=null;closeModal();render();}});
+
+/* ---------- boucle ---------- */
+let saveTick=0;
+function tick(){
+ const n=Date.now();const dt=(n-S.lastReal)/36e5;S.lastReal=n;
+ if(dt>.05){offline(dt);return;}
+ advance(dt*S.speed,null);
+ if(S._dirty&&!modalFn)render();else liveUpdate();
+ if(++saveTick>=10){saveTick=0;save();}
+}
+function offline(dtReal){
+ const before=Object.assign({},S.res);const sum=newSum();const dt=dtReal*S.speed;
+ advance(dt,sum);save();render();
+ if(dt>=.1)openModal(absenceModal(dt,before,sum));
+}
+function start(data){
+ S=(data&&data.S)?migrate(data.S):load();
+ const fresh=!S;if(fresh){newGame();save();}
+ recomputeCB();
+ S.tab=S.tab||'sanctuaire';
+ render();
+ if(!fresh){const dt=(Date.now()-S.lastReal)/36e5;S.lastReal=Date.now();if(dt>.01){const before=Object.assign({},S.res),sum=newSum();advance(dt*S.speed,sum);save();render();if(dt*S.speed>=.1)openModal(absenceModal(dt*S.speed,before,sum));}}
+ setInterval(tick,1000);
+ requestAnimationFrame(mapLoop);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});
+ window.addEventListener('pagehide',save);
+ window.addEventListener('resize',()=>{staticSig='';});
+}
+try{window.claude&&window.claude.hot&&window.claude.hot.snapshot&&window.claude.hot.snapshot(()=>{save();return{S};});}catch(e){}
+if(window.claude&&window.claude.hot&&window.claude.hot.ready)window.claude.hot.ready(start);else start((window.claude&&window.claude.hot&&window.claude.hot.data)||{});
+})();
+</script>

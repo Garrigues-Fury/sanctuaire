@@ -1,0 +1,26 @@
+{
+  "name": "sanctuaire-renaissant",
+  "private": true,
+  "version": "0.7.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "test": "vitest run",
+    "icons": "pwa-assets-generator"
+  },
+  "dependencies": {
+    "@fontsource/alegreya-sans": "^5.3.0",
+    "@fontsource/marcellus-sc": "^5.3.0",
+    "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "@vite-pwa/assets-generator": "^2.0.0",
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.5"
+  }
+}
