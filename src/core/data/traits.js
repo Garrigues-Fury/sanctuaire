@@ -3,7 +3,7 @@
    Les effets en combat sont appliqués dans core/combat.js, les affinités dans core/social.js. */
 
 export const QUAL={
- perseverant:{n:'Persévérant',d:l=>'Récupère '+15*l+' % d’énergie en plus ; après un échec, garde '+Math.round(33*l)+' % de sa progression.',c:l=>Math.round(30*l)+' % de chance de rester debout à 1 PV au lieu de tomber (une fois par combat).',s:'S’entend avec les travailleurs.'},
+ perseverant:{n:'Persévérant',d:l=>'Son temps rend '+3*l+' % de plus ; récupère '+15*l+' % d’énergie en plus ; après un échec, garde '+Math.round(33*l)+' % de sa progression.',c:l=>Math.round(30*l)+' % de chance de rester debout à 1 PV au lieu de tomber (une fois par combat).',s:'S’entend avec les travailleurs.'},
  fougueux:{n:'Fougueux',d:l=>'+'+5*l+' % d’XP, mais −'+4*l+' points aux épreuves.',c:l=>'+'+8*l+' % de dégâts, mais −'+4*l+' % de défense.',s:'S’entend avec les vifs et les courageux ; agace les peureux.'},
  patient:{n:'Patient',d:l=>'+'+4*l+' points de chance aux épreuves.',c:l=>'Commence le combat avec +'+l+' cosmos.',s:'Apaise les impulsifs et les colériques.'},
  studieux:{n:'Studieux',d:l=>'Savoir des séances −'+10*l+' %.',c:l=>'+'+6*l+' % de dégâts avec ses techniques.',s:'S’entend avec les studieux et les rêveurs ; les distraits l’exaspèrent.'},
@@ -12,13 +12,13 @@ export const QUAL={
  courageux:{n:'Courageux',d:l=>Math.round(33*l)+' % de chance d’un point de force bonus par niveau.',c:l=>'+'+10*l+' % de dégâts quand il lui reste moins de la moitié de ses PV.',s:'S’entend avec les loyaux et les fougueux.'},
  vif:{n:'Vif',d:l=>Math.round(33*l)+' % de chance d’un point de vitesse bonus par niveau.',c:l=>'+'+5*l+' % d’esquive.',s:'S’entend avec les fougueux.'},
  reveur:{n:'Rêveur',d:l=>Math.round(33*l)+' % de chance d’un point de cosmos bonus par niveau.',c:l=>'+'+10*l+' % de dégâts avec son coup ultime.',s:'S’entend avec les rêveurs, les studieux et les drôles.'},
- travailleur:{n:'Travailleur',d:l=>'Rend '+25*l+' % de plus en renfort sur un site.',c:l=>'La garde soigne '+3*l+' % de PV en plus.',s:'S’entend avec les travailleurs et les persévérants ; les paresseux l’agacent.'},
+ travailleur:{n:'Travailleur',d:l=>'Son temps rend '+6*l+' % de plus (formation, métier) ; '+25*l+' % de plus en renfort sur un site.',c:l=>'La garde soigne '+3*l+' % de PV en plus.',s:'S’entend avec les travailleurs et les persévérants ; les paresseux l’agacent.'},
  orgueilleux:{n:'Orgueilleux',d:l=>'+'+3*l+' points aux épreuves, mais un échec l’abat 24 h au lieu de 12.',c:l=>'+'+6*l+' % de dégâts, mais la garde lui rapporte 1 cosmos de moins.',s:'Supporte mal les arrogants et les autres orgueilleux.'},
  sociable:{n:'Sociable',d:l=>'Ses amitiés lui rapportent '+25*l+' % de plus.',c:()=>'Aucun effet en combat.',s:'S’entend avec presque tout le monde, surtout les drôles et les sociables.'},
  drole:{n:'Drôle',d:l=>'Ses amitiés se nouent '+20*l+' % plus vite ; il détend l’atmosphère du Sanctuaire.',c:l=>Math.round(8*l)+' % de chance qu’un ennemi, déstabilisé par une remarque, rate son attaque.',s:'S’entend avec les drôles, les sociables et les rêveurs ; les arrogants et les têtus n’apprécient pas.'}
 };
 export const FLAW={
- paresseux:{n:'Paresseux',d:l=>'−'+6*l+' % d’XP.',c:l=>'Commence le combat avec '+l+' cosmos de moins.',s:'Agace les travailleurs.',cure:'elixir'},
+ paresseux:{n:'Paresseux',d:l=>'Son temps rend '+6*l+' % de moins (formation, métier, renfort).',c:l=>'Commence le combat avec '+l+' cosmos de moins.',s:'Agace les travailleurs.',cure:'elixir'},
  impulsif:{n:'Impulsif',d:l=>'−'+5*l+' points aux épreuves.',c:l=>'−'+5*l+' % de défense.',s:'Se heurte aux colériques ; les patients le calment.',cure:'tisane'},
  peureux:{n:'Peureux',d:l=>'−'+6*l+' points aux épreuves d’argent et d’or.',c:l=>'−'+8*l+' % de dégâts contre un chef.',s:'Les fougueux le bousculent.',cure:'materiel'},
  distrait:{n:'Distrait',d:l=>10*l+' % de chance de rater une séance d’entraînement.',c:l=>5*l+' % de chance de rater son action.',s:'Exaspère les studieux.',cure:'elixir'},

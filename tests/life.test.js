@@ -69,7 +69,7 @@ describe('entraînements', () => {
     const [k1, k2] = S.knights; k1.nrg = 100; k2.nrg = 10;
     expect(unavailable(k2)).toMatch(/fatigu/);
     expect(trainTogether(k1, k2, 0).ok).toBe(false);
-    k2.nrg = 100; const ap = S.pending[0]; S.aps.push(ap); ap.nrg = 100; k1.role = 'maitre'; ap.master = k1.id;
+    k2.nrg = 100; const ap = S.pending[0]; S.aps.push(ap); ap.nrg = 100; k1.role = null; k1.tm = { job: 0, dis: 50, self: 50 }; ap.master = k1.id;
     expect(acceptChance(ap, k1, -3)).toBe(1);
     const r = trainTogether(ap, k1, 0);
     expect(r.ok).toBe(true);

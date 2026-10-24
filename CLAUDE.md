@@ -98,7 +98,11 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
     - **Combat au tour par tour** (frapper, technique, coup ultime, garde ; cosmos de 0 à 10 ; avantage d'élément) ou **automatique**. Les niveaux de danger sont calés sur un chevalier type : ★ bronze débutant, ★★★★★ chevalier d'or.
     - **Dialogues façon RPG** : choix de réponse, répliques selon les qualités et défauts du chevalier, tirages au sort, rebondissements inattendus. Des **scènes au Sanctuaire** se présentent environ une fois par jour.
     - Code : `src/core/combat.js`, `src/core/expeditions.js`, `src/core/data/scenes.js` (le texte des scènes), `src/ui/world.js`, `src/ui/scene.js`.
-15. **Comptes à rebours** : réveil de Poséidon au jour 90, guerre sainte contre Hadès au jour 270. La réincarnation d'Athéna sera révélée plus tard.
+15. **Emploi du temps, missions, blessures (demandé le 2026-10-24, en 4 étapes)** :
+    - **Étape 1, emploi du temps** (`src/core/schedule.js`) : un chevalier répartit son temps en % entre son métier (Grand Pope, Recruteur, Intendant, Maître d'œuvre, Chercheur à la bibliothèque), la formation de ses disciples (3 au plus ; « Maître » n'est plus un métier) et son entraînement personnel. Un apprenti en renfort répartit entre entraînement et aide au Sanctuaire. Le goût de l'effort (travailleur, persévérant) ou la paresse change le rendement de ce temps.
+    - Étape 2 : répartition de l'entraînement (physique, rapidité, dextérité, méditation, psychokinésie, cosmos, endurance, études). Étape 3 : tableau des missions (auto ou en direct). Étape 4 : fatigue, blessures (un blessé ne fait que se soigner), mort, armure à rapporter, cimetière, réparation à l'orichalque.
+    - **Mort (décision de Seba le 2026-10-24)** : possible **seulement sur une mission risquée lancée par le joueur**, avec un avertissement clair avant le départ. **Jamais pendant une absence** si rien n'a été lancé.
+16. **Comptes à rebours** : réveil de Poséidon au jour 90, guerre sainte contre Hadès au jour 270. La réincarnation d'Athéna sera révélée plus tard.
 
 ## Feuille de route
 

@@ -1,7 +1,7 @@
 /* Les petits personnages de la carte : qui va où. */
 import { looks } from '../core/appearance.js';
 import { DEPOT, SITES, guardPt, rectPt } from '../core/data/map.js';
-import { knightsWith } from '../core/rules.js';
+import { isMaster } from '../core/schedule.js';
 import { S } from '../core/state.js';
 
 export let AG=[],SPARKS=[];
@@ -9,7 +9,7 @@ export function syncAgents(){
  const want=[];
  S.workers.forEach(w=>{if(w.job)want.push({id:'w'+w.id,kind:'worker',site:w.job,p:w});else want.push({id:'i'+w.id,kind:'idle',site:'artisans',p:w});});
  S.aps.forEach(a=>{if(a.job)want.push({id:'a'+a.id,kind:'apworker',site:a.job,p:a});else want.push({id:'s'+a.id,kind:'spar',site:'arene',p:a});});
- knightsWith('maitre').forEach(k=>want.push({id:'m'+k.id,kind:'master',site:'arene',p:k}));
+ S.knights.filter(isMaster).forEach(k=>want.push({id:'m'+k.id,kind:'master',site:'arene',p:k}));
  (S.guards||[]).forEach(g=>{if(g.post)want.push({id:'g'+g.id+g.post,kind:'guard',site:g.post,p:g});});
  const old={};AG.forEach(a=>old[a.id]=a);
  AG=want.map(wn=>{const o=old[wn.id];if(o&&o.site===wn.site&&o.kind===wn.kind){o.p=wn.p;return o;}const r=Math.random;const pt=wn.kind==='guard'?guardPt(wn.site,wn.p):rectPt(SITES[wn.site].r,r);const L=looks(wn.p);

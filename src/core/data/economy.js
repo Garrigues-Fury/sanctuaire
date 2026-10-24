@@ -37,12 +37,13 @@ export const BORDER=['champs','carriere','mine','biblio','jardin','herbo','ateli
 export const WORK={champs:{res:'vivres',stat:'en'},carriere:{res:'marbre',stat:'fo'},mine:{res:'metal',stat:'fo'},biblio:{res:'savoir',stat:'co'},jardin:{item:'herbes',stat:'en'},forge:{stat:'co'},herbo:{stat:'co'},atelier:{stat:'fo'}};
 export const TOOL_SITES=['champs','carriere','mine','biblio','jardin'];
 export const STATN={fo:'force',vi:'vitesse',en:'endurance',co:'cosmos'};
+// Les métiers des chevaliers. Les effets sont pleins quand le métier occupe 100 % du temps (voir schedule.js).
 export const ROLES={
- pope:{n:'Grand Pope',d:'+10 % de production et d’XP pour tout le Sanctuaire, plus 1 % par 10 points de cosmos. Un seul.'},
+ pope:{n:'Grand Pope',d:'+10 % de production et d’XP pour tout le Sanctuaire, plus 1 % par 10 points de cosmos. Un seul. Mène la lecture des astres.'},
  recruteur:{n:'Recruteur',d:'Parcourt le monde et ramène des candidats apprentis. Plus son cosmos est fort, plus il trouve vite.'},
- maitre:{n:'Maître',d:'Forme jusqu’à 3 apprentis. Affinité de signe ou d’élément : formation bien plus rapide.'},
  intendant:{n:'Intendant',d:'+15 % de production des ressources.'},
- oeuvre:{n:'Maître d’œuvre',d:'Dirige les artisans : chantiers 20 % plus rapides.'}
+ oeuvre:{n:'Maître d’œuvre',d:'Dirige les artisans : chantiers 20 % plus rapides.'},
+ biblio:{n:'Chercheur',d:'Étudie les parchemins de la bibliothèque (à bâtir) : produit du savoir, davantage s’il est studieux.'}
 };
 export const ARMOR_COST={bronze:{metal:150,savoir:40},argent:{marbre:300,metal:700,savoir:250},or:{marbre:1500,metal:3000,savoir:1200}};
 export const ARMOR_WORK={bronze:6,argent:24,or:96};

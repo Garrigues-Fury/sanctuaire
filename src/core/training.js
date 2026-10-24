@@ -3,6 +3,7 @@
    (matériel d'entraînement à l'artisanat, élixir à l'herboristerie). */
 import { QUAL, fl, ql } from './data/traits.js';
 import { guardRate, knightRate, levelUpAp, levelUpKnight, need, xpRate } from './rules.js';
+import { isMaster } from './schedule.js';
 import { S } from './state.js';
 
 export const TRAININGS=[
@@ -54,8 +55,8 @@ export function unavailable(q){
 }
 const pk=(a,b)=>a+'>'+b;
 export function acceptChance(p,q,compatV){
- if(q.role==='maitre'&&p.master===q.id)return 1;
- if(p.role==='maitre'&&q.master===p.id)return 1;
+ if(p.master===q.id&&kindOf(q)==='k'&&isMaster(q))return 1;
+ if(q.master===p.id&&kindOf(p)==='k'&&isMaster(p))return 1;
  let c=.7+.08*compatV+.1*ql(q,'sociable')+.05*ql(q,'loyal')+.05*ql(q,'drole')-.15*ql(q,'solitaire')-.1*fl(q,'paresseux')-(rankW(q)>rankW(p)?.1*fl(q,'arrogant')+.05*ql(q,'orgueilleux'):0)-(q.role==='pope'?.25:0);
  return Math.max(.1,Math.min(.98,c));
 }

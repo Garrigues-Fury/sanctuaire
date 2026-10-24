@@ -14,6 +14,7 @@ import { installTips } from './ui/tips.js';
 import { registerSW } from 'virtual:pwa-register';
 import { S, setS } from './core/state.js';
 import { setMapTapHandler } from './map/map.js';
+import { plan } from './core/schedule.js';
 import { sfx, unlockAudio } from './audio/audio.js';
 import { absenceModal, installClicks, liveUpdate, modalFn, onMapTap, openModal, render } from './ui/app.js';
 
@@ -34,7 +35,7 @@ function tick(){
 function start(){
  setS(load());
  const fresh=!S;if(fresh){newGame();save();}
- recomputeCB();ensureWorld();ensureDuel();
+ recomputeCB();ensureWorld();ensureDuel();S.knights.concat(S.aps).forEach(plan);
  S.tab=S.tab||'sanctuaire';
  installClicks();installTips();setMapTapHandler(onMapTap);
  // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.

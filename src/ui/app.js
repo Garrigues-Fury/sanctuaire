@@ -10,13 +10,14 @@ import { FLAW, QUAL, SIG_WORDS, fl, ql, traitText } from '../core/data/traits.js
 import { TIP, tip } from './tips.js';
 import { ITEM_TRADE, PAIR_E, TRAININGS, acceptChance, canTrain, pairPartners, refusedRecently, train, trainTogether, unavailable } from '../core/training.js';
 import { compat, compatLabel } from '../core/social.js';
+import { APLAN, KPLAN, apHelpF, apTrainF, isMaster, jobF, plan, selfF, setShare, teachF, timeMult, timeWhy } from '../core/schedule.js';
 import { CONS, CONS_BY, EKEYS, ELEM, RANKS, RANK_MULT, SIGNS, armorLow, armorName, de } from '../core/data/world.js';
 import { cardOf, duelAvailable, duelLevel, ensureDuel, godState, levelMult, myStart, startDuel } from '../core/duel.js';
 import { RELICS } from '../core/data/stars.js';
 import { cardArt } from '../art/cards.js';
 import { openDuel } from './duel.js';
 import { makeGuardFrom, makeWorker, newGame } from '../core/people.js';
-import { CB, DUO_E, HOUSE_MAX, POSTS, SESS, SESS_E, affinity, afford, apsAt, arena, artReady, bestSmith, bonusOf, byId, cap, capacity, cardPrice, cb, consScore, cosmosLabel, costOf, craftRate, defenseOf, elemScores, emax, fkey, forgeRate, friendBonus, friendLv, friendsOf, guardRate, have, houseCost, houseTime, knightRate, knightsWith, levelUpAp, masterOf, need, pay, people, pope, postName, power, rates, recomputeCB, recruitInterval, reqOk, reqText, sanctPower, siteProd, siteSlots, slotsFor, timeOf, trialEval, usedSlots, villageCap, workerCost, workersAt, xpRate } from '../core/rules.js';
+import { CB, DUO_E, HOUSE_MAX, POSTS, SESS, SESS_E, affinity, afford, apsAt, arena, artReady, bestSmith, bonusOf, byId, cap, capacity, cardPrice, cb, consScore, cosmosLabel, costOf, craftRate, defenseOf, elemScores, emax, fkey, forgeRate, friendBonus, friendLv, friendsOf, guardRate, have, houseCost, houseTime, knightRate, knightsWith, levelUpAp, masterOf, need, pay, people, pope, postName, power, rates, recomputeCB, recruitInterval, reqOk, research, reqText, sanctPower, siteProd, siteSlots, slotsFor, timeOf, trialEval, usedSlots, villageCap, workerCost, workersAt, xpRate } from '../core/rules.js';
 import { exportCode, importCode, save } from '../core/save.js';
 import { HADES_H, KEY, POSEIDON_H, S, log, setS } from '../core/state.js';
 import { G, ROMAN, clamp, dur, esc, fmt, fmt1 } from '../core/util.js';
@@ -144,12 +145,52 @@ export function viewSanctuaire(){
  h+='<section class="sec"><div class="sec-h"><h2>Les douze maisons</h2><span class="aside">'+S.houses.filter(x=>x>0).length+' / 12 relevées</span></div><p class="hint">Chaque niveau d’une maison accélère de 10 % la formation des apprentis de son signe.</p><button class="btn ghost" data-act="houses">Gérer les maisons</button></section>';
  return h;
 }
-export function roleChip(k){return k.role?'<span class="chip role '+k.role+'">'+ROLES[k.role].n+'</span>':'<span class="chip">Entraînement personnel</span>';}
+export function roleChip(k){const t=plan(k);let h=k.role?'<span class="chip role '+k.role+'">'+ROLES[k.role].n+' '+t.job+' %</span>':'';
+ if(t.dis>0)h+='<span class="chip">Maître '+t.dis+' %</span>';
+ if(t.self>0||!h)h+='<span class="chip">Entraînement '+t.self+' %</span>';return h;}
+/* ---------- emploi du temps ---------- */
+const pct=x=>Math.round(x*100)+' %';
+const planLocked=(p,kind)=>kind==='k'&&!p.role?['job']:[];
+// Ce que rapporte l'emploi du temps choisi, en clair.
+export function planEffects(p,kind){
+ const tm=timeMult(p),why=timeWhy(p);
+ let h='<div>Rendement du temps : <b>'+pct(tm)+'</b>'+(why.length?' ('+why.join(', ')+')':'')+'.</div>';
+ if(kind==='a'){
+  if(!p.job)return h+'<div>Tout son temps va à l’entraînement. Envoyez-'+(p.sex==='F'?'la':'le')+' en renfort sur un site pour qu’'+(p.sex==='F'?'elle':'il')+' aide le Sanctuaire.</div>';
+  return h+'<div>Formation : <b>'+pct(apTrainF(p))+'</b> de sa vitesse normale · '+fmt(xpRate(p))+' XP / h.</div><div>Travail sur le site ('+esc(SITES[p.job].n.toLowerCase())+') : <b>'+pct(apHelpF(p))+'</b> d’un renfort ordinaire.</div>';}
+ const t=plan(p),R=p.role&&ROLES[p.role],j=jobF(p);
+ if(R){let fx='';
+  if(p.role==='pope')fx='+'+Math.round((.1+p.st.co/1000)*j*100)+' % de production et d’XP pour tous';
+  else if(p.role==='intendant')fx='+'+Math.round(15*j)+' % de production';
+  else if(p.role==='oeuvre')fx='chantiers '+Math.round(20*j)+' % plus rapides';
+  else if(p.role==='recruteur'){const iv=recruitInterval();fx=iv<Infinity?'un candidat toutes les '+dur(iv)+' environ':'aucune recherche';}
+  else if(p.role==='biblio')fx=S.b.biblio>0?'+'+fmt1(research(p))+' savoir / h':'bibliothèque à bâtir d’abord';
+  h+='<div>'+R.n+' : <b>'+pct(j)+'</b> de l’effet plein · '+fx+'.</div>';}
+ else h+='<div>Sans métier : son temps va à ses disciples et à son entraînement.</div>';
+ const n=S.aps.filter(a=>a.master===p.id).length;
+ if(t.dis>0)h+=n?'<div>Disciples ('+n+' / 3) : formation à <b>'+pct(teachF(p))+'</b> de son plein régime.</div>':'<div style="color:var(--warn)">Aucun disciple : ce temps est perdu. Confiez-lui des apprentis depuis leur fiche.</div>';
+ else if(n)h+='<div style="color:var(--warn)">'+n+' disciple'+(n>1?'s attendent':' attend')+' : sans temps pour eux, ils se forment seuls, lentement.</div>';
+ return h+'<div>Sa propre progression : <b>'+pct(selfF(p))+'</b> du maximum · '+fmt(knightRate(p))+' XP / h.</div>';
+}
+export function planBlock(p,kind){
+ const t=plan(p),L=planLocked(p,kind),keys=kind==='a'?APLAN:KPLAN;
+ if(kind==='a'&&!p.job)return '<div class="sec-h"><h2>Emploi du temps</h2></div><div class="hint plan-out">'+planEffects(p,kind)+'</div>';
+ let h='<div class="sec-h"><h2>Emploi du temps</h2></div><p class="hint">Déplacez les curseurs : le total fait toujours 100 %.</p><div class="plan">';
+ keys.forEach(x=>{const off=L.includes(x.k);h+='<label class="vol'+(off?' off':'')+'"><span>'+x.n+' <b data-planv="'+x.k+'">'+t[x.k]+' %</b></span><input type="range" min="0" max="100" step="5" value="'+t[x.k]+'" data-plan="'+kind+':'+p.id+':'+x.k+'"'+(off?' disabled':'')+' aria-label="'+x.n+'"></label>';});
+ return h+'<div class="hint plan-out" data-planout>'+planEffects(p,kind)+'</div></div>';
+}
+function onPlanInput(el,done){
+ const [kind,id,key]=el.dataset.plan.split(':'),p=getP(kind,+id);if(!p)return;
+ setShare(p,key,+el.value,planLocked(p,kind));const t=plan(p);
+ document.querySelectorAll('[data-plan^="'+kind+':'+id+':"]').forEach(i=>{const k=i.dataset.plan.split(':')[2];i.value=t[k];const v=i.closest('label').querySelector('[data-planv]');if(v)v.textContent=t[k]+' %';});
+ const out=document.querySelector('[data-planout]');if(out)out.innerHTML=planEffects(p,kind);
+ if(done){save();sfx('confirm');}
+}
 export function viewChevaliers(){
  let h='<section class="sec"><div class="sec-h"><h2>Chevaliers d’Athéna</h2><span class="aside">'+S.knights.length+'</span></div><p class="hint">Touchez un chevalier pour lire son histoire, répartir ses points et lui confier un rôle.</p>';
  h+='<div class="fp-box"><b>'+S.fp+'</b> point'+(S.fp>1?'s':'')+' d’amitié à offrir · +1 toutes les 6 h (veillées autour du feu). Ouvrez une fiche pour renforcer un lien.</div><div class="list">';
  S.knights.slice().sort((a,b)=>RANK_MULT[b.rank]-RANK_MULT[a.rank]||b.lv-a.lv).forEach(k=>{const c=CONS_BY[k.cons];const nAp=S.aps.filter(a=>a.master===k.id).length;
-  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+spChip(k)+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(k.role==='maitre'?'<span>'+nAp+' / 3 apprentis</span>':'')+''+nrgIcon(k)+'</div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+k.lv+'</div></div></div>';});
+  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+spChip(k)+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(isMaster(k)||nAp?'<span>'+nAp+' / 3 apprentis</span>':'')+''+nrgIcon(k)+'</div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+k.lv+'</div></div></div>';});
  return h+'</div></section>'+viewGuards();
 }
 export function viewApprentis(){
@@ -367,13 +408,13 @@ export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance '+fmt(power(k,k.rank))+'</div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+statsHtml(k,'k');
  h+=itemUse(k,'k');
  h+='<div class="hint">Techniques : '+(k.tech.length?k.tech.map(esc).join(' · '):'aucune')+'</div>';
- h+=trainingBlock(k,'k')+selfWork(k,'k')+friendBlock(k);
- h+='<div class="sec-h"><h2>Rôle</h2></div><div class="opts">';
- h+='<button class="opt'+(k.role===null?' sel':'')+'" data-act="role:'+k.id+':none"><b>Entraînement personnel</b><span class="d">Pas de rôle : progresse à pleine vitesse.</span></button>';
+ h+=planBlock(k,'k')+trainingBlock(k,'k')+selfWork(k,'k')+friendBlock(k);
+ h+='<div class="sec-h"><h2>Métier</h2></div><div class="opts">';
+ h+='<button class="opt'+(k.role===null?' sel':'')+'" data-act="role:'+k.id+':none"><b>Aucun métier</b><span class="d">Tout son temps va à ses disciples et à son entraînement.</span></button>';
  const p=pope();
  Object.entries(ROLES).forEach(([rk,R])=>{const taken=rk==='pope'&&p&&p.id!==k.id;h+='<button class="opt'+(k.role===rk?' sel':'')+'" data-act="role:'+k.id+':'+rk+'"'+(taken?' disabled':'')+'><b>'+R.n+'</b><span class="d">'+R.d+(taken?' Déjà confié à '+esc(p.name)+'.':'')+'</span></button>';});
  h+='</div>';
- if(k.role==='maitre'){h+='<div class="sec-h"><h2>Ses apprentis</h2><span class="aside">'+aps.length+' / 3</span></div>'+(aps.length?'<div class="list">'+aps.map(a=>{const af=affinity(a,k);return '<div class="item tap" data-act="ap:'+a.id+'">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+'</div><div class="sub">Niv. '+a.lv+(af.t?' · '+af.t:'')+'</div></div><div></div></div>';}).join('')+'</div>':'<p class="hint">Aucun pour l’instant. Assignez-lui des apprentis depuis l’onglet Apprentis.</p>');}
+ if(isMaster(k)||aps.length){h+='<div class="sec-h"><h2>Ses disciples</h2><span class="aside">'+aps.length+' / 3</span></div>'+(aps.length?'<div class="list">'+aps.map(a=>{const af=affinity(a,k);return '<div class="item tap" data-act="ap:'+a.id+'">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+'</div><div class="sub">Niv. '+a.lv+(af.t?' · '+af.t:'')+'</div></div><div></div></div>';}).join('')+'</div>':'<p class="hint">Aucun pour l’instant. Ouvrez la fiche d’un apprenti pour le confier à '+esc(k.name)+'.</p>');}
  return h;};}
 export function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)return '<p>Cet apprenti n’est plus là.</p>';const rate=xpRate(a);
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(a,null,true)+'<div class="main"><h2>'+esc(a.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+signChip(a.sign)+'<span class="chip">'+a.age+' ans</span><span class="chip '+(a.imp==='Exceptionnel'?'or':a.imp==='Prometteur'?'argent':'')+'">'+a.imp+(cb('REVEAL')?' · potentiel '+a.pot:'')+'</span></div><div class="hint">Cosmos '+cosmosLabel(a.st.co).toLowerCase()+(a.awk?'':' · pas encore éveillé (niv. 5)')+'</div></div></div>';
@@ -382,13 +423,13 @@ export function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)re
  h+=itemUse(a,'a');
  if(a.cd>S.gt&&(S.items.onguent||0)>0)h+='<button class="btn sm ghost" data-act="onguent:'+a.id+'">Appliquer un onguent : fin du repos · '+S.items.onguent+' en réserve</button>';
  h+='<div class="hint">Techniques : '+(a.tech.length?a.tech.map(esc).join(' · '):'aucune (première au niveau 10)')+'</div>';
- if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Formation ralentie de moitié. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
- h+=trainingBlock(a,'a')+selfWork(a,'a')+friendBlock(a);
+ if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Réglez son temps ci-dessous. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
+ h+=planBlock(a,'a')+trainingBlock(a,'a')+selfWork(a,'a')+friendBlock(a);
  h+='<div class="sec-h"><h2>Maître</h2></div><div class="opts">';
- const masters=knightsWith('maitre');
- if(!masters.length)h+='<p class="hint">Aucun chevalier n’a le rôle de Maître. Confiez ce rôle à un chevalier dans l’onglet Chevaliers.</p>';
+ const masters=S.knights;
+ h+='<p class="hint">Tout chevalier peut former jusqu’à 3 disciples, selon le temps qu’il leur consacre (sa fiche, « Emploi du temps »).</p>';
  masters.forEach(k=>{const n=S.aps.filter(x=>x.master===k.id).length;const af=affinity(a,k);const full=n>=3&&a.master!==k.id;
-  h+='<button class="opt'+(a.master===k.id?' sel':'')+'" data-act="assign:'+a.id+':'+k.id+'"'+(full?' disabled':'')+'><b>'+esc(k.name)+' <span class="sign">'+SIGNS[k.sign].s+'</span></b><span class="chip '+k.rank+'">'+RANKS[k.rank]+'</span><span class="d">'+n+' / 3 apprentis'+(af.t?' · <span style="color:var(--gold-hi)">'+af.t+' (×'+af.x+')</span>':'')+'</span></button>';});
+  h+='<button class="opt'+(a.master===k.id?' sel':'')+'" data-act="assign:'+a.id+':'+k.id+'"'+(full?' disabled':'')+'><b>'+esc(k.name)+' <span class="sign">'+SIGNS[k.sign].s+'</span></b><span class="chip '+k.rank+'">'+RANKS[k.rank]+'</span><span class="d">'+n+' / 3 apprentis · '+plan(k).dis+' % de son temps'+(af.t?' · <span style="color:var(--gold-hi)">'+af.t+' (×'+af.x+')</span>':'')+'</span></button>';});
  if(a.master)h+='<button class="btn sm ghost" data-act="assign:'+a.id+':none">Retirer du maître</button>';
  h+='</div><div class="sec-h"><h2>Épreuve de l’armure</h2></div>';
  if(a.cd>S.gt)h+='<p class="hint">'+esc(a.name)+' se remet de sa dernière épreuve. Nouvel essai dans <b data-until="'+a.cd+'">'+dur(a.cd-S.gt)+'</b>.</p>';
@@ -431,8 +472,8 @@ export function settingsModal(){
 export function getP(kind,id){return kind==='k'?S.knights.find(q=>q.id===id):kind==='g'?(S.guards||[]).find(q=>q.id===id):S.aps.find(q=>q.id===id);}
 // Un seul écouteur pour tous les boutons (attribut data-act), et un toucher hors de la fenêtre la ferme.
 export function installClicks(){
- document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.vol;if(k)setSound({[k]:+e.target.value/100});});
- document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.vol==='sfx')sfx('confirm');});
+ document.addEventListener('input',e=>{const d=e.target.dataset||{};if(d.vol)setSound({[d.vol]:+e.target.value/100});if(d.plan)onPlanInput(e.target,false);});
+ document.addEventListener('change',e=>{const d=e.target.dataset||{};if(d.vol==='sfx')sfx('confirm');if(d.plan)onPlanInput(e.target,true);});
  document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled){actWithSound(t.dataset.act);return;}if(e.target.id==='sheet'){sfx('close');lastTrial=null;closeModal();render();}});}
 // Le bruitage qui accompagne chaque action du joueur.
 const ACT_SOUND={tab:'tap',close:'close',dclose:'close',site:'open',knight:'open',ap:'open',guard:'open',armor:'open',houses:'open',settings:'open',trialOpen:'open',
@@ -499,11 +540,14 @@ export function act(a){
   flash=kn.name+' entraîne '+ap.name+' : +'+fmt(rate*8)+' XP, amitié '+S.friend[fk]+'/10.';
   const teach=kn.qual.filter(t=>!ql(ap,t.k));if(teach.length&&ap.qual.length<3&&Math.random()<.15){const t=teach[Math.floor(Math.random()*teach.length)];ap.qual.push({k:t.k,lv:1});flash+=' '+ap.name+' apprend à être '+QUAL[t.k].n.toLowerCase()+' !';log(kn.name+' transmet sa qualité ('+QUAL[t.k].n.toLowerCase()+') à '+ap.name+'.');}
   break;}
- case'assign':{const ap=S.aps.find(q=>q.id===+x);if(!ap)return;if(y==='none'){ap.master=null;break;}const kn=S.knights.find(q=>q.id===+y);if(!kn||kn.role!=='maitre')return;if(S.aps.filter(q=>q.master===kn.id).length>=3&&ap.master!==kn.id)return;ap.master=kn.id;break;}
+ case'assign':{const ap=S.aps.find(q=>q.id===+x);if(!ap)return;if(y==='none'){ap.master=null;break;}const kn=S.knights.find(q=>q.id===+y);if(!kn)return;if(S.aps.filter(q=>q.master===kn.id).length>=3&&ap.master!==kn.id)return;ap.master=kn.id;
+  if(!plan(kn).dis){setShare(kn,'dis',30,planLocked(kn,'k'));flash=kn.name+' consacre désormais 30 % de son temps à ses disciples (réglable sur sa fiche).';}break;}
  case'role':{const kn=S.knights.find(q=>q.id===+x);if(!kn)return;const nr=y==='none'?null:y;if(nr==='pope'&&pope()&&pope().id!==kn.id)return;
-  if(kn.role==='maitre'&&nr!=='maitre')S.aps.forEach(ap=>{if(ap.master===kn.id)ap.master=null;});
   if(nr==='recruteur'&&kn.role!=='recruteur'&&!knightsWith('recruteur').length)S.recruitAcc=0;
-  kn.role=nr;if(nr)log(kn.name+' devient '+ROLES[nr].n+'.');break;}
+  if(nr==='biblio'&&!(S.b.biblio>0)){flash='Il faut d’abord bâtir la bibliothèque.';break;}
+  const was=kn.role;plan(kn);kn.role=nr;
+  if(!nr)setShare(kn,'job',0);else if(!was||!kn.tm.job)setShare(kn,'job',50);
+  if(nr)log(kn.name+' devient '+ROLES[nr].n+'.');break;}
  case'accept':{const i=+x,ap=S.pending[i];if(!ap||S.aps.length>=capacity())return;S.pending.splice(i,1);S.aps.push(ap);log(ap.name+' rejoint le Sanctuaire comme apprenti'+G(ap,'e')+'.');break;}
  case'dismiss':{const ap=S.pending.splice(+x,1)[0];if(ap)log(ap.name+' est reconduit'+G(ap,'e')+' chez sa famille.');break;}
  case'pair':{const p=getP(x,+y),q=byId(+z);if(!p||!q)return;const r=trainTogether(p,q,compat(p,q).v);flash=r.msg;if(r.ok)log(r.msg);break;}
@@ -523,7 +567,7 @@ export function act(a){
  case'sound':unlockAudio();setSound({on:x==='toggle'?!soundPrefs().on:x==='on'});if(soundPrefs().on)sfx('confirm');break;
  case'exportSave':{save();const code=exportCode(S);const ta=$('#saveIo');ta.value=code;ta.select();
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(()=>{ioMsg='Code copié dans le presse-papiers.';$('#sheetBody').innerHTML=settingsModal();$('#saveIo').value=code;},()=>{ioMsg='Copie automatique impossible : le code est sélectionné, copiez-le à la main.';});}else ioMsg='Le code est sélectionné, copiez-le à la main.';return;}
- case'importSave':{const v=$('#saveIo').value.trim();const o=importCode(v);if(o){setS(o);recomputeCB();S.lastReal=Date.now();save();ioMsg='Partie chargée.';}else{ioMsg='Ce code n’est pas reconnu. Vérifiez qu’il a été collé en entier.';}break;}
+ case'importSave':{const v=$('#saveIo').value.trim();const o=importCode(v);if(o){setS(o);recomputeCB();S.knights.concat(S.aps).forEach(plan);S.lastReal=Date.now();save();ioMsg='Partie chargée.';}else{ioMsg='Ce code n’est pas reconnu. Vérifiez qu’il a été collé en entier.';}break;}
  case'resetArm':resetArmed=true;break;
  case'resetCancel':resetArmed=false;break;
  case'resetGo':try{localStorage.removeItem(KEY);}catch(e){}newGame();recomputeCB();save();closeModal();render();return;

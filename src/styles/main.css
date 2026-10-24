@@ -471,3 +471,7 @@ nav.tabs button{font-size:.68rem}
 #title .btn{padding:12px 28px;font-size:1rem}
 #title .ver{font-size:.72rem;color:var(--marble-dim);letter-spacing:.04em}
 @media (prefers-reduced-motion:reduce){.bar>i{transition:none}#title{transition:none}}
+.plan{display:grid;gap:10px}
+.vol.off{opacity:.45}
+.vol b{color:var(--gold-hi)}
+.plan-out{display:grid;gap:3px;padding:8px 10px;border:1px solid rgba(232,196,106,.18);border-radius:10px;background:rgba(0,0,0,.18)}
