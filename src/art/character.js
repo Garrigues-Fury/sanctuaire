@@ -13,6 +13,8 @@ export const METALS={
  garde:['#e2cda8','#a3845e','#614b31','#2b2116'],crimson:['#ffab98','#c2301f','#5c0b06','#200302'],steel:['#eef2f6','#97a3b2','#4c5664','#1c222a'],
  violet:['#f3dcff','#a362d2','#4d2172','#1c0a2c'],jade:['#dcffe9','#52b47d','#1f5b3b','#0a2416'],dark:['#b9b0c4','#5b5368','#2a2532','#100d14']
 };
+// Couleurs de cheveux « manga » possibles.
+const FANCY=[['vert','#3f9a5a'],['vert','#2f8f7a'],['bleu','#3d6fd0'],['bleu','#5aa6e0'],['violet','#7a4ec2'],['rose','#e07aa8'],['argent','#cfd6e0'],['rouge','#c8323a']];
 const EL={feu:{cloth:'#b3302a',gem:'#ff5a3a'},eau:{cloth:'#2b5bb2',gem:'#4fb6ff'},air:{cloth:'#dfe7f2',gem:'#c8ecff'},terre:{cloth:'#4b6b33',gem:'#62d884'}};
 const GOLD_MOTIF=['curl','horns','twin','crescent','mane','wings','scales','tail','wings','backhorns','water','fins'];
 function motifOf(c){
@@ -61,6 +63,10 @@ export function specOf(p,o={}){
  s.plain=adult&&r2()<(F?.2:.32)?.5+r2()*.5:0;
  s.scar=adult&&r2()<(p.origin==='survivant'||fac?.5:.2)?1+Math.floor(r2()*3):0;
  if(adult&&!s.tattoo&&r2()<.15)s.tattoo=true;
+ // taches de rousseur : souvent chez les roux, parfois chez les peaux claires
+ s.freckles=r2()<(L.hk==='roux'?.75:L.hk==='auburn'?.45:L.si<=1?.1:0);
+ // cheveux colorés de manga : le cosmos teinte les cheveux, surtout chez les chevaliers (demande de Seba du 2026-10-24)
+ if(!o.elder&&r2()<(rank?.22:fac?.12:.05)){const c=FANCY[Math.floor(r2()*FANCY.length)];s.hair=c[1];s.hairKey=c[0];}
  if(fac){s.hood=fac.hood&&r()<.7?fac.hood:null;s.mask=!!fac.mask;s.spiky=!!fac.spiky;s.robe=!!fac.robe;s.bow=!!fac.bow;s.vine=!!fac.vine;}
  return s;
 }
@@ -111,6 +117,8 @@ function face(s,d){
  if(s.smile)h+='<path d="M'+(CX-9)+' 145 Q'+CX+' 156 '+(CX+9)+' 145 Q'+CX+' 149 '+(CX-9)+' 145Z" fill="#6a2024"/><path d="M'+(CX-7)+' 146 L'+(CX+7)+' 146" stroke="#fff" stroke-width="1.6"/>';
  else if(F)h+='<path d="M'+(CX-8)+' 146 Q'+CX+' 143.5 '+(CX+8)+' 146 Q'+CX+' 151 '+(CX-8)+' 146Z" fill="'+mix2(S,'#c0505a',.55)+'"/>';
  else h+='<path d="M'+(CX-8)+' 147 Q'+CX+' '+(s.fierce?145:149)+' '+(CX+8)+' 147" fill="none" stroke="'+dk+'" stroke-width="2" stroke-linecap="round"/>';
+ // taches de rousseur sur le nez et les pommettes
+ if(s.freckles){const fr=rng((s.seed^0x51f)>>>0);for(let i=0;i<26;i++){const sd=i%2?1:-1,x=CX+sd*(4+fr()*30),y=118+fr()*20-Math.max(0,(Math.abs(x-CX)-24))*.4;h+='<circle cx="'+f(x)+'" cy="'+f(y)+'" r="'+f(.8+fr()*.9)+'" fill="#a0562e" opacity="'+f(.35+fr()*.35)+'"/>';}}
  // visage moins gracieux : nez plus marqué, narines visibles
  if(pl)h+='<path d="M'+(CX-6)+' 136 Q'+(CX-9)+' 131 '+(CX-3)+' 129 M'+(CX+6)+' 136 Q'+(CX+9)+' 131 '+(CX+3)+' 129 M'+(CX+3)+' 112 Q'+(CX+7)+' 120 '+(CX+5)+' 128" fill="none" stroke="'+dk+'" stroke-width="1.7" stroke-linecap="round" opacity="'+f(.45+.4*pl)+'"/>';
  // cicatrices : joue ou sourcil

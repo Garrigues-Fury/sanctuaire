@@ -57,6 +57,17 @@ const who = (sex, nat, look) => BODY[sex](look) + ' Originaire de ' + nat + ' : 
 const perso = (sex, nat, rank, theme, i) => who(sex, nat, sex === 'F' ? LOOK_F[i % 5] : LOOK_M[(i + 2) % 5]) + ' ' + RANK[rank] + ' ' + theme + ' ' + HEAD + ' ' + FRAME;
 
 export const JOBS = {};
+// Variantes demandées par Seba le 2026-10-24 : roux aux taches de rousseur, cheveux colorés de manga, physiques variés.
+// [pays (ou null), silhouette (ou null), détail ajouté]
+const RED_TXT = ' Cheveux roux flamboyants, taches de rousseur bien visibles sur le nez, les joues et les épaules.';
+const EXTRA = {
+  'perso-argent-air-F': ['Irlande', null, RED_TXT],
+  'perso-bronze-terre-M': ['Écosse', null, RED_TXT],
+  'perso-or-vierge-F': [null, 'femme ronde et voluptueuse, hanches larges, ventre doux, très séduisante', ' Longs cheveux vert émeraude de manga, brillants.'],
+  'perso-or-gemeaux-F': [null, 'jolie, petite poitrine, silhouette fine et sportive', ' Cheveux rose vif de manga, coupe au carré.'],
+  'perso-or-belier-M': [null, 'homme corpulent et massif, gros ventre puissant, barbe épaisse', ' Cheveux argentés de manga, en bataille.'],
+  'perso-or-lion-M': [null, 'traits rudes et irréguliers, nez cassé, pas spécialement beau mais charismatique', ' Cheveux bleu nuit de manga, cicatrice sur la joue.']
+};
 GOLD.forEach(([k, theme, natF, natM], i) => {
   JOBS['perso-or-' + k + '-F'] = perso('F', natF, 'or', theme, i);
   JOBS['perso-or-' + k + '-M'] = perso('M', natM, 'or', theme, i);
@@ -67,6 +78,10 @@ Object.entries(EL).forEach(([e, [theme, natF, natM]], j) => {
     JOBS['perso-' + rk + '-' + e + '-M'] = perso('M', natM, rk, theme, j * 2 + r + 3);
   });
 });
+for (const n in EXTRA) { if (!JOBS[n]) continue; const [nat, look, txt] = EXTRA[n];
+  if (nat) JOBS[n] = JOBS[n].replace(/Originaire de [^:]+:/, 'Originaire de ' + nat + ' :');
+  if (look) JOBS[n] = JOBS[n].replace(/jeu gacha : [^.]*./, 'jeu gacha : ' + look + '.');
+  JOBS[n] = JOBS[n].replace(' ' + HEAD, txt + ' ' + HEAD); }
 GOLD.forEach(([k, theme]) => { JOBS['armure-or-' + k] = RANK.or + ' ' + theme + ' ' + EMPTY; });
 Object.entries(EL).forEach(([e, [theme]]) => ['argent', 'bronze'].forEach(rk => { JOBS['armure-' + rk + '-' + e] = RANK[rk] + ' ' + theme + ' ' + EMPTY; }));
 
