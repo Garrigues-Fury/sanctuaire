@@ -1,8 +1,8 @@
 # Charte graphique — Sanctuaire Renaissant
 
-Version 1 du 24 octobre 2026. Elle s'appuie sur les deux planches de Seba (`art/`) et sur ses choix :
+Version 2 du 24 octobre 2026. Elle s'appuie sur l'image de référence (`docs/reference.jpeg`), sur les deux planches de Seba (`art/`) et sur ses choix :
 
-- **Style** : rendu 3D semi-réaliste, qualité cinématique de jeu vidéo (et non plus anime).
+- **Style** : **anime**, comme l'image de référence. Les planches semi-réalistes de `art/` restent des modèles pour l'architecture et les armures, et servent dans le jeu en attendant leur version anime.
 - **Le Sanctuaire intact** est le **but à atteindre** : il sert d'écran titre et de « vision ». La partie montre des ruines qui se relèvent peu à peu.
 - **Les 8 chevaliers d'or dessinés sont gardés tels quels** (usage strictement privé).
 
@@ -17,7 +17,9 @@ Formats proposés par ChatGPT : carré (1024 × 1024), paysage (1536 × 1024), p
 
 ## 2. Bloc de style commun (à coller à chaque fois)
 
-> Rendu 3D semi-réaliste, qualité cinématique de jeu vidéo haut de gamme, éclairage doré de soleil couchant, ciel orange et rose, brume légère. Univers de la Grèce antique mythique : marbre blanc veiné, ornements d'or, frises grecques, cyprès, cascades. Détails nets, couleurs chaudes et riches. Aucun texte, aucune lettre, aucun logo, aucune signature, aucun filigrane.
+> Illustration de style anime, dessin japonais moderne de qualité série télévisée haut de gamme : contours nets, aplats de couleur et ombrages doux, grands yeux expressifs. Lumière dorée de soleil couchant, ciel orange et ocre, brume légère, poussière dans l'air. Univers de la Grèce antique mythique en ruines : colonnes de marbre brisées, dalles fendues, herbes folles, cyprès. Personnages aux tatouages tribaux, armures segmentées et rivetées en métal patiné, tenues de cuir et de tissu, sangles et boucles. Couleurs chaudes. Aucun texte, aucune lettre, aucun logo, aucune signature, aucun filigrane.
+
+Si tu peux joindre une image dans ChatGPT, **joins `docs/reference.jpeg`** et ajoute : « dans le même style de dessin que l'image jointe ». C'est le moyen le plus sûr de garder le même trait d'une image à l'autre.
 
 ## 3. Chevaliers (portraits)
 
@@ -34,7 +36,9 @@ Différences entre les rangs :
 - **Argent** : armure partielle (épaules, torse, avant-bras, jambières), argent et bleu acier, plus sobre.
 - **Bronze** : pièces de bronze patiné sur une tenue de cuir et de tissu, rivets apparents, armure légère.
 
-**À compléter en priorité** : les 4 chevaliers d'or manquants (Gémeaux, Balance, Sagittaire, Capricorne), puis une version de l'autre sexe pour chacune des 12 maisons. Le jeu tire au hasard le sexe des chevaliers : pour l'instant, un Lion femme ou un Bélier homme garde le portrait procédural.
+**Priorité 1 : redessiner en anime ce qui est déjà en jeu**, pour que tout le jeu ait le même style. Joins à ChatGPT la planche de `art/personnages/` (pour l'armure) et `docs/reference.jpeg` (pour le style), puis demande, chevalier par chevalier : « redessine ce chevalier d'or [maison] en style anime, comme l'image de référence, une seule image ». Fais pareil pour la vue d'ensemble du Sanctuaire (écran titre).
+
+**Priorité 2, ensuite** : les 4 chevaliers d'or manquants (Gémeaux, Balance, Sagittaire, Capricorne), puis une version de l'autre sexe pour chacune des 12 maisons. Le jeu tire au hasard le sexe des chevaliers : pour l'instant, un Lion femme ou un Bélier homme garde le portrait procédural.
 
 ## 4. Apprentis
 
@@ -77,6 +81,8 @@ Nom de fichier `dieu-[nom].png`, format portrait. Dieux : Arès, Éris, Apollon,
 | 4 vues du Sanctuaire | onglet Chronique, « Le Sanctuaire restauré » | `public/img/sanctuaire/vue-1.webp` à `vue-4.webp` |
 | 8 visages de chevaliers d'or | portraits, quand le signe et le sexe correspondent | `public/img/or/tete-1.webp` à `tete-8.webp` |
 | 8 chevaliers d'or en pied | fiche du chevalier | `public/img/or/corps-1.webp` à `corps-8.webp` |
+
+Toutes ces images sont encore semi-réalistes : chacune sera remplacée dès que sa version anime existera, sous le même nom.
 
 Attribution des maisons, devinée d'après les armures (**à confirmer par Seba**) :
 
