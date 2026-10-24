@@ -469,4 +469,5 @@ nav.tabs button{font-size:.68rem}
 #title h1{font-size:2.3rem;letter-spacing:.08em;color:var(--gold-hi);text-shadow:0 2px 18px rgba(0,0,0,.6)}
 #title p{margin:0;color:var(--marble);max-width:28em;text-shadow:0 1px 8px rgba(0,0,0,.8)}
 #title .btn{padding:12px 28px;font-size:1rem}
+#title .ver{font-size:.72rem;color:var(--marble-dim);letter-spacing:.04em}
 @media (prefers-reduced-motion:reduce){.bar>i{transition:none}#title{transition:none}}

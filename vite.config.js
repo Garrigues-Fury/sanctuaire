@@ -1,14 +1,20 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'node:fs';
+
+const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+const built = new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
 
 // base './' : le site marche quel que soit le dossier d'hébergement (GitHub Pages met le jeu dans /<nom-du-dépôt>/).
 export default defineConfig({
   base: './',
   build: { chunkSizeWarningLimit: 2000 },
+  // Numéro de version affiché dans le jeu, pour savoir d'un coup d'œil si le téléphone est à jour.
+  define: { __APP_VERSION__: JSON.stringify('v' + pkg.version + ' du ' + built) },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      injectRegister: false, // l'enregistrement se fait dans main.js, avec une vérification à chaque retour dans l'appli
       includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'Sanctuaire Renaissant',

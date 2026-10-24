@@ -398,7 +398,7 @@ export function absenceModal(dt,before,sum){return()=>{
  return h+'<button class="btn" data-act="close">Reprendre</button>';};}
 export let resetArmed=false,ioMsg='';
 export function settingsModal(){
- let h='<div><h2 class="mh">Réglages</h2><p class="hint">Version 0.7 · partie commencée il y a '+dur((Date.now()-S.created)/36e5)+' (temps réel).</p></div>';
+ let h='<div><h2 class="mh">Réglages</h2><p class="hint">'+(typeof __APP_VERSION__!=='undefined'?__APP_VERSION__:'développement')+' · partie commencée il y a '+dur((Date.now()-S.created)/36e5)+' (temps réel).</p></div>';
  const sp=soundPrefs();const vol=(k,n)=>'<label class="vol"><span>'+n+'</span><input type="range" min="0" max="100" step="5" value="'+Math.round(sp[k]*100)+'" data-vol="'+k+'"></label>';
  h+='<div class="sec"><div class="sec-h"><h2>Son</h2></div><div class="btns"><button class="btn sm'+(sp.on?'':' ghost')+'" data-act="sound:on">Son activé</button><button class="btn sm'+(sp.on?' ghost':'')+'" data-act="sound:off">Silence</button></div>'+vol('amb','Ambiance (vent, cigales, grillons)')+vol('sfx','Bruitages')+'</div>';
  h+='<div class="sec"><div class="sec-h"><h2>Vitesse du temps</h2></div><p class="hint">Le mode test accélère tout par 60 (1 minute = 1 heure de jeu) pour juger l’équilibrage. Revenez au temps normal pour jouer.</p><div class="btns"><button class="btn sm'+(S.speed===1?'':' ghost')+'" data-act="speed:1">Temps normal</button><button class="btn sm'+(S.speed===60?'':' ghost')+'" data-act="speed:60">Mode test ×60</button></div></div>';

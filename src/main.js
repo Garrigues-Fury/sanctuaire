@@ -11,6 +11,7 @@ import { load, save } from './core/save.js';
 import { ensureWorld } from './core/expeditions.js';
 import { ensureDuel } from './core/duel.js';
 import { installTips } from './ui/tips.js';
+import { registerSW } from 'virtual:pwa-register';
 import { S, setS } from './core/state.js';
 import { setMapTapHandler } from './map/map.js';
 import { sfx, unlockAudio } from './audio/audio.js';
@@ -38,6 +39,7 @@ function start(){
  installClicks();installTips();setMapTapHandler(onMapTap);
  // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.
  const title=document.getElementById('title');
+ const ver=document.getElementById('appVersion');if(ver)ver.textContent=typeof __APP_VERSION__!=='undefined'?__APP_VERSION__:'développement';
  // Le premier toucher (écran titre ou ailleurs) autorise le son.
  document.addEventListener('pointerdown',unlockAudio,true);
  const enter=()=>{unlockAudio();sfx('open');title.classList.add('out');setTimeout(()=>{title.hidden=true;},600);};
@@ -50,5 +52,14 @@ function start(){
  window.addEventListener('pagehide',save);
  // Demande au navigateur de ne pas effacer la sauvegarde pour libérer de la place.
  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+ keepUpToDate();
+}
+// Mises à jour : on vérifie au lancement, à chaque retour dans l'appli et toutes les 30 minutes.
+// Quand une nouvelle version est prête, on sauvegarde puis on recharge (la partie reprend là où elle était).
+function keepUpToDate(){
+ if(import.meta.env.DEV||!('serviceWorker' in navigator))return;
+ const updateSW=registerSW({immediate:true,
+  onNeedRefresh(){save();updateSW(true);},
+  onRegisteredSW(url,r){if(!r)return;setInterval(()=>r.update(),30*60e3);document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update();});}});
 }
 start();
