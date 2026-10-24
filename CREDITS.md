@@ -20,6 +20,14 @@ Tout ce qui est intégré au jeu est gratuit et sous licence libre. Chaque nouve
 | Marcellus SC (Brian J. Bonislawsky) | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Marcellus+SC, via @fontsource/marcellus-sc |
 | Alegreya Sans (Juan Pablo del Peral, Huerta Tipográfica) | SIL Open Font License 1.1 | https://fonts.google.com/specimen/Alegreya+Sans, via @fontsource/alegreya-sans |
 
+## Sons
+
+| Élément | Auteur | Licence | Source |
+|---|---|---|---|
+| Bruitages `public/audio/` : chantier, marteau1-3, pieces, carte, tour, porte, livre (pack « RPG Audio ») | Kenney Vleugels (Kenney.nl) | CC0 1.0, domaine public | https://kenney.nl/assets/rpg-audio |
+| Bruitages `public/audio/` : toucher, ouvrir, fermer, valider, fabrique, echec (pack « Interface Sounds ») | Kenney Vleugels (Kenney.nl) | CC0 1.0, domaine public | https://kenney.nl/assets/interface-sounds |
+| Ambiance (vent, cigales, grillons), cloches et carillons | synthétisés par le code du jeu (`src/audio/audio.js`) | propre au projet | — |
+
 ## Images
 
 | Élément | Auteur | Licence |

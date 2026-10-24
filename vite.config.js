@@ -29,7 +29,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico,jpg,webp}'],
+        globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico,jpg,webp,ogg}'],
         // Seules les polices latines servent ; inutile de stocker les alphabets cyrillique, grec, vietnamien.
         globIgnores: ['**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024

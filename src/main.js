@@ -10,6 +10,7 @@ import { advance, newSum, recomputeCB } from './core/rules.js';
 import { load, save } from './core/save.js';
 import { S, setS } from './core/state.js';
 import { setMapTapHandler } from './map/map.js';
+import { sfx, unlockAudio } from './audio/audio.js';
 import { absenceModal, installClicks, liveUpdate, modalFn, onMapTap, openModal, render } from './ui/app.js';
 
 // Rattrape un écart de temps réel dtReal (en heures) et montre le résumé d'absence s'il dépasse 6 minutes de jeu.
@@ -34,7 +35,9 @@ function start(){
  installClicks();setMapTapHandler(onMapTap);
  // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.
  const title=document.getElementById('title');
- const enter=()=>{title.classList.add('out');setTimeout(()=>{title.hidden=true;},600);};
+ // Le premier toucher (écran titre ou ailleurs) autorise le son.
+ document.addEventListener('pointerdown',unlockAudio,true);
+ const enter=()=>{unlockAudio();sfx('open');title.classList.add('out');setTimeout(()=>{title.hidden=true;},600);};
  title.addEventListener('click',enter);title.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')enter();});
  render();
  if(!fresh){const dt=(Date.now()-S.lastReal)/36e5;S.lastReal=Date.now();if(dt>.01)catchUp(dt);}

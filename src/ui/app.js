@@ -16,6 +16,7 @@ import { HADES_H, KEY, POSEIDON_H, S, log, setS } from '../core/state.js';
 import { G, ROMAN, clamp, dur, esc, fmt, fmt1 } from '../core/util.js';
 import { syncAgents } from '../map/agents.js';
 import { mountMap } from '../map/map.js';
+import { setSound, sfx, soundPrefs, unlockAudio } from '../audio/audio.js';
 import { portrait } from './portraits.js';
 
 export function $(s){return document.querySelector(s);}
@@ -117,6 +118,7 @@ export function renderRes(){
  const R=rates();
  $('#resbar').innerHTML=RKEYS.map(r=>'<div class="res"><div class="k"><i style="background:'+RES[r].c+'"></i>'+RES[r].n+'</div><div class="v" data-res="'+r+'">'+fmt(S.res[r])+'</div><div class="r">'+(R[r]>=0?'+':'')+fmt(R[r])+'/h · max '+fmt(cap(r))+'</div></div>').join('');
  $('#speedTag').hidden=S.speed===1;
+ const sb=$('#soundBtn');if(sb){const on=soundPrefs().on;sb.setAttribute('aria-pressed',on);sb.classList.toggle('off',!on);sb.setAttribute('aria-label',on?'Couper le son':'Activer le son');}
 }
 export function bar(pct,attrs,cls){return '<div class="bar'+(cls?' '+cls:'')+'"><i '+(attrs||'')+' style="width:'+clamp(pct,0,100).toFixed(1)+'%"></i></div>';}
 export function bldBlock(id){
@@ -380,6 +382,8 @@ export function absenceModal(dt,before,sum){return()=>{
 export let resetArmed=false,ioMsg='';
 export function settingsModal(){
  let h='<div><h2 class="mh">Réglages</h2><p class="hint">Version 0.7 · partie commencée il y a '+dur((Date.now()-S.created)/36e5)+' (temps réel).</p></div>';
+ const sp=soundPrefs();const vol=(k,n)=>'<label class="vol"><span>'+n+'</span><input type="range" min="0" max="100" step="5" value="'+Math.round(sp[k]*100)+'" data-vol="'+k+'"></label>';
+ h+='<div class="sec"><div class="sec-h"><h2>Son</h2></div><div class="btns"><button class="btn sm'+(sp.on?'':' ghost')+'" data-act="sound:on">Son activé</button><button class="btn sm'+(sp.on?' ghost':'')+'" data-act="sound:off">Silence</button></div>'+vol('amb','Ambiance (vent, cigales, grillons)')+vol('sfx','Bruitages')+'</div>';
  h+='<div class="sec"><div class="sec-h"><h2>Vitesse du temps</h2></div><p class="hint">Le mode test accélère tout par 60 (1 minute = 1 heure de jeu) pour juger l’équilibrage. Revenez au temps normal pour jouer.</p><div class="btns"><button class="btn sm'+(S.speed===1?'':' ghost')+'" data-act="speed:1">Temps normal</button><button class="btn sm'+(S.speed===60?'':' ghost')+'" data-act="speed:60">Mode test ×60</button></div></div>';
  h+='<div class="sec"><div class="sec-h"><h2>Sauvegarde</h2></div><p class="hint">La partie est enregistrée dans ce navigateur. Copiez régulièrement le code ci-dessous et gardez-le dans une note : il permet de restaurer la partie si les données de Chrome sont effacées.</p><textarea id="saveIo" aria-label="Code de sauvegarde" spellcheck="false"></textarea><div class="btns"><button class="btn sm" data-act="exportSave">Générer et copier le code</button><button class="btn sm ghost" data-act="importSave">Charger le code collé</button></div>'+(ioMsg?'<p class="hint" style="color:var(--gold-hi)">'+esc(ioMsg)+'</p>':'')+'</div>';
  h+='<div class="sec"><div class="sec-h"><h2>Nouvelle partie</h2></div>'+(resetArmed?'<div class="banner bad">Toute la progression sera perdue. Confirmez-vous ?</div><div class="btns"><button class="btn sm danger" data-act="resetGo">Oui, tout recommencer</button><button class="btn sm ghost" data-act="resetCancel">Annuler</button></div>':'<button class="btn sm ghost" data-act="resetArm">Recommencer une partie</button>')+'</div>';
@@ -389,7 +393,22 @@ export function settingsModal(){
 /* ---------- actions ---------- */
 export function getP(kind,id){return kind==='k'?S.knights.find(q=>q.id===id):kind==='g'?(S.guards||[]).find(q=>q.id===id):S.aps.find(q=>q.id===id);}
 // Un seul écouteur pour tous les boutons (attribut data-act), et un toucher hors de la fenêtre la ferme.
-export function installClicks(){document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled){act(t.dataset.act);return;}if(e.target.id==='sheet'){lastTrial=null;closeModal();render();}});}
+export function installClicks(){
+ document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.vol;if(k)setSound({[k]:+e.target.value/100});});
+ document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.vol==='sfx')sfx('confirm');});
+ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled){actWithSound(t.dataset.act);return;}if(e.target.id==='sheet'){sfx('close');lastTrial=null;closeModal();render();}});}
+// Le bruitage qui accompagne chaque action du joueur.
+const ACT_SOUND={tab:'tap',close:'close',dclose:'close',site:'open',knight:'open',ap:'open',guard:'open',armor:'open',houses:'open',settings:'open',trialOpen:'open',
+ build:'build',house:'build',restore:'build',hire:'pay',craft:'pay',tool:'build',dtake:'card',dend:'turn',dboost:'pay',
+ role:'confirm',assign:'confirm',accept:'confirm',post:'confirm',friend:'confirm',sp:'tap',spauto:'confirm',wjob:'confirm',ajob:'confirm',
+ sess:'study',duo:'confirm',potion:'confirm',ambroisie:'confirm',onguent:'confirm',huile:'confirm',cure:'confirm',boost:'confirm',claim:'milestone',dkeep:'milestone',dstart:'turn'};
+function actWithSound(a){
+ const k=a.split(':')[0],wasOver=!!(S.match&&S.match.over);
+ if(k!=='trial'&&k!=='sound')sfx(ACT_SOUND[k]||'tap');
+ act(a);
+ if(k==='trial'&&lastTrial)sfx(lastTrial.win?'win':'lose');
+ if(S.match&&S.match.over&&!wasOver)sfx(S.match.result==='win'?'win':'lose');
+}
 export function onMapTap(h){if(h.type==='pope')act('tab:pope');else if(h.type==='houses')openModal(housesModal);else openSite(h.id);}
 export let guardArm=null,forfeitArm=false;
 export function act(a){
@@ -465,6 +484,7 @@ export function act(a){
  case'restore':{const c=CONS_BY[x];const cost=ARMOR_COST[c.rank];if(S.forgeJob||S.b.forge<ARMOR_FORGE[c.rank]||bestSmith()<ARMOR_SMITH[c.rank]||!afford(cost)||S.armors[x]!=='brisee')return;pay(cost);S.forgeJob={cons:x,work:ARMOR_WORK[c.rank],prog:0};log('L’atelier commence la restauration de l’'+armorLow(c)+'.');break;}
  case'settings':resetArmed=false;ioMsg='';openModal(settingsModal);return;
  case'speed':S.speed=+x;break;
+ case'sound':unlockAudio();setSound({on:x==='toggle'?!soundPrefs().on:x==='on'});if(soundPrefs().on)sfx('confirm');break;
  case'exportSave':{save();const code=exportCode(S);const ta=$('#saveIo');ta.value=code;ta.select();
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(()=>{ioMsg='Code copié dans le presse-papiers.';$('#sheetBody').innerHTML=settingsModal();$('#saveIo').value=code;},()=>{ioMsg='Copie automatique impossible : le code est sélectionné, copiez-le à la main.';});}else ioMsg='Le code est sélectionné, copiez-le à la main.';return;}
  case'importSave':{const v=$('#saveIo').value.trim();const o=importCode(v);if(o){setS(o);recomputeCB();S.lastReal=Date.now();save();ioMsg='Partie chargée.';}else{ioMsg='Ce code n’est pas reconnu. Vérifiez qu’il a été collé en entier.';}break;}

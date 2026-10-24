@@ -6,7 +6,7 @@ import { SITES } from './data/map.js';
 import { QKEYS, QUAL, TECH, fl, ql } from './data/traits.js';
 import { CONS_BY, ELEM, RANK_MULT, SIGNS, armorName, de } from './data/world.js';
 import { makeApprentice } from './people.js';
-import { HADES_H, POSEIDON_H, S, log } from './state.js';
+import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
 
 export const knightsWith=role=>S.knights.filter(k=>k.role===role);
@@ -89,7 +89,7 @@ export function levelUpAp(ap,sum){
  const ti=[10,20,30].indexOf(ap.lv);
  if(ti>=0){const tn=TECH[SIGNS[ap.sign].el][ti];ap.tech.push(tn);msg=ap.name+' découvre une technique : '+tn+'.';gainQuality(ap,sum);}
  if(msg){log(msg);sum&&sum.ev.push(msg);}
- if(sum)sum.lv[ap.id]=(sum.lv[ap.id]||0)+1;
+ if(sum)sum.lv[ap.id]=(sum.lv[ap.id]||0)+1;else emit(msg?'milestone':'levelup',ap.id);
  S._dirty=true;
 }
 export function levelUpKnight(k){k.xp-=need(k.lv)*1.5;k.lv++;k.sp=(k.sp||0)+{bronze:2,argent:3,or:5}[k.rank];bonusStats(k);S._dirty=true;}
@@ -106,13 +106,13 @@ export function step(h,sum){
  S.workers.forEach(w=>{if(!w.job)return;if(w.job==='forge'&&!S.forgeJob)return;if((w.job==='herbo'||w.job==='atelier')&&!S.craft[w.job].length)return;
   w.sxp+=h;while(w.skill<10&&w.sxp>=24*w.skill){w.sxp-=24*w.skill;w.skill++;if(w.skill===5&&w.job==='forge'){const m=w.name+' est désormais maître forgeron. Les armures d’or ne lui résistent plus.';log(m);sum&&sum.ev.push(m);}S._dirty=true;}});
  if(S.forgeJob)S.forgeJob.prog+=forgeRate()*h;
- ['herbo','atelier'].forEach(ws=>{const q=S.craft[ws];if(!q.length)return;let left=craftRate(ws)*h;while(left>0&&q.length){const j=q[0];const r=REC_BY[j.k];const need=r.work-j.prog;if(left>=need){left-=need;q.shift();S.items[j.k]=(S.items[j.k]||0)+1;S._dirty=true;if(sum)sum.made[j.k]=(sum.made[j.k]||0)+1;}else{j.prog+=left;left=0;}}});
+ ['herbo','atelier'].forEach(ws=>{const q=S.craft[ws];if(!q.length)return;let left=craftRate(ws)*h;while(left>0&&q.length){const j=q[0];const r=REC_BY[j.k];const need=r.work-j.prog;if(left>=need){left-=need;q.shift();S.items[j.k]=(S.items[j.k]||0)+1;S._dirty=true;if(sum)sum.made[j.k]=(sum.made[j.k]||0)+1;else emit('crafted',j.k);}else{j.prog+=left;left=0;}}});
  S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
  S.gt+=h;
- for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;if(j.b[0]==='h'){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum&&sum.ev.push(m);S._dirty=true;}}
- if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum&&sum.ev.push(m);S._dirty=true;}
+ for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;if(j.b[0]==='h'){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
+ if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}
  const iv=recruitInterval();
- if(iv<Infinity){S.recruitAcc+=h;if(S.recruitAcc>=iv){S.recruitAcc-=iv;if(S.pending.length<3){const a=makeApprentice();S.pending.push(a);const m='Un recruteur ramène '+a.name+', '+a.age+' ans, venu'+G(a,'e')+' '+NATS[a.nat].d+'.';log(m);sum&&sum.ev.push(m);S._dirty=true;}else S.recruitAcc=Math.min(S.recruitAcc,iv);}}
+ if(iv<Infinity){S.recruitAcc+=h;if(S.recruitAcc>=iv){S.recruitAcc-=iv;if(S.pending.length<3){const a=makeApprentice();S.pending.push(a);const m='Un recruteur ramène '+a.name+', '+a.age+' ans, venu'+G(a,'e')+' '+NATS[a.nat].d+'.';log(m);sum?sum.ev.push(m):emit('recruit');S._dirty=true;}else S.recruitAcc=Math.min(S.recruitAcc,iv);}}
  [[POSEIDON_H-30*24,'p30','Les marées deviennent étranges sur toutes les côtes du monde. Poséidon s’agite dans son sommeil.'],[HADES_H-60*24,'h60','Les étoiles maléfiques brillent plus fort chaque nuit. Hadès prépare son retour.']].forEach(([t,f,m])=>{if(S.gt>=t&&!S.flags[f]){S.flags[f]=true;log(m);sum&&sum.ev.push(m);}});
 }
 export function advance(dt,sum){if(dt<=0)return;const stepH=Math.max(1/60,dt/3000);let rem=dt;while(rem>1e-9){const h=Math.min(stepH,rem);step(h,sum);rem-=h;}}

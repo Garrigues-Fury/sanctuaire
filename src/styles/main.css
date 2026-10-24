@@ -279,6 +279,10 @@ nav.tabs button{font-size:.68rem}
 .vision figcaption,.fullbody figcaption{font-size:.82rem;color:var(--marble-dim);font-style:italic}
 .fullbody{justify-items:center;background:radial-gradient(80% 60% at 50% 40%,var(--night-4),var(--night) 75%);border-radius:14px;padding:12px}
 .fullbody img{display:block;height:min(52vh,420px);width:auto;border-radius:10px}
+.icon-btn.off{opacity:.45;text-decoration:line-through}
+#soundBtn{font-family:var(--f-display);font-size:1.25rem;margin-right:6px}
+.vol{display:grid;gap:4px;font-size:.86rem;color:var(--marble-dim)}
+.vol input{width:100%;accent-color:var(--gold)}
 .arm-mini{width:48px;height:72px;border-radius:8px;object-fit:cover;background:var(--night-3);display:block}
 /* Armure pas encore restaurée : ternie, comme sous la poussière. */
 .broken{filter:grayscale(.85) brightness(.55) contrast(1.1)}
