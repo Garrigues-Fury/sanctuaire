@@ -78,6 +78,9 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
 8. **Amitiés** : des points à distribuer entre deux personnages, qui accordent un bonus d'XP plafonné.
 9. **Villageois** : ils travaillent sur les sites et progressent dans leur métier. Les apprentis peuvent être envoyés en renfort : ils gagnent une statistique mais se forment moins vite.
 10. **Armures** : on les restaure à l'atelier avec des forgerons d'un niveau minimum, puis un apprenti passe l'épreuve. L'armure d'or n'accepte que les natifs de sa maison.
+    - **Affinités (demandées par Seba le 2026-10-25, `src/core/armor.js`)** : chaque armure a deux qualités maîtresses. L'affinité (0 à 100) vient de l'élément du signe, des statistiques travaillées et des maîtres qui ont formé le personnage. Sous 25 (45 pour l'argent, 55 pour l'or), l'armure reste muette. La fiche montre les 3 armures pressenties, et l'atelier pour qui chaque armure est pressentie.
+    - L'argent et l'or exigent des personnages très doués (potentiel caché).
+    - **Promotion** : un chevalier de bronze très doué peut passer l'épreuve d'une armure d'argent, un chevalier d'argent celle de l'or de sa maison ; son ancienne armure redevient libre.
 11. **Gardes** : un apprenti qui a raté son épreuve ou qui est surpassé devient garde. Il est affecté à une maison, au village ou à un site, et sa valeur de défense comptera lors des attaques.
 12. **Lecture des astres**, le duel quotidien du Pope contre un dieu :
     - **Fréquence** : une partie par jour réel, toutes les 24 minutes en mode test. Il faut un Grand Pope en poste.

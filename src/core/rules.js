@@ -10,6 +10,7 @@ import { tickWorld } from './expeditions.js';
 import { tickSocial } from './social.js';
 import { apHelpF, apTrainF, isMaster, jobF, selfF, teachF, timeMult } from './schedule.js';
 import { medMult, studyMult, trainStats } from './program.js';
+import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity } from './armor.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
 
@@ -171,13 +172,18 @@ export const SESS=[
 ];
 export const SESS_E=20,DUO_E=30;
 export function trialEval(a,c){
+ // Un apprenti tente une armure ; un chevalier tente une promotion au rang suivant.
+ const knight=S.knights.includes(a);
  if(S.armors[c.k]!=='restauree')return{ok:false,why:'Armure non disponible'};
+ if(knight&&NEXT_RANK[a.rank]!==c.rank)return{ok:false,why:'Promotion au rang suivant seulement'};
  if(a.lv<TRIAL_LV[c.rank])return{ok:false,why:'Niveau '+TRIAL_LV[c.rank]+' requis'};
  if(c.rank==='or'&&c.sign!==a.sign)return{ok:false,why:'Réservée aux natifs '+de(SIGNS[c.sign].n)};
- if(c.rank==='or'&&!a.awk)return{ok:false,why:'Cosmos non éveillé'};
- if(a.pot<TRIAL_POT[c.rank])return{ok:false,why:'Son cosmos ne résonne pas avec cette armure'};
+ if(c.rank==='or'&&!knight&&!a.awk)return{ok:false,why:'Cosmos non éveillé'};
+ if(a.pot<TRIAL_POT[c.rank])return{ok:false,why:'Pas assez doué pour une armure '+(c.rank==='or'?'d’or':'d’argent')};
+ const af=armorAffinity(a,c);
+ if(af.v<AFF_MIN[c.rank])return{ok:false,af,why:'Affinité '+affLabel(af.v).toLowerCase()+' ('+af.v+'/100, il faut '+AFF_MIN[c.rank]+') : l’armure reste muette'};
  const el=c.el===SIGNS[a.sign].el;
  const tr=-.04*ql(a,'fougueux')+.04*ql(a,'patient')+.03*ql(a,'orgueilleux')-.05*fl(a,'impulsif')-(c.rank!=='bronze'?.06*fl(a,'peureux'):0);
- const ch=clamp(.4+.04*(a.lv-TRIAL_LV[c.rank])+(el?.15:0)+a.st.co/300+tr+cb('TRIAL')/100,.1,.95);
- return{ok:true,ch,el};
+ const ch=clamp(.32+.04*(a.lv-TRIAL_LV[c.rank])+af.v/250+a.st.co/300+tr+cb('TRIAL')/100,.1,.95);
+ return{ok:true,ch,el,af};
 }
