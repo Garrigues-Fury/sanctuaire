@@ -20,7 +20,9 @@ export function heroStats(k){
  const techs=k.tech.filter((t,i)=>i!==sigI);
  const tr=traitMods(k);
  return{id:k.id,name:k.name,el,max:Math.round((40+s.en*2.5+lv*4)*rk*tr.hp),atk:(8+s.fo*1.1+lv)*rk,tec:(8+s.co*1.3+lv)*rk,
-  def:((2+s.en*.4+lv*.4)*rk+(ARMOR_DEF[k.rank]||0))*tr.def,spd:s.vi+lv*.5,tech:techs[0]||TECH[el][0],sig,tr};
+  def:((2+s.en*.4+lv*.4)*rk+(ARMOR_DEF[k.rank]||0))*tr.def,spd:s.vi+lv*.5,tech:techs[0]||TECH[el][0],sig,tr,
+  // dextérité : précision (l'ennemi esquive moins) et coups critiques ; psychokinésie : barrière et cosmos de départ
+  acc:(s.de||0)*.3,crit:clamp(.03+(s.de||0)/400,0,.3),shield:clamp((s.ps||0)/400,0,.2),cosPs:Math.min(2,Math.floor((s.ps||0)/30))};
 }
 // Effets des qualités et défauts en combat (voir data/traits.js, champ « c »).
 export function traitMods(k){
@@ -35,12 +37,12 @@ function dmgMult(b,f,kind){const h=b.hero;return T(h,'dmg',1)*(kind==='tech'?T(h
 // Chevalier de référence pour un niveau d'alerte L (1 à 5) : L1 = un bronze débutant, L5 = un chevalier d'or.
 // Chaque niveau d'alerte est calé sur un chevalier type : ★ bronze débutant … ★★★★★ chevalier d'or.
 const REF=[null,['bronze',8,15],['bronze',14,22],['argent',21,32],['argent',30,44],['or',38,55]];
-export function refHero(L){const [rank,lv,v]=REF[Math.max(1,Math.min(5,L))];return heroStats({id:0,name:'réf',rank,lv,st:{fo:v,vi:v,en:v,co:v},sign:0,tech:[],origin:'forme'});}
+export function refHero(L){const [rank,lv,v]=REF[Math.max(1,Math.min(5,L))];return heroStats({id:0,name:'réf',rank,lv,st:{fo:v,vi:v,en:v,co:v,de:v,ps:v},sign:0,tech:[],origin:'forme'});}
 
 /* ev : {foe, L, n (nombre d'ennemis), boss} ; mods : {hard, easy, duel, first} */
 export function newBattle(k,ev,mods={},seed=1){
  const b={rs:seed|0,turn:1,log:[],over:false,result:null};
- const h=heroStats(k);b.hero=Object.assign(h,{hp:h.max,cos:clamp((mods.first?6:2)+h.tr.cos0,0,10),guard:false});
+ const h=heroStats(k);b.hero=Object.assign(h,{hp:h.max,cos:clamp((mods.first?6:2)+h.tr.cos0+(h.cosPs||0),0,10),guard:false});
  const F=FOES[ev.foe],ref=refHero(ev.L);
  let n=mods.duel?1:ev.n,mult=(mods.hard?1.25:1)*(mods.easy?.8:1);
  const boss=mods.duel||ev.boss;
@@ -57,9 +59,10 @@ export function newBattle(k,ev,mods={},seed=1){
 const alive=b=>b.foes.filter(f=>f.hp>0);
 function dodge(b,attSpd,defSpd){return rnd(b)<clamp(.05+(defSpd-attSpd)/120,.02,.35);}
 function hit(b,f,raw,label,kind){
- if(dodge(b,b.hero.spd,f.spd)){b.log.push({t:'hero',m:f.n+' esquive '+label+'.',miss:true,target:f.i});return;}
- const d=Math.max(1,Math.round(raw*dmgMult(b,f,kind)*(.75+rnd(b)*.5)));f.hp=Math.max(0,f.hp-d);
- b.log.push({t:'hero',m:label.charAt(0).toUpperCase()+label.slice(1)+' : '+d+' dégâts à '+f.n+(f.hp<=0?' — à terre !':'.'),dmg:d,target:f.i});
+ if(dodge(b,b.hero.spd+(b.hero.acc||0),f.spd)){b.log.push({t:'hero',m:f.n+' esquive '+label+'.',miss:true,target:f.i});return;}
+ const crit=rnd(b)<(b.hero.crit||0);
+ const d=Math.max(1,Math.round(raw*dmgMult(b,f,kind)*(crit?1.5:1)*(.75+rnd(b)*.5)));f.hp=Math.max(0,f.hp-d);
+ b.log.push({t:'hero',m:(crit?'Coup précis ! ':'')+label.charAt(0).toUpperCase()+label.slice(1)+' : '+d+' dégâts à '+f.n+(f.hp<=0?' — à terre !':'.'),dmg:d,target:f.i,crit});
 }
 export function canUse(b,a){return a==='strike'||a==='guard'||(a==='tech'&&b.hero.cos>=COST.tech)||(a==='sig'&&b.hero.cos>=COST.sig);}
 
@@ -82,10 +85,11 @@ function foesTurn(b){
  alive(b).forEach(f=>{
   if(h.hp<=0)return;
   if(!f.charge&&rnd(b)<T(h,'taunt',0)){b.log.push({t:'foe',m:f.n+', piqué au vif par une remarque de '+h.name+', perd sa concentration et rate son attaque.',miss:true,src:f.i});return;}
-  if(f.boss&&f.charge===1){f.charge=0;const raw=(f.atk*2.2-h.def*.5)*(h.guard?gr:1);const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));h.hp=Math.max(0,h.hp-d);b.log.push({t:'foe',m:f.n+' libère son attaque terrible : '+d+' dégâts !'+(h.guard?' La garde a tenu.':''),dmg:d,big:true,src:f.i});return;}
+  const sh=1-(h.shield||0);
+  if(f.boss&&f.charge===1){f.charge=0;const raw=(f.atk*2.2-h.def*.5)*(h.guard?gr:1)*sh;const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));h.hp=Math.max(0,h.hp-d);b.log.push({t:'foe',m:f.n+' libère son attaque terrible : '+d+' dégâts !'+(h.guard?' La garde a tenu.':''),dmg:d,big:true,src:f.i});return;}
   if(f.boss&&b.turn%3===2){f.charge=1;b.log.push({t:'foe',m:f.n+' prépare un coup terrible… (se mettre en garde !)',warn:true,src:f.i});return;}
   if(dodge(b,f.spd,h.spd)||rnd(b)<T(h,'dodge',0)){b.log.push({t:'foe',m:h.name+' esquive '+f.n+'.',miss:true,src:f.i});return;}
-  const raw=(f.atk*elemMult(f.el,h.el)-h.def*.5)*(h.guard?gr:1);const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));
+  const raw=(f.atk*elemMult(f.el,h.el)-h.def*.5)*(h.guard?gr:1)*sh;const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));
   h.hp=Math.max(0,h.hp-d);h.cos=Math.min(10,h.cos+1);b.log.push({t:'foe',m:f.n+' frappe : '+d+' dégâts.',dmg:d,src:f.i});
  });
  if(h.hp<=0&&!h.survived&&rnd(b)<T(h,'survive',0)){h.survived=true;h.hp=1;b.log.push({t:'info',m:h.name+' devrait être à terre… et pourtant, se relève.',big:true});}

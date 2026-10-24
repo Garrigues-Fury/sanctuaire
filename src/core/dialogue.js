@@ -22,7 +22,7 @@ export function reqOk(req,k,S){
  if(req.survivor)return k.origin==='survivant';
  return true;
 }
-const STATN={fo:'Force',vi:'Vitesse',en:'Endurance',co:'Cosmos'};
+const STATN={fo:'Force',vi:'Vitesse',de:'Dextérité',en:'Endurance',ps:'Psychokinésie',co:'Cosmos'};
 export function reqLabel(req){
  if(!req)return'';
  if(req.qual)return req.qual.split('|').map(q=>QUAL[q].n).join(' ou ');

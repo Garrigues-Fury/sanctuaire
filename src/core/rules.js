@@ -9,6 +9,7 @@ import { makeApprentice } from './people.js';
 import { tickWorld } from './expeditions.js';
 import { tickSocial } from './social.js';
 import { apHelpF, apTrainF, isMaster, jobF, selfF, teachF, timeMult } from './schedule.js';
+import { medMult, studyMult, trainStats } from './program.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
 
@@ -56,7 +57,7 @@ export function need(lv){return Math.round(80*Math.pow(1.25,lv-1));}
 export function affinity(ap,m){if(!m)return{x:1,t:''};if(m.sign===ap.sign)return{x:1.5,t:'Même signe'};if(SIGNS[m.sign].el===SIGNS[ap.sign].el)return{x:1.25,t:'Même élément'};return{x:1,t:''};}
 export function masterOf(ap){return S.knights.find(k=>k.id===ap.master&&isMaster(k))||null;}
 export function emax(p){return 100-10*fl(p,'colerique');}
-export function eregen(p){return E_REGEN*(1+.15*ql(p,'perseverant'))*(1-.15*fl(p,'fragile'))*(1+cb('NRG')/100);}
+export function eregen(p){return E_REGEN*medMult(p)*(1+.15*ql(p,'perseverant'))*(1-.15*fl(p,'fragile'))*(1+cb('NRG')/100);}
 export function fkey(a,b){return a<b?a+'-'+b:b+'-'+a;}
 export function friendLv(a,b){return S.friend[fkey(a,b)]||0;}
 export function friendsOf(p){const out=[];for(const k in S.friend){const [a,b]=k.split('-').map(Number);if(a!==p.id&&b!==p.id)continue;const o=byId(a===p.id?b:a);if(o&&S.friend[k]>0)out.push({p:o,lv:S.friend[k]});}return out.sort((x,y)=>y.lv-x.lv);}
@@ -66,10 +67,10 @@ export function xpRate(ap){
  // le maître forme à plein régime quand il y consacre la moitié de son temps
  if(m)mm=.4+((1+m.lv/40+({or:.5,argent:.25,bronze:0})[m.rank])*affinity(ap,m).x*(1+.07*ql(ap,'loyal'))*(1-.1*ql(ap,'solitaire'))*(1-.08*fl(ap,'tetu'))-.4)*teachF(m);
  const tr=(1+.05*ql(ap,'fougueux'))*timeMult(ap);
- return 10*arena()*mm*tr*(1+.1*S.houses[ap.sign])*(1+ap.st.en/200)*(1+popeBonus())*(1+friendBonus(ap))*(1+cb('XP')/100)*(S.starve?.5:1)*apTrainF(ap);
+ return 10*arena()*mm*tr*(1+.1*S.houses[ap.sign])*(1+ap.st.en/200)*(1+popeBonus())*(1+friendBonus(ap))*(1+cb('XP')/100)*(S.starve?.5:1)*apTrainF(ap)*studyMult(ap);
 }
-export function knightRate(k){return 6*arena()*selfF(k)*(1+popeBonus())*(1+friendBonus(k))*(1+cb('XP')/100)*(S.starve?.5:1);}
-export function power(p,rank){const s=p.st;return(s.fo+s.vi+s.en+s.co*2)*(rank?RANK_MULT[rank]:.5)*(1+p.lv/20);}
+export function knightRate(k){return 6*arena()*selfF(k)*studyMult(k)*(1+popeBonus())*(1+friendBonus(k))*(1+cb('XP')/100)*(S.starve?.5:1);}
+export function power(p,rank){const s=p.st;return((s.fo+s.vi+s.en+(s.de||0)+(s.ps||0))*.8+s.co*2)*(rank?RANK_MULT[rank]:.5)*(1+p.lv/20);}
 export function sanctPower(){let t=0;S.knights.forEach(k=>t+=power(k,k.rank));S.aps.forEach(a=>t+=power(a,null)*.5);S.houses.forEach(h=>t+=h*40);return t;}
 export const RANK_W={apprenti:.5,garde:1,bronze:2,argent:4,or:8};
 export function weightOf(p){return RANK_W[p.rank||'apprenti']*(p.role==='pope'?1.5:1)*(1+p.st.co/50);}
@@ -109,7 +110,7 @@ export function step(h,sum){
   if(ap.job){ap.wacc=(ap.wacc||0)+h*apHelpF(ap);while(ap.wacc>=24){ap.wacc-=24;ap.st[WORK[ap.job].stat]++;}}});
  S.knights.forEach(k=>{k.xp+=knightRate(k)*h;let g=0;while(k.xp>=need(k.lv)*1.5&&g++<50)levelUpKnight(k);});
  (S.guards||[]).forEach(gd=>{gd.xp+=guardRate(gd)*h;let g=0;while(gd.xp>=need(gd.lv)*1.5&&g++<50){gd.xp-=need(gd.lv)*1.5;gd.lv++;gd.sp=(gd.sp||0)+2;bonusStats(gd);S._dirty=true;}});
- people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);});
+ const am=arena();people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);trainStats(p,h,am);});
  S.workers.forEach(w=>{if(!w.job)return;if(w.job==='forge'&&!S.forgeJob)return;if((w.job==='herbo'||w.job==='atelier')&&!S.craft[w.job].length)return;
   w.sxp+=h;while(w.skill<10&&w.sxp>=24*w.skill){w.sxp-=24*w.skill;w.skill++;if(w.skill===5&&w.job==='forge'){const m=w.name+' est désormais maître forgeron. Les armures d’or ne lui résistent plus.';log(m);sum&&sum.ev.push(m);}S._dirty=true;}});
  if(S.forgeJob)S.forgeJob.prog+=forgeRate()*h;
@@ -160,7 +161,7 @@ export function artReady(a){for(const e in a.need)if(bonusOf(e)<a.need[e])return
 export const POSTS=['village','champs','carriere','mine','jardin','biblio','forge','herbo','atelier'];
 export function postName(p){if(!p)return 'sans poste';if(/^h\d+$/.test(p))return 'maison '+de(SIGNS[+p.slice(1)].n);if(p==='village')return 'village de Rodorio';return SITES[p]?SITES[p].n.toLowerCase():p;}
 export function defenseOf(post){let d=0;(S.guards||[]).forEach(g=>{if(g.post===post)d+=power(g,'garde');});return d*(1+cb('DEF')/100);}
-export function guardRate(g){return 6*arena()*.6*timeMult(g)*(1+popeBonus())*(1+friendBonus(g))*(1+cb('XP')/100)*(S.starve?.5:1);}
+export function guardRate(g){return 6*arena()*.6*timeMult(g)*studyMult(g)*(1+popeBonus())*(1+friendBonus(g))*(1+cb('XP')/100)*(S.starve?.5:1);}
 export const SESS=[
  {k:'fo',n:'Combat au rocher',gain:'+2 force',cost:a=>({vivres:Math.round(40*(1+a.st.fo/20)),metal:Math.round(10*(1+a.st.fo/20))})},
  {k:'vi',n:'Course dans les escaliers',gain:'+2 vitesse',cost:a=>({vivres:Math.round(30*(1+a.st.vi/20)),marbre:Math.round(20*(1+a.st.vi/20))})},

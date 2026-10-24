@@ -9,6 +9,8 @@ export const TIP={
  lv:'Niveau : il monte avec l’expérience, gagnée en temps réel, à l’entraînement et en expédition.',
  fo:'Force : les dégâts de vos coups en combat. Au Sanctuaire, elle aide à la carrière, à la mine et à l’atelier.',
  vi:'Vitesse : esquiver et faire esquiver en combat.',
+ de:'Dextérité : la précision. En combat, l’ennemi esquive moins et les coups précis font 50 % de dégâts en plus. Utile à l’atelier, et pour certaines actions en mission.',
+ ps:'Psychokinésie : la force de l’esprit. En combat, une barrière amortit les coups (jusqu’à 20 %) et le cosmos démarre plus haut. Utile à l’herboristerie, et pour certaines actions en mission.',
  en:'Endurance : les points de vie et la défense en combat, et une formation plus rapide. Utile aux champs et au jardin.',
  co:'Cosmos : la puissance des techniques et du coup ultime. Il compte pour les épreuves d’armure et pour la lecture des astres.',
  hearts:'Amitié, de 0 à 10 : chaque niveau donne +1 % d’XP aux deux personnes (+2 % entre maître et apprenti), 30 % au plus.',

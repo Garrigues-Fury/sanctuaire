@@ -10,12 +10,16 @@ export const TRAININGS=[
  {k:'fo',n:'Combat au rocher',gain:'+1 force',e:25,st:{fo:1}},
  {k:'vi',n:'Course dans l’escalier des douze maisons',gain:'+1 vitesse',e:25,st:{vi:1}},
  {k:'en',n:'Endurance sous la cascade',gain:'+1 endurance',e:25,st:{en:1}},
+ {k:'de',n:'Tir de précision aux galets',gain:'+1 dextérité',e:25,st:{de:1}},
+ {k:'ps',n:'Lévitation des pierres de l’arène',gain:'+1 psychokinésie',e:30,st:{ps:1}},
  {k:'co',n:'Méditation sur les étoiles',gain:'+1 cosmos',e:30,st:{co:1}},
  {k:'libre',n:'Entraînement libre',gain:'+4 h d’entraînement',e:20,hours:4},
  {k:'leste',n:'Entraînement lesté',gain:'+2 force, +1 endurance',e:35,item:'materiel',st:{fo:2,en:1}},
  {k:'course',n:'Course aux bracelets de bronze',gain:'+2 vitesse',e:30,item:'lingot',st:{vi:2}},
  {k:'bain',n:'Bain d’onguent après l’effort',gain:'+2 endurance',e:30,item:'onguent',st:{en:2}},
  {k:'elixir',n:'Méditation à l’élixir',gain:'+2 cosmos',e:35,item:'elixir',st:{co:2}},
+ {k:'jongle',n:'Jonglage aux lingots',gain:'+2 dextérité',e:30,item:'lingot',st:{de:2}},
+ {k:'transe',n:'Transe à la tisane',gain:'+2 psychokinésie',e:30,item:'tisane',st:{ps:2}},
  {k:'tisane',n:'Veillée de méditation à la tisane',gain:'+6 h d’entraînement',e:20,item:'tisane',hours:6},
  {k:'etude',n:'Retraite d’étude des parchemins',gain:'+8 h d’entraînement',e:20,savoir:p=>Math.round(10+2*p.lv*(1-.1*ql(p,'studieux'))),hours:8}
 ];

@@ -61,7 +61,7 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
    - Toucher un site ouvre sa gestion.
 4. **Survivants au départ** : 1 chevalier d'or, 1 d'argent, 2 de bronze. Rôles possibles : Grand Pope (unique), Recruteur, Maître (3 apprentis), Intendant, Maître d'œuvre, ou entraînement personnel.
 5. **Apprentis**
-   - Profil : signe, élément, statistiques (force, vitesse, endurance, cosmos), potentiel caché (environ 1 % peuvent atteindre l'or), impression visible approximative.
+   - Profil : signe, élément, statistiques (force, vitesse, dextérité, endurance, psychokinésie, cosmos ; les deux nouvelles ajoutées le 2026-10-24 à la demande de Seba), potentiel caché (environ 1 % peuvent atteindre l'or), impression visible approximative.
    - Biographie de 3 lignes, nationalité.
    - Qualités et défauts de niveau I à III. Exemples de qualités : persévérant, fougueux, patient, studieux, loyal, sociable… Exemples de défauts : paresseux, impulsif, peureux, distrait, arrogant, colérique, têtu, fragile, gourmand.
 6. **Progression**
@@ -100,7 +100,9 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
     - Code : `src/core/combat.js`, `src/core/expeditions.js`, `src/core/data/scenes.js` (le texte des scènes), `src/ui/world.js`, `src/ui/scene.js`.
 15. **Emploi du temps, missions, blessures (demandé le 2026-10-24, en 4 étapes)** :
     - **Étape 1, emploi du temps** (`src/core/schedule.js`) : un chevalier répartit son temps en % entre son métier (Grand Pope, Recruteur, Intendant, Maître d'œuvre, Chercheur à la bibliothèque), la formation de ses disciples (3 au plus ; « Maître » n'est plus un métier) et son entraînement personnel. Un apprenti en renfort répartit entre entraînement et aide au Sanctuaire. Le goût de l'effort (travailleur, persévérant) ou la paresse change le rendement de ce temps.
-    - Étape 2 : répartition de l'entraînement (physique, rapidité, dextérité, méditation, psychokinésie, cosmos, endurance, études). Étape 3 : tableau des missions (auto ou en direct). Étape 4 : fatigue, blessures (un blessé ne fait que se soigner), mort, armure à rapporter, cimetière, réparation à l'orichalque.
+    - **Étape 2, programme d'entraînement** (`src/core/program.js`, livré le 2026-10-24) : le temps d'entraînement se répartit en 8 curseurs (physique, rapidité, dextérité, endurance, psychokinésie, cosmos, méditation, études). Chaque part fait monter sa statistique en continu ; la méditation recharge l'énergie (jusqu'à +80 %) et nourrit un peu le cosmos ; les études accélèrent l'XP (jusqu'à +60 %, plus pour un studieux). Séances ciblées à l'énergie pour les nouvelles statistiques.
+    - **Dextérité** : précision (l'ennemi esquive moins) et coups précis à ×1,5 en combat ; atelier d'artisanat ; actions de mission (désarmer, ligoter). **Psychokinésie** : barrière qui amortit les coups (jusqu'à 20 %) et cosmos de départ plus haut ; herboristerie ; actions de mission (soulever le chariot, barrière autour d'un village). Les anciens personnages reçoivent dextérité = (force + vitesse) / 2 et psychokinésie = (cosmos + endurance) / 2.
+    - Étape 3 : tableau des missions (auto ou en direct). Étape 4 : fatigue, blessures (un blessé ne fait que se soigner), mort, armure à rapporter, cimetière, réparation à l'orichalque.
     - **Mort (décision de Seba le 2026-10-24)** : possible **seulement sur une mission risquée lancée par le joueur**, avec un avertissement clair avant le départ. **Jamais pendant une absence** si rien n'a été lancé.
 16. **Comptes à rebours** : réveil de Poséidon au jour 90, guerre sainte contre Hadès au jour 270. La réincarnation d'Athéna sera révélée plus tard.
 

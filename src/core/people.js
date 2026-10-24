@@ -6,7 +6,7 @@ import { emax, fkey } from './rules.js';
 import { S, VERSION, log, setS, uid } from './state.js';
 import { G, mulberry32, pick } from './util.js';
 
-export function rollStats(r,base,spread){return{fo:Math.round(base+r()*spread),vi:Math.round(base+r()*spread),en:Math.round(base+r()*spread),co:Math.round(base+r()*spread)};}
+export function rollStats(r,base,spread){return{fo:Math.round(base+r()*spread),vi:Math.round(base+r()*spread),en:Math.round(base+r()*spread),co:Math.round(base+r()*spread),de:Math.round(base+r()*spread),ps:Math.round(base+r()*spread)};}
 export function fillG(t,p){return t.replace(/\{e\}/g,G(p,'e')).replace(/\{il\}/g,p.sex==='F'?'elle':'il').replace(/\{lui\}/g,p.sex==='F'?'elle':'lui');}
 export function makeBio(p,r,vet){
  const N=NATS[p.nat];const place=r()<.55?'à '+N.c:'dans un village '+N.d;

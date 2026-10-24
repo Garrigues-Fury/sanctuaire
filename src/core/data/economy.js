@@ -34,9 +34,9 @@ export const BUILD={
  artisans:{n:'Village des artisans',base:{marbre:250,vivres:200,metal:100},t:2,eff:l=>slotsFor(l)+' chantier'+(slotsFor(l)>1?'s':'')+' · '+villageCap(l)+' villageois'}
 };
 export const BORDER=['champs','carriere','mine','biblio','jardin','herbo','atelier','entrepot','dortoirs','arene','forge','artisans'];
-export const WORK={champs:{res:'vivres',stat:'en'},carriere:{res:'marbre',stat:'fo'},mine:{res:'metal',stat:'fo'},biblio:{res:'savoir',stat:'co'},jardin:{item:'herbes',stat:'en'},forge:{stat:'co'},herbo:{stat:'co'},atelier:{stat:'fo'}};
+export const WORK={champs:{res:'vivres',stat:'en'},carriere:{res:'marbre',stat:'fo'},mine:{res:'metal',stat:'fo'},biblio:{res:'savoir',stat:'co'},jardin:{item:'herbes',stat:'en'},forge:{stat:'co'},herbo:{stat:'ps'},atelier:{stat:'de'}};
 export const TOOL_SITES=['champs','carriere','mine','biblio','jardin'];
-export const STATN={fo:'force',vi:'vitesse',en:'endurance',co:'cosmos'};
+export const STATN={fo:'force',vi:'vitesse',de:'dextérité',en:'endurance',ps:'psychokinésie',co:'cosmos'};
 // Les métiers des chevaliers. Les effets sont pleins quand le métier occupe 100 % du temps (voir schedule.js).
 export const ROLES={
  pope:{n:'Grand Pope',d:'+10 % de production et d’XP pour tout le Sanctuaire, plus 1 % par 10 points de cosmos. Un seul. Mène la lecture des astres.'},
