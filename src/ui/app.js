@@ -565,6 +565,7 @@ export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);
  }
  // Profil : le personnage en pied, ses statistiques, son histoire
  h+='<figure class="fullbody"><img src="'+fullBody(k,k.rank)+'" alt="'+esc(k.name)+' en '+esc(armorLow(c))+'" width="300" height="675"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
+ h+='<button class="btn ghost c3-open" data-act="c3:'+k.id+'">Apparence 3D : choisir son physique (essai)</button>';
  h+=radarBox(k)+statsHtml(k,'k')+itemUse(k,'k');
  h+='<div class="hint">Techniques : '+(k.tech.length?k.tech.map(esc).join(' · '):'aucune')+'</div>';
  h+=persoBlock(k);
@@ -691,6 +692,7 @@ export function act(a){
  case'craft':{const r=REC_BY[x];if(!r||S.craft[r.ws].length>=6||!afford(r.inp))return;pay(r.inp);S.craft[r.ws].push({k:x,prog:0});break;}
  case'tool':{const tl=S.tools[x]||0;if(tl>=5||(S.items.outil||0)<tl+1)return;S.items.outil-=tl+1;S.tools[x]=tl+1;log('Les outils '+de(BUILD[x].n.split(' ')[0]).replace('du Oliveraies','des oliveraies')+' passent au niveau '+(tl+1)+'.');flash='Outillage amélioré : +'+10*(tl+1)+' % de production.';break;}
  case'knight':sheetTab='profil';openModal(knightModal(+x));return;
+ case'c3':{const k=S.knights.find(q=>q.id===+x);if(!k)return;import('./creator3d.js').then(m=>m.openCreator(k));return;}
  case'stab':sheetTab=x;render();$('.sheet-card').scrollTop=0;return;
  case'event':openModal(eventModal(+x));return;
  case'go':{if(!startExpedition(+x,+y))return;closeModal();save();render();openScene();return;}

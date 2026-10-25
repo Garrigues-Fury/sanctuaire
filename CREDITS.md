@@ -12,6 +12,8 @@ Tout ce qui est intégré au jeu est gratuit et sous licence libre. Chaque nouve
 | @vite-pwa/assets-generator | Génération des icônes PNG | MIT | https://github.com/vite-pwa/assets-generator |
 | Vitest | Tests automatiques | MIT | https://vitest.dev |
 | acorn, acorn-walk | Outil ponctuel de découpage du prototype | MIT | https://github.com/acornjs/acorn |
+| three.js 0.179 | Affichage 3D du créateur de personnage | MIT | https://threejs.org |
+| @pixiv/three-vrm 3.4 | Lecture des personnages 3D au format VRM (os, matériaux anime, physique des cheveux) | MIT | https://github.com/pixiv/three-vrm |
 
 ## Polices
 
@@ -37,5 +39,7 @@ Tout ce qui est intégré au jeu est gratuit et sous licence libre. Chaque nouve
 | Chevaliers d'or (`public/img/or/`) | générés par Seba avec ChatGPT (OpenAI), d'après `art/personnages/` | idem ; usage privé, ressemblance avec le canon assumée par Seba |
 | Armures d'or en style anime (`public/img/armures/`) | générées par Seba (outil d'IA de son abonnement), d'après `docs/prompts-images.md` | images produites par l'utilisateur ; usage privé |
 | Chevaliers et armures façon gacha, charte v3 (`public/img/gacha/`, `public/img/armures/armure-*`) | générés par Claude avec Gemini 3 Pro Image (Google), via l'API Mammouth AI sur l'abonnement de Seba, d'après `scripts/generate-images.mjs` | les conditions de Google et de Mammouth laissent l'usage des images produites à l'utilisateur ; usage privé |
+| Personnages 3D de base (`public/models/vroid-f.vrm`, `vroid-m.vrm`), une femme et un homme créés avec VRoid Studio | publiés sur OpenGameArt (« VRoid Studio CC0 models », https://opengameart.org/content/vroid-studio-cc0-models) | CC0 1.0, domaine public |
+| Armures 3D du créateur de personnage | construites par le code du jeu (`src/three/avatar3d.js`) | propre au projet |
 | Portraits et carte | dessinés par le code du jeu (générateur procédural repris du prototype) | propre au projet |
 | `docs/reference.jpeg` | image de référence fournie par Seba | usage privé, non diffusée dans le jeu |

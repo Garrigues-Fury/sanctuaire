@@ -42,9 +42,12 @@ export default defineConfig({
         // La nouvelle version prend la main tout de suite, sans attendre que l'appli soit complètement fermée.
         skipWaiting: true,
         clientsClaim: true,
-        cleanupOutdatedCaches: true
+        cleanupOutdatedCaches: true,
+        // Personnages 3D (16 à 18 Mo chacun) : téléchargés seulement quand on ouvre le créateur, puis gardés hors ligne.
+        runtimeCaching: [{ urlPattern: /\/models\/.*\.vrm$/, handler: 'CacheFirst', options: { cacheName: 'modeles-3d', expiration: { maxEntries: 6 } } }]
       }
     })
   ],
-  test: { environment: 'node' }
+  // les simulations longues (30 jours de jeu, parties complètes) dépassent 5 s quand l'ordinateur est chargé
+  test: { environment: 'node', testTimeout: 30000 }
 });
