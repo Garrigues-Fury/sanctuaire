@@ -32,6 +32,12 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
     - **Chronique**.
   - **Personnages**, avec 4 rubriques : Chevaliers, Apprentis, Formation (par disciple, par armure) et Relations (liens les plus forts, tensions).
   - **Armures**, **Monde** et **Astres** (le duel du Pope).
+  - **Fiches de personnage (phase 2)** en 4 rubriques :
+    - **Profil** : image en pied, radar des 6 statistiques, histoire et caractère ;
+    - **Emploi du temps** : curseurs, métier, programme et séances ;
+    - **Compétences** : cartes, épreuve ou promotion ;
+    - **Liens** : maître ou disciples, et amitiés.
+  - **Fiche d'armure** : image, qualités maîtresses, type d'épreuve, porteur ou restauration, compétences exigées, candidats et maîtres qui peuvent guider.
 - `tests/` : tests Vitest (`npm test`), dont la reprise des sauvegardes v1 à v6.
 - Commandes : `npm run dev` (jeu en développement), `npm run build` (site dans `dist/`), `npm run icons` (icônes depuis `public/icon.svg`).
 - Hébergement : `.github/workflows/deploy.yml` publie sur GitHub Pages à chaque envoi sur `main`.

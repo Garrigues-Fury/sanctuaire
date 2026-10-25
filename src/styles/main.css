@@ -538,3 +538,16 @@ nav.tabs button[aria-current="page"] .ico{filter:drop-shadow(0 0 6px rgba(246,21
 .house-r.rel{grid-template-columns:auto minmax(0,1fr) auto}
 .duo{display:flex}.duo img.pt{width:34px;height:34px}.duo img.pt+img.pt{margin-left:-10px}
 @media (prefers-reduced-motion:reduce){.subnav button,.todo-i{transition:none}}
+
+/* fiches en rubriques, radar, fiche armure */
+.sheet-tabs{margin:2px 0 4px}
+.radar-box{display:grid;place-items:center;padding:6px;border-radius:14px;background:radial-gradient(70% 70% at 50% 45%,rgba(246,212,138,.08),transparent)}
+.radar{width:100%;max-width:300px;height:auto;overflow:visible}
+.radar .rg{fill:none;stroke:rgba(242,231,211,.14);stroke-width:1}
+.radar .rv{fill:rgba(246,212,138,.28);stroke:var(--gold-hi);stroke-width:2;stroke-linejoin:round}
+.radar .rl{fill:var(--marble-dim);font:600 11px var(--f-body)}
+.radar .rn{fill:var(--gold-hi);font-weight:800}
+.arm-head{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:start}
+.arm-big{width:110px;height:auto;border-radius:10px;background:radial-gradient(80% 60% at 50% 40%,var(--night-4),var(--night));border:1px solid rgba(246,212,138,.3)}
+.arm-big.broken{filter:grayscale(.85) brightness(.55)}
+.arm-head .main{display:grid;gap:6px}

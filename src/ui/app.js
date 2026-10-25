@@ -11,7 +11,7 @@ import { TIP, tip } from './tips.js';
 import { ITEM_TRADE, PAIR_E, TRAININGS, acceptChance, canTrain, pairPartners, refusedRecently, train, trainTogether, unavailable } from '../core/training.js';
 import { compat, compatLabel } from '../core/social.js';
 import { PROG, PROG_DEF, ensureSchedules, medMult, perDay, prog, setProg, studyMult } from '../core/program.js';
-import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity, bestArmors } from '../core/armor.js';
+import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity, bestArmors, profileOf } from '../core/armor.js';
 import { KIND_N, duelChance, promoteApprentice, runDuel, trialKind } from '../core/trial.js';
 import { candidatesFor, guidesFor, mastersFor, reachOf, revealed } from '../core/formation.js';
 import { FAMILIES, FUND, SKILLS, SPEED, specReq } from '../core/data/skills.js';
@@ -97,11 +97,31 @@ export function viewGuards(){
  G0.forEach(g=>{h+='<div class="item tap" data-act="guard:'+g.id+'">'+ptImg(g,'garde')+'<div class="main"><div class="name">'+esc(g.name)+' <span class="chip garde">Garde</span>'+spChip(g)+'</div><div class="sub">'+(g.post?'Poste : '+esc(postName(g.post)):'<span style="color:var(--warn)">Sans poste</span>')+'</div><div class="meta">'+nrgIcon(g)+'<span>Défense '+fmt(power(g,'garde'))+'</span></div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+g.lv+'</div></div></div>';});
  return h+'</div></section>';
 }
+/* ---------- fiches en rubriques (refonte UX, phase 2) ---------- */
+let sheetTab='profil';
+const SHEET_TABS=[['profil','Profil','eye'],['temps','Emploi du temps','clock'],['competences','Compétences','star'],['liens','Liens','heart']];
+function sheetTabs(){return '<nav class="subnav sheet-tabs" aria-label="Rubriques de la fiche">'+SHEET_TABS.map(([k,n,ic])=>'<button data-act="stab:'+k+'"'+(sheetTab===k?' aria-current="true"':'')+'>'+icon(ic,18)+'<span>'+n+'</span></button>').join('')+'</nav>';}
+// Radar des 6 statistiques : l'échelle s'adapte au personnage.
+const RADAR_K=[['fo','Force'],['vi','Vitesse'],['de','Dextérité'],['en','Endurance'],['ps','Psychokin.'],['co','Cosmos']];
+export function statsRadar(p){
+ const st=p.st,mx=Math.max(20,Math.ceil(Math.max(...RADAR_K.map(([k])=>st[k]||0))*1.15/10)*10);
+ const cx=130,cy=110,R=74,pt=(i,r)=>{const a=-Math.PI/2+i*Math.PI/3;return[cx+Math.cos(a)*r,cy+Math.sin(a)*r];};
+ const poly=fn=>RADAR_K.map((_,i)=>pt(i,fn(i)).map(v=>v.toFixed(1)).join(',')).join(' ');
+ let h='<svg class="radar" viewBox="0 0 260 222" role="img" aria-label="Statistiques : '+RADAR_K.map(([k,n])=>n+' '+(st[k]||0)).join(', ')+'">';
+ [.25,.5,.75,1].forEach(q=>h+='<polygon points="'+poly(()=>R*q)+'" class="rg"/>');
+ RADAR_K.forEach((_,i)=>{const [x,y]=pt(i,R);h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" class="rg"/>';});
+ h+='<polygon points="'+poly(i=>R*Math.min(1,(st[RADAR_K[i][0]]||0)/mx))+'" class="rv"/>';
+ RADAR_K.forEach(([k,n],i)=>{const [x,y]=pt(i,R+20);h+='<text x="'+x.toFixed(1)+'" y="'+(y+4).toFixed(1)+'" text-anchor="middle" class="rl">'+n+' <tspan class="rn">'+(st[k]||0)+'</tspan></text>';});
+ return h+'</svg>';
+}
+const radarBox=p=>'<div class="radar-box">'+statsRadar(p)+'</div>';
 export function guardModal(id){return()=>{const g=(S.guards||[]).find(x=>x.id===id);if(!g)return '<p>Ce garde n’est plus là.</p>';
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(g,'garde',true)+'<div class="main"><h2>'+esc(g.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="chip garde">Garde</span>'+signChip(g.sign)+sexChip(g)+'</div><div class="hint">'+(g.post?'En poste : '+esc(postName(g.post)):'Sans poste')+'</div></div></div>';
- h+=persoBlock(g);
- h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+g.lv+'</b> · défense '+fmt(power(g,'garde'))+'</div>'+bar(g.xp/(need(g.lv)*1.5)*100)+nrgBar(g)+'</div>'+statsHtml(g,'g')+itemUse(g,'g');
- h+=progBlock(g,'g')+skillsBlock(g,'g')+trainingBlock(g,'g')+selfWork(g,'g')+friendBlock(g);
+ h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+g.lv+'</b> · défense '+fmt(power(g,'garde'))+'</div>'+bar(g.xp/(need(g.lv)*1.5)*100)+nrgBar(g)+'</div>'+sheetTabs();
+ if(sheetTab==='temps')return h+progBlock(g,'g')+trainingBlock(g,'g')+selfWork(g,'g');
+ if(sheetTab==='competences')return h+skillsBlock(g,'g');
+ if(sheetTab==='liens')return h+friendBlock(g);
+ h+=radarBox(g)+statsHtml(g,'g')+itemUse(g,'g')+persoBlock(g);
  h+='<div class="sec-h"><h2>Poste</h2></div><div class="posts">';
  h+=SIGNS.map((s,i)=>'<button class="opt'+(g.post==='h'+i?' sel':'')+'" data-act="post:'+g.id+':h'+i+'"><b><span class="sign">'+s.s+'</span> '+s.n+'</b><span class="d">déf. '+fmt(defenseOf('h'+i))+'</span></button>').join('');
  h+=POSTS.map(p=>'<button class="opt'+(g.post===p?' sel':'')+'" data-act="post:'+g.id+':'+p+'"><b>'+esc(postName(p).replace(/^./,c=>c.toUpperCase()))+'</b><span class="d">déf. '+fmt(defenseOf(p))+'</span></button>').join('');
@@ -500,54 +520,76 @@ export function housesModal(){
   h+='<div class="bld"><div class="t"><b><span class="sign" style="color:var(--gold-hi)">'+s.s+'</span> Maison '+de(s.n)+'</b><span class="lv">'+(l?'niv. '+l:'ruines')+'</span></div><div class="eff">'+(guard?'Gardée par '+esc(guard.name):'Sans gardien')+' · formation '+s.n+' +'+10*l+' %</div>'+(l<HOUSE_MAX?costHtml(c):'<div class="cost"><span>Niveau maximal</span></div>')+'<div class="act">'+(l<HOUSE_MAX?'<button class="btn sm" data-act="house:'+i+'"'+(ok?'':' disabled')+'>'+(busy?'En cours':full?'Chantiers pleins':l?'Améliorer':'Relever')+'</button><span class="time">'+dur(houseTime(i))+'</span>':'')+'</div></div>';});
  return h+'</div>';
 }
-export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';const s=S.armors[c.k];const img=armorImg(c.k);
- const intro={or:'Seul un natif '+de(SIGNS[c.sign||0].n)+' peut prétendre à cette armure.',argent:'Une armure d’argent, pour un apprenti de niveau '+TRIAL_LV.argent+' au moins.',bronze:'Une armure de bronze, la première marche des chevaliers.'}[c.rank];
- let h='<div><h2 class="mh">'+esc(armorName(c))+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+rankChip(c.rank)+'<span class="chip el-'+c.el+'">'+ELEM[c.el]+'</span>'+armorState(c)+'</div></div>';
- if(img)h+='<figure class="fullbody"><img class="'+(s==='brisee'?'broken':'')+'" src="'+img+'" alt="" width="400" height="600">'+(s==='brisee'?'<figcaption>Telle qu’elle sera une fois restaurée. Pour l’instant, elle gît en morceaux.</figcaption>':'')+'</figure>';
- h+='<p class="hint">'+intro+'</p><p class="hint">Compétences exigées : les 8 fondamentales, la vitesse '+({bronze:'Mach 1',argent:'Mach 5',or:'de la lumière'})[c.rank]+', et '+specReq(c).map(id=>SKILLS[id].n.toLowerCase()).join(', ')+'.</p>';
- if(s==='brisee')h+='<button class="btn ghost" data-act="tab:armures">Retour à l’atelier des armures</button>';
+export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';const s=S.armors[c.k];const img=armorImg(c.k);const wearer=S.knights.find(k=>k.cons===c.k);
+ const intro={or:'Seul un natif '+de(SIGNS[c.sign||0].n)+' peut prétendre à cette armure.',argent:'Une armure d’argent, pour un apprenti de niveau '+TRIAL_LV.argent+' au moins, et très doué.',bronze:'Une armure de bronze, la première marche des chevaliers.'}[c.rank];
+ let h='<div class="arm-head">'+(img?'<img class="arm-big'+(s==='brisee'?' broken':'')+'" src="'+img+'" alt="" width="400" height="600">':'')+'<div class="main"><h2 class="mh">'+esc(armorName(c))+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(c.rank)+'<span class="chip el-'+c.el+'">'+ELEM[c.el]+'</span>'+armorState(c)+'</div>';
+ h+='<div class="hint">'+intro+'</div><div class="hint">Qualités maîtresses : <b>'+profileOf(c).map(k=>STATN[k]).join(' et ')+'</b></div><div class="hint">'+KIND_N[trialKind(c)].replace(/^./,x=>x.toUpperCase())+'</div></div></div>';
+ if(wearer)h+='<div class="sec-h"><h2>Porteur</h2></div><div class="item tap" data-act="knight:'+wearer.id+'">'+ptImg(wearer,wearer.rank)+'<div class="main"><div class="name">'+esc(wearer.name)+' '+rankChip(wearer.rank)+'</div><div class="sub">Niveau '+wearer.lv+' · puissance '+fmt(power(wearer,wearer.rank))+'</div></div><div></div></div>';
+ else if(s==='brisee'){const rk=c.rank,cost=ARMOR_COST[rk],restoring=S.forgeJob&&S.forgeJob.cons===c.k;
+  const why=restoring?'Restauration en cours':S.b.forge<ARMOR_FORGE[rk]?'Il faut l’atelier des armures niveau '+ARMOR_FORGE[rk]:bestSmith()<ARMOR_SMITH[rk]?'Il faut un forgeron de niveau '+ARMOR_SMITH[rk]:S.forgeJob?'L’atelier restaure déjà une autre armure':'';
+  h+='<div class="sec-h"><h2>Restauration</h2></div>'+costHtml(cost)+'<div class="btns"><button class="btn" data-act="restore:'+c.k+'"'+(!why&&afford(cost)?'':' disabled')+'>Restaurer</button>'+(why?'<span class="hint">'+why+'</span>':'')+'</div>';}
+ else h+='<div class="banner info">Restaurée : elle attend un porteur. Ouvrez la fiche d’un apprenti pour lui faire passer l’épreuve.</div>';
+ h+='<div class="sec-h"><h2>Compétences exigées</h2></div><div class="mrow"><span class="chip">8 fondamentales</span><span class="chip">'+SKILLS[({bronze:'V1',argent:'V2',or:'V3'})[c.rank]].n+'</span>'+specReq(c).map(id=>'<span class="chip"'+tip(SKILLS[id].d)+'>'+esc(SKILLS[id].n)+'</span>').join('')+'</div>';
+ if(!wearer){const cand=candidatesFor(c);h+='<div class="sec-h"><h2>Candidats</h2><span class="aside">'+cand.length+'</span></div><div class="mrow">'+(cand.length?cand.map(({a,af})=>'<button class="mbtn" data-act="ap:'+a.id+'"><b>'+esc(a.name)+'</b><small>'+affLabel(af)+' '+af+'</small></button>').join(''):'<span class="hint">Aucun apprenti n’a encore assez d’affinité.</span>')+'</div>';}
+ h+='<div class="sec-h"><h2>Maîtres qui peuvent guider</h2></div><div class="mrow">'+guideChips(c)+'</div>';
  return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main"><h2>'+esc(k.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
- // Le personnage en pied, dessiné par le générateur, vêtu de son armure.
+ h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance <b style="color:var(--gold-hi)">'+fmt(power(k,k.rank))+'</b></div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+sheetTabs();
+ if(sheetTab==='temps'){
+  h+=planBlock(k,'k');
+  h+='<div class="sec-h"><h2>Métier</h2></div><div class="opts">';
+  h+='<button class="opt'+(k.role===null?' sel':'')+'" data-act="role:'+k.id+':none"><b>Aucun métier</b><span class="d">Tout son temps va à ses disciples et à son entraînement.</span></button>';
+  const p=pope();
+  Object.entries(ROLES).forEach(([rk,R])=>{const taken=rk==='pope'&&p&&p.id!==k.id;h+='<button class="opt'+(k.role===rk?' sel':'')+'" data-act="role:'+k.id+':'+rk+'"'+(taken?' disabled':'')+'><b>'+R.n+'</b><span class="d">'+R.d+(taken?' Déjà confié à '+esc(p.name)+'.':'')+'</span></button>';});
+  return h+'</div>'+progBlock(k,'k')+trainingBlock(k,'k')+selfWork(k,'k');
+ }
+ if(sheetTab==='competences'){
+  h+=skillsBlock(k,'k');
+  const nx=NEXT_RANK[k.rank];
+  if(nx){h+='<div class="sec-h"><h2>Promotion</h2></div><p class="hint">Un chevalier très doué peut passer l’épreuve d’une armure '+(nx==='or'?'d’or (de sa maison seulement)':'d’argent')+' dès le niveau '+TRIAL_LV[nx]+'. Son armure actuelle redevient libre pour un autre.</p>';
+   if(k.cd>S.gt)h+='<p class="hint">'+esc(k.name)+' se remet de sa dernière épreuve. Nouvel essai dans <b data-until="'+k.cd+'">'+dur(k.cd-S.gt)+'</b>.</p>';
+   else if(k.lv>=TRIAL_LV[nx])h+='<button class="btn" data-act="trialOpen:'+k.id+'">Tenter une promotion</button>';
+   h+=foreseen(k,nx);}
+  return h;
+ }
+ if(sheetTab==='liens'){
+  h+='<div class="sec-h"><h2>Ses disciples</h2><span class="aside">'+aps.length+' / 3</span></div>'+(aps.length?'<div class="list">'+aps.map(a=>{const af=affinity(a,k);return '<div class="item tap" data-act="ap:'+a.id+'">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+'</div><div class="sub">Niv. '+a.lv+(af.t?' · '+af.t:'')+'</div></div><div></div></div>';}).join('')+'</div>':'<p class="hint">Aucun pour l’instant. Ouvrez la fiche d’un apprenti (ou la rubrique Formation) pour le confier à '+esc(k.name)+'.</p>');
+  return h+friendBlock(k);
+ }
+ // Profil : le personnage en pied, ses statistiques, son histoire
  h+='<figure class="fullbody"><img src="'+fullBody(k,k.rank)+'" alt="'+esc(k.name)+' en '+esc(armorLow(c))+'" width="300" height="675"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
- h+=persoBlock(k);
- h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance '+fmt(power(k,k.rank))+'</div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+statsHtml(k,'k');
- h+=itemUse(k,'k');
+ h+=radarBox(k)+statsHtml(k,'k')+itemUse(k,'k');
  h+='<div class="hint">Techniques : '+(k.tech.length?k.tech.map(esc).join(' · '):'aucune')+'</div>';
- h+=planBlock(k,'k')+progBlock(k,'k')+skillsBlock(k,'k')+trainingBlock(k,'k')+selfWork(k,'k')+friendBlock(k);
- h+='<div class="sec-h"><h2>Métier</h2></div><div class="opts">';
- h+='<button class="opt'+(k.role===null?' sel':'')+'" data-act="role:'+k.id+':none"><b>Aucun métier</b><span class="d">Tout son temps va à ses disciples et à son entraînement.</span></button>';
- const p=pope();
- Object.entries(ROLES).forEach(([rk,R])=>{const taken=rk==='pope'&&p&&p.id!==k.id;h+='<button class="opt'+(k.role===rk?' sel':'')+'" data-act="role:'+k.id+':'+rk+'"'+(taken?' disabled':'')+'><b>'+R.n+'</b><span class="d">'+R.d+(taken?' Déjà confié à '+esc(p.name)+'.':'')+'</span></button>';});
- h+='</div>';
- const nx=NEXT_RANK[k.rank];
- if(nx){h+='<div class="sec-h"><h2>Promotion</h2></div><p class="hint">Un chevalier très doué peut passer l’épreuve d’une armure '+(nx==='or'?'d’or (de sa maison seulement)':'d’argent')+' dès le niveau '+TRIAL_LV[nx]+'. Son armure actuelle redevient libre pour un autre.</p>';
-  if(k.cd>S.gt)h+='<p class="hint">'+esc(k.name)+' se remet de sa dernière épreuve. Nouvel essai dans <b data-until="'+k.cd+'">'+dur(k.cd-S.gt)+'</b>.</p>';
-  else if(k.lv>=TRIAL_LV[nx])h+='<button class="btn" data-act="trialOpen:'+k.id+'">Tenter une promotion</button>';
-  h+=foreseen(k,nx);}
- if(isMaster(k)||aps.length){h+='<div class="sec-h"><h2>Ses disciples</h2><span class="aside">'+aps.length+' / 3</span></div>'+(aps.length?'<div class="list">'+aps.map(a=>{const af=affinity(a,k);return '<div class="item tap" data-act="ap:'+a.id+'">'+ptImg(a,null)+'<div class="main"><div class="name">'+esc(a.name)+'</div><div class="sub">Niv. '+a.lv+(af.t?' · '+af.t:'')+'</div></div><div></div></div>';}).join('')+'</div>':'<p class="hint">Aucun pour l’instant. Ouvrez la fiche d’un apprenti pour le confier à '+esc(k.name)+'.</p>');}
+ h+=persoBlock(k);
  return h;};}
 export function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)return '<p>Cet apprenti n’est plus là.</p>';const rate=xpRate(a);
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(a,null,true)+'<div class="main"><h2>'+esc(a.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+signChip(a.sign)+sexChip(a)+'<span class="chip">'+a.age+' ans</span><span class="chip '+(a.imp==='Exceptionnel'?'or':a.imp==='Prometteur'?'argent':'')+'">'+a.imp+(cb('REVEAL')?' · potentiel '+a.pot:'')+'</span></div><div class="hint">Cosmos '+cosmosLabel(a.st.co).toLowerCase()+(a.awk?'':' · pas encore éveillé (niv. 5)')+'</div></div></div>';
- h+=persoBlock(a);
- h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)" data-aplv="'+a.id+'">'+a.lv+'</b> · '+fmt(rate)+' XP / h'+(friendBonus(a)?' · amitiés +'+Math.round(friendBonus(a)*100)+' %':'')+(S.houses[a.sign]?' · maison +'+10*S.houses[a.sign]+' %':'')+'</div>'+bar(a.xp/need(a.lv)*100,'data-apbar="'+a.id+'"')+nrgBar(a)+'</div>'+statsHtml(a,'a');
- h+=itemUse(a,'a');
- if(a.cd>S.gt&&(S.items.onguent||0)>0)h+='<button class="btn sm ghost" data-act="onguent:'+a.id+'">Appliquer un onguent : fin du repos · '+S.items.onguent+' en réserve</button>';
+ h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)" data-aplv="'+a.id+'">'+a.lv+'</b> · '+fmt(rate)+' XP / h'+(friendBonus(a)?' · amitiés +'+Math.round(friendBonus(a)*100)+' %':'')+(S.houses[a.sign]?' · maison +'+10*S.houses[a.sign]+' %':'')+'</div>'+bar(a.xp/need(a.lv)*100,'data-apbar="'+a.id+'"')+nrgBar(a)+'</div>'+sheetTabs();
+ if(sheetTab==='temps'){
+  if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Réglez son temps ci-dessous. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
+  return h+planBlock(a,'a')+progBlock(a,'a')+trainingBlock(a,'a')+selfWork(a,'a');
+ }
+ if(sheetTab==='competences'){
+  h+=skillsBlock(a,'a');
+  h+='<div class="sec-h"><h2>Épreuve de l’armure</h2></div>';
+  if(a.cd>S.gt)h+='<p class="hint">'+esc(a.name)+' se remet de sa dernière épreuve. Nouvel essai dans <b data-until="'+a.cd+'">'+dur(a.cd-S.gt)+'</b>.</p>';
+  else if(a.lv<TRIAL_LV.bronze)h+='<p class="hint">Dès le niveau '+TRIAL_LV.bronze+', '+esc(a.name)+' pourra tenter d’obtenir une armure restaurée.</p>';
+  else h+='<button class="btn" data-act="trialOpen:'+a.id+'">Choisir une armure</button>';
+  if(a.cd>S.gt&&(S.items.onguent||0)>0)h+='<button class="btn sm ghost" data-act="onguent:'+a.id+'">Appliquer un onguent : fin du repos · '+S.items.onguent+' en réserve</button>';
+  return h+'<p class="hint">Armures pressenties pour '+esc(a.name)+' : l’affinité vient de son élément, des compétences qu’'+(a.sex==='F'?'elle':'il')+' a travaillées et de ses maîtres. Restaurez celle qui l’attire le plus.</p>'+foreseen(a);
+ }
+ if(sheetTab==='liens'){
+  h+='<div class="sec-h"><h2>Maître</h2></div><div class="opts">';
+  h+='<p class="hint">Tout chevalier peut former jusqu’à 3 disciples, selon le temps qu’il leur consacre (sa fiche, « Emploi du temps »).</p>';
+  S.knights.forEach(k=>{const n=S.aps.filter(x=>x.master===k.id).length;const af=affinity(a,k);const full=n>=3&&a.master!==k.id;
+   h+='<button class="opt'+(a.master===k.id?' sel':'')+'" data-act="assign:'+a.id+':'+k.id+'"'+(full?' disabled':'')+'><b>'+esc(k.name)+' <span class="sign">'+SIGNS[k.sign].s+'</span></b><span class="chip '+k.rank+'">'+RANKS[k.rank]+'</span><span class="d">'+n+' / 3 apprentis · '+plan(k).dis+' % de son temps'+(af.t?' · <span style="color:var(--gold-hi)">'+af.t+' (×'+af.x+')</span>':'')+'</span></button>';});
+  if(a.master)h+='<button class="btn sm ghost" data-act="assign:'+a.id+':none">Retirer du maître</button>';
+  return h+'</div>'+friendBlock(a);
+ }
+ h+=radarBox(a)+statsHtml(a,'a')+itemUse(a,'a');
  h+='<div class="hint">Techniques : '+(a.tech.length?a.tech.map(esc).join(' · '):'aucune (première au niveau 10)')+'</div>';
- if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Réglez son temps ci-dessous. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
- h+=planBlock(a,'a')+progBlock(a,'a')+skillsBlock(a,'a')+trainingBlock(a,'a')+selfWork(a,'a')+friendBlock(a);
- h+='<div class="sec-h"><h2>Maître</h2></div><div class="opts">';
- const masters=S.knights;
- h+='<p class="hint">Tout chevalier peut former jusqu’à 3 disciples, selon le temps qu’il leur consacre (sa fiche, « Emploi du temps »).</p>';
- masters.forEach(k=>{const n=S.aps.filter(x=>x.master===k.id).length;const af=affinity(a,k);const full=n>=3&&a.master!==k.id;
-  h+='<button class="opt'+(a.master===k.id?' sel':'')+'" data-act="assign:'+a.id+':'+k.id+'"'+(full?' disabled':'')+'><b>'+esc(k.name)+' <span class="sign">'+SIGNS[k.sign].s+'</span></b><span class="chip '+k.rank+'">'+RANKS[k.rank]+'</span><span class="d">'+n+' / 3 apprentis · '+plan(k).dis+' % de son temps'+(af.t?' · <span style="color:var(--gold-hi)">'+af.t+' (×'+af.x+')</span>':'')+'</span></button>';});
- if(a.master)h+='<button class="btn sm ghost" data-act="assign:'+a.id+':none">Retirer du maître</button>';
- h+='</div><div class="sec-h"><h2>Épreuve de l’armure</h2></div>';
- if(a.cd>S.gt)h+='<p class="hint">'+esc(a.name)+' se remet de sa dernière épreuve. Nouvel essai dans <b data-until="'+a.cd+'">'+dur(a.cd-S.gt)+'</b>.</p>';
- else if(a.lv<TRIAL_LV.bronze)h+='<p class="hint">Dès le niveau '+TRIAL_LV.bronze+', '+esc(a.name)+' pourra tenter d’obtenir une armure restaurée.</p>';
- else h+='<button class="btn" data-act="trialOpen:'+a.id+'">Choisir une armure</button>';
- h+='<p class="hint">Armures pressenties pour '+esc(a.name)+' : l’affinité vient de son élément, des compétences qu’'+(a.sex==='F'?'elle':'il')+' a travaillées et de ses maîtres. Restaurez celle qui l’attire le plus.</p>'+foreseen(a);
+ h+=persoBlock(a);
  if(a.lv>=8){h+='<div class="sec-h"><h2>Devenir garde</h2></div><p class="hint">Si '+esc(a.name)+' a raté son épreuve ou qu’un autre est plus prometteur, il peut servir comme garde : il quitte les apprentis, garde ses stats et défendra une maison, le village ou un site.</p>'+(guardArm===a.id?'<div class="btns"><button class="btn sm danger" data-act="mkguard:'+a.id+'">Confirmer : '+esc(a.name)+' devient garde</button><button class="btn sm ghost" data-act="guardCancel">Annuler</button></div>':'<button class="btn sm ghost" data-act="guardArm:'+a.id+'">Faire de '+esc(a.name)+' un garde</button>');}
  return h;};}
 export let lastTrial=null;
@@ -626,13 +668,14 @@ export function act(a){
  case'ajob':{const ap=S.aps.find(q=>q.id===+x);if(!ap)return;if(y==='none'){ap.job=null;break;}if(usedSlots(y)>=siteSlots(y))return;ap.job=y;ap.wacc=0;break;}
  case'craft':{const r=REC_BY[x];if(!r||S.craft[r.ws].length>=6||!afford(r.inp))return;pay(r.inp);S.craft[r.ws].push({k:x,prog:0});break;}
  case'tool':{const tl=S.tools[x]||0;if(tl>=5||(S.items.outil||0)<tl+1)return;S.items.outil-=tl+1;S.tools[x]=tl+1;log('Les outils '+de(BUILD[x].n.split(' ')[0]).replace('du Oliveraies','des oliveraies')+' passent au niveau '+(tl+1)+'.');flash='Outillage amélioré : +'+10*(tl+1)+' % de production.';break;}
- case'knight':openModal(knightModal(+x));return;
+ case'knight':sheetTab='profil';openModal(knightModal(+x));return;
+ case'stab':sheetTab=x;render();$('.sheet-card').scrollTop=0;return;
  case'event':openModal(eventModal(+x));return;
  case'go':{if(!startExpedition(+x,+y))return;closeModal();save();render();openScene();return;}
  case'scene':closeModal();openScene();return;
  case'home':{if(!startHomeScene())return;save();render();openScene();return;}
  case'armor':openModal(armorModal(x));return;
- case'guard':openModal(guardModal(+x));return;
+ case'guard':sheetTab='profil';openModal(guardModal(+x));return;
  case'dstart':{if(!pope())return;if(!startDuel(S.duel.loadout))return;save();render();openDuel();return;}
  case'dopen':openDuel();return;
  case'loadout':{ensureDuel();const lo=S.duel.loadout;if(lo.includes(x))S.duel.loadout=lo.filter(i=>i!==x);else if(lo.length<3&&S.relics.includes(x))lo.push(x);break;}
@@ -643,7 +686,7 @@ export function act(a){
  case'claim':{const ar=ART_BY[x];if(!ar||(S.artefacts||[]).includes(x)||!artReady(ar))return;S.artefacts.push(x);recomputeCB();log('★ Le Sanctuaire reçoit un artefact : '+ar.n+'.');break;}
  case'ambroisie':{const p=getP(x,+y);if(!p||(S.items.ambroisie||0)<1)return;S.items.ambroisie--;p.nrg=emax(p);if(S.aps.includes(p)){p.xp+=xpRate(p)*12;let g=0;while(p.xp>=need(p.lv)&&g++<50)levelUpAp(p,null);}else if(S.knights.includes(p))p.xp+=knightRate(p)*12;else p.xp+=guardRate(p)*12;flash=p.name+' goûte l’ambroisie.';break;}
  case'huile':{if(!S.forgeJob||(S.items.huile||0)<1)return;S.items.huile--;S.forgeJob.prog=Math.min(S.forgeJob.work,S.forgeJob.prog+S.forgeJob.work*.5);break;}
- case'ap':openModal(apModal(+x));return;
+ case'ap':sheetTab='profil';openModal(apModal(+x));return;
  case'sp':{const p=getP(x,+y);if(!p||!(p.sp>0)||!STATN[z])return;p.sp--;p.st[z]++;break;}
  case'spauto':{const p=getP(x,+y);if(!p)return;while(p.sp>0){const ks=['fo','vi','de','en','ps','co'];let m=ks[0];ks.forEach(s=>{if(p.st[s]<p.st[m])m=s;});p.st[m]++;p.sp--;}break;}
  case'potion':{const p=getP(x,+y);if(!p||(S.items.potion||0)<1)return;S.items.potion--;p.nrg=Math.min(emax(p),p.nrg+40);flash=p.name+' boit une potion d’endurance.';break;}
