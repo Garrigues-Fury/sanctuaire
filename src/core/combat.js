@@ -116,23 +116,26 @@ export function autoResolve(b){let g=0;while(!b.over&&g++<40){const p=autoPick(b
 // Chance de victoire estimée par simulation.
 export function winChance(k,ev,mods={},n=60){let w=0;for(let i=0;i<n;i++){const b=autoResolve(newBattle(k,ev,mods,7919*i+13));if(b.result==='win')w++;}return w/n;}
 export { BEATS };
-// Duel entre deux disciples pour une armure (comme deux apprentis qui se disputent la même armure).
-// boost : la résonance avec l'armure convoitée. Renvoie {win : A l'emporte, log : le récit}.
+// Duel pour une armure : entre deux disciples, ou face à un chevalier qui évalue (boostB < 1 : il retient ses coups).
+// boost : la résonance avec l'armure convoitée. Renvoie {win : A l'emporte, log : le récit,
+// st : pour chaque combattant, coups portés, techniques réussies, esquives, échanges tenus debout}.
 export function duelSim(A,B,boostA=1,boostB=1,seed=1){
  const b={rs:seed|0},log=[];
- const F=[A,B].map((p,i)=>{const h=heroStats(p);return{h,hp:h.max,cos:2+(h.cosPs||0),boost:i?boostB:boostA,n:p.name};});
+ const F=[A,B].map((p,i)=>{const h=heroStats(p);return{h,hp:h.max,cos:2+(h.cosPs||0),boost:i?boostB:boostA,n:p.name,st:{hits:0,techs:0,dodges:0,rounds:0}};});
  for(let t=1;t<=30&&F[0].hp>0&&F[1].hp>0;t++){
   const order=F[0].h.spd+rnd(b)*10>=F[1].h.spd+rnd(b)*10?[0,1]:[1,0];
   for(const i of order){const me=F[i],op=F[1-i];if(me.hp<=0||op.hp<=0)continue;
    const tech=me.cos>=COST.tech,what=tech?'« '+me.h.tech+' »':'un coup';
    if(tech)me.cos-=COST.tech;else me.cos=Math.min(10,me.cos+2);
-   if(rnd(b)<clamp(.05+(op.h.spd-me.h.spd-(me.h.acc||0))/120,.02,.35)){if(log.length<12)log.push(op.n+' esquive '+what+' de '+me.n+'.');continue;}
+   if(rnd(b)<clamp(.05+(op.h.spd-me.h.spd-(me.h.acc||0))/120,.02,.35)){op.st.dodges++;if(log.length<12)log.push(op.n+' esquive '+what+' de '+me.n+'.');continue;}
    const crit=rnd(b)<(me.h.crit||0),raw=(tech?me.h.tec*1.5-op.h.def*.3:me.h.atk-op.h.def*.5)*me.boost;
    const d=Math.max(1,Math.round(raw*(crit?1.5:1)*(1-(op.h.shield||0))*(.75+rnd(b)*.5)));op.hp=Math.max(0,op.hp-d);
+   me.st.hits++;if(tech)me.st.techs++;
    if(log.length<12||op.hp<=0)log.push((crit?'Coup précis ! ':'')+me.n+(tech?' lance '+what:' frappe')+' : '+d+' dégâts'+(op.hp<=0?'. '+op.n+' ne se relève pas.':'.'));
   }
+  F.forEach(x=>{if(x.hp>0)x.st.rounds=t;});
  }
  const win=F[0].hp>0&&(F[1].hp<=0||F[0].hp/F[0].h.max>=F[1].hp/F[1].h.max);
  if(F[0].hp>0&&F[1].hp>0)log.push('Après trente échanges, les juges désignent '+(win?A.name:B.name)+'.');
- return{win,log};
+ return{win,log,st:F.map(x=>x.st)};
 }

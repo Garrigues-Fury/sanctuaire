@@ -108,6 +108,32 @@ describe('épreuve en combat entre disciples', () => {
     const e = trialEval(weak, c); expect(e.ok).toBe(true);
     const r = runDuel(weak, c, e, 12);
     expect(r.rival).toBe('Stelios');
-    if (!r.win) { expect(r.rivalWon).toBe(true); expect(S.knights.some(k => k.name === 'Stelios' && k.cons === 'pegase')).toBe(true); }
+    // le vainqueur reçoit l'armure, quel qu'il soit
+    const winner = r.win ? 'Cassandre' : 'Stelios';
+    expect(S.knights.some(k => k.name === winner && k.cons === 'pegase')).toBe(true);
+  });
+});
+
+describe('évaluation par un sempai et disciple venu d’ailleurs', () => {
+  const ready = (o) => { const p = ap(o); S.aps.push(p); ensureSkills(p, 'a'); ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'V1', 'bouclier', 'percussion', 'rafale', 'aerien'].forEach(id => grantSkill(p, id)); return p; };
+  it('face au sempai, perdre n’empêche pas d’obtenir l’armure si les fondamentales se voient', async () => {
+    const { evaluate, trialKind, runDuel } = await import('../src/core/trial.js');
+    expect(trialKind(CONS_BY.dragon)).toBe('sempai');
+    expect(evaluate({ hits: 3, techs: 1, dodges: 1, rounds: 9 }).score).toBe(5);
+    expect(evaluate({ hits: 0, techs: 0, dodges: 0, rounds: 2 }).score).toBe(0);
+    S.armors.dragon = 'restauree';
+    const a = ready({ id: 9201, name: 'Nikos', sign: 3, lv: 12, st: { fo: 30, vi: 20, de: 20, en: 30, ps: 20, co: 20 } });
+    const e = trialEval(a, CONS_BY.dragon); expect(e.ok).toBe(true);
+    const r = runDuel(a, CONS_BY.dragon, e, 12);
+    expect(r.kind).toBe('sempai'); expect(r.eval.items).toHaveLength(5);
+    expect(r.win).toBe(r.fought || r.eval.score >= 4);
+  });
+  it('si le disciple d’un autre maître gagne, il rejoint le Sanctuaire avec l’armure', async () => {
+    const { runDuel } = await import('../src/core/trial.js');
+    S.armors.pegase = 'restauree';
+    const a = ready({ id: 9301, name: 'Petit', sign: 2, lv: 8, st: { fo: 1, vi: 9, de: 1, en: 1, ps: 1, co: 9 } });
+    const before = S.knights.length; let r;
+    for (let i = 0; i < 6; i++) { a.cd = 0; S.armors.pegase = 'restauree'; r = runDuel(a, CONS_BY.pegase, trialEval(a, CONS_BY.pegase), 12); if (!r.win) break; S.knights.pop(); S.aps.push(a); }
+    if (!r.win) { expect(r.rivalNpc).toBe(true); expect(S.knights.length).toBe(before + 1); expect(S.knights.at(-1).cons).toBe('pegase'); }
   });
 });
