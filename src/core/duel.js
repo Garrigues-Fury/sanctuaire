@@ -24,7 +24,9 @@ export function duelAvailable(){ensureDuel();if(S.match)return false;if(S.speed!
 export function godState(k){if(!S.gods[k])S.gods[k]={lv:0,wins:0,losses:0,bonus:{feu:0,eau:0,air:0,terre:0}};return S.gods[k];}
 // Réserve de départ du Sanctuaire : pour chaque élément, le score (nombre de personnages de l'élément,
 // pondéré par le rang — apprenti, garde, bronze, argent, or, Pope — et par le cosmos) donne des gemmes, 4 au plus.
-export function myStart(){const E=elemScores(),b={};EKEYS.forEach(e=>b[e]=Math.min(4,Math.round(E[e]/8)));return b;}
+// Jamais plus que la main ne peut en tenir : un grand Sanctuaire (départ en Facile) perd d'abord dans ses éléments les plus fournis.
+export function myStart(){const E=elemScores(),b={};EKEYS.forEach(e=>b[e]=Math.min(4,Math.round(E[e]/8)));
+ let n=EKEYS.reduce((t,e)=>t+b[e],0);while(n>HAND_MAX){const e=EKEYS.reduce((x,y)=>b[y]>b[x]?y:x);b[e]--;n--;}return b;}
 // Niveau de la partie (1 à 5) : il monte avec la puissance totale du Sanctuaire. Plus haut, le dieu est plus fort,
 // mais la carte gardée après une victoire donne un effet permanent plus important.
 export function duelLevel(){const E=elemScores();let t=0;EKEYS.forEach(e=>t+=E[e]);return Math.max(1,Math.min(5,1+Math.floor(t/45)));}

@@ -23,7 +23,7 @@ describe('cartes', () => {
 
 describe('règles', () => {
   it('prendre : 3 différentes ou 2 identiques, pas de joker, limite de 10', () => {
-    const m = startDuel(); empty(m.me);
+    const m = startDuel(); empty(m.me); ['feu', 'eau', 'air', 'terre'].forEach(e => m.bank[e] = 7);
     expect(canTake(m, m.me, ['feu', 'eau', 'air'])).toBe(true);
     expect(canTake(m, m.me, ['feu', 'feu', 'eau'])).toBe(false);
     expect(canTake(m, m.me, ['or'])).toBe(false);

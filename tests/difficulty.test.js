@@ -27,3 +27,13 @@ describe('difficulté de départ', () => {
     expect(S.knights.length).toBe(15);
   });
 });
+
+describe('duel avec un grand Sanctuaire', () => {
+  it('les gemmes de départ ne dépassent jamais la main (10)', async () => {
+    const { myStart } = await import('../src/core/duel.js');
+    for (let i = 0; i < 30; i++) {
+      setS(null); newGame('facile'); recomputeCB();
+      expect(Object.values(myStart()).reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(10);
+    }
+  });
+});
