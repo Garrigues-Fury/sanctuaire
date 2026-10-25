@@ -73,9 +73,9 @@ describe('cartes de compétences', () => {
     for (let i = 0; i < 40; i++) { tickSkills(a1, 1, 10, gold); tickSkills(a2, 1, 10, null); }
     const n = p => Object.keys(p.sk).length + Object.values(p.skp).reduce((t, v) => t + v, 0) / 100;
     expect(n(a1)).toBeGreaterThan(n(a2));
-    const a3 = mk(); for (let i = 0; i < 400; i++) tickSkills(a3, 1, 10, bronze);
+    const a3 = mk(); for (let i = 0; i < 2000; i++) tickSkills(a3, 1, 10, bronze);
     expect(hasSkill(a3, 'V2')).toBe(false);
-    for (let i = 0; i < 400; i++) tickSkills(a1, 1, 10, gold);
+    for (let i = 0; i < 2000; i++) tickSkills(a1, 1, 10, gold);
     expect(hasSkill(a1, 'V2')).toBe(true);
   });
   it('sans fondamentales, pas d’épreuve ; avec une forte affinité, l’armure transmet ce qui manque', () => {
