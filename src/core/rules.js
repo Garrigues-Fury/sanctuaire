@@ -13,6 +13,7 @@ import { medMult, studyMult, trainStats } from './program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity } from './armor.js';
 import { ensureSkills, grantSkill, skillCheck, skillPower, tickSkills } from './skills.js';
 import { orientF } from './formation.js';
+import { buildCostMult, buildTimeMult, extraSlots, gainOnBuilt, gainWhileBuilding } from './builders.js';
 import { SKILLS } from './data/skills.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
@@ -31,7 +32,8 @@ export function prodMult(){return 1+.15*jobSum('intendant')+popeBonus();}
 export function toolMult(site){return 1+.1*(S.tools[site]||0);}
 export function capFor(r,l){return(r==='savoir'?150:600)*Math.pow(1.6,Math.max(0,l-1));}
 export function cap(r){return capFor(r,S.b.entrepot)*(1+cb('CAP')/100);}
-export function slotsFor(l){return 1+(l>=1?1:0)+(l>=4?1:0)+(l>=8?1:0);}
+// Chantiers simultanés : le village des artisans, plus le savoir-faire « chantiers en parallèle ».
+export function slotsFor(l){return 1+(l>=1?1:0)+(l>=4?1:0)+(l>=8?1:0)+extraSlots();}
 export function villageCap(l){return 6+3*l;}
 export function siteSlots(site,l){if(l==null)l=S.b[site];if(l<=0)return 0;return(site==='forge'||site==='herbo'||site==='atelier')?1+l:2+l;}
 export function workersAt(site){return S.workers.filter(w=>w.job===site);}
@@ -46,11 +48,11 @@ export function siteProd(site){if(site==='jardin')return herbBase(S.b.jardin)*si
 // Recherches des chevaliers à la bibliothèque (métier « Chercheur »).
 export function research(k){return S.b.biblio>0?2*(1+k.lv/20)*(1+.25*ql(k,'studieux'))*jobF(k)*(1+cb('P_savoir')/100):0;}
 export function rates(){const o={};RKEYS.forEach(r=>o[r]=siteProd(RES[r].b));knightsWith('biblio').forEach(k=>o.savoir+=research(k));o.vivres-=upkeep();return o;}
-export function costOf(id){const l=S.b[id],c={};for(const r in BUILD[id].base)c[r]=Math.ceil(BUILD[id].base[r]*Math.pow(1.55,l)/5)*5;return c;}
+export function costOf(id){const l=S.b[id],c={},m=buildCostMult(false);for(const r in BUILD[id].base)c[r]=Math.ceil(BUILD[id].base[r]*Math.pow(1.55,l)*(r==='marbre'||r==='metal'?m:1)/5)*5;return c;}
 export function oeuvreMult(){return 1/(1+.2*jobSum('oeuvre'));}
-export function timeOf(id){return BUILD[id].t*Math.pow(1.7,S.b[id])*oeuvreMult()*Math.max(.3,1-cb('BUILD')/100);}
-export function houseCost(i){const l=S.houses[i];return{marbre:Math.ceil(300*Math.pow(1.8,l)/5)*5,metal:Math.ceil(80*Math.pow(1.8,l)/5)*5};}
-export function houseTime(i){return 3*Math.pow(1.8,S.houses[i])*oeuvreMult()*Math.max(.3,1-cb('BUILD')/100);}
+export function timeOf(id){return BUILD[id].t*Math.pow(1.7,S.b[id])*oeuvreMult()*buildTimeMult(false)*Math.max(.3,1-cb('BUILD')/100);}
+export function houseCost(i){const l=S.houses[i],m=buildCostMult(true);return{marbre:Math.ceil(300*Math.pow(1.8,l)*m/5)*5,metal:Math.ceil(80*Math.pow(1.8,l)*m/5)*5};}
+export function houseTime(i){return 3*Math.pow(1.8,S.houses[i])*oeuvreMult()*buildTimeMult(true)*Math.max(.3,1-cb('BUILD')/100);}
 export const HOUSE_MAX=5;
 export function have(k){return RES[k]?S.res[k]:(S.items[k]||0);}
 export function afford(c){for(const r in c)if(have(r)<c[r])return false;return true;}
@@ -129,7 +131,8 @@ export function step(h,sum){
  S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
  S.gt+=h;
  tickWorld(sum);tickSocial(h,sum);
- for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
+ gainWhileBuilding(h);
+ for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;gainOnBuilt(/^h\d+$/.test(j.b),j.lvl);if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
  if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}
  const iv=recruitInterval();
  if(iv<Infinity){S.recruitAcc+=h;if(S.recruitAcc>=iv){S.recruitAcc-=iv;if(S.pending.length<3){const a=makeApprentice();S.pending.push(a);const m='Un recruteur ramène '+a.name+', '+a.age+' ans, venu'+G(a,'e')+' '+NATS[a.nat].d+'.';log(m);sum?sum.ev.push(m):emit('recruit');S._dirty=true;}else S.recruitAcc=Math.min(S.recruitAcc,iv);}}

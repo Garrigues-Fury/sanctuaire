@@ -4,13 +4,16 @@ import { BUILD, RES, RKEYS } from '../core/data/economy.js';
 import { GODS, GOD_KEYS } from '../core/data/gods.js';
 import { CONS, CONS_BY, EKEYS, ELEM, RANKS, SIGNS, de } from '../core/data/world.js';
 import { duelAvailable, godState } from '../core/duel.js';
-import { POSTS, cap, capacity, defenseOf, elemScores, masterOf, people, pope, postName, power, rates, sanctPower, slotsFor, trialEval, villageCap } from '../core/rules.js';
+import { POSTS, afford, cap, capacity, defenseOf, elemScores, masterOf, siteProd, siteSlots, usedSlots, people, pope, postName, power, rates, sanctPower, slotsFor, trialEval, villageCap } from '../core/rules.js';
 import { compat, compatLabel } from '../core/social.js';
 import { HADES_H, POSEIDON_H, S } from '../core/state.js';
 import { dur, esc, fmt } from '../core/util.js';
 import { RES_ICON, icon } from './icons.js';
 import { tip } from './tips.js';
-import { bar, ptImg, viewApprentis, viewArmures, viewChevaliers, viewChronique, viewFormArmures, viewFormDisciples, viewPope, viewSanctuaire } from './app.js';
+import { TECHS, TECH_KEYS, bp, builderRank, techLv } from '../core/builders.js';
+import { WORK } from '../core/data/economy.js';
+import { setMapHoverHandler } from '../map/map.js';
+import { bar, costHtml, ptImg, viewApprentis, viewArmures, viewChevaliers, viewChronique, viewFormArmures, viewFormDisciples, viewPope, viewSanctuaire } from './app.js';
 import { viewMonde } from './world.js';
 
 /* ---------- navigation : 5 onglets, des sous-onglets ---------- */
@@ -35,7 +38,7 @@ function subnav(t){
 export function viewHub(){
  if(LEGACY[S.tab]||!TABS.some(x=>x[0]===S.tab))goTab(S.tab);
  const t=S.tab;
- if(t==='sanctuaire'){const s=subOf(t);return subnav(t)+(s==='batir'?viewSanctuaire():s==='defense'?viewDefense():s==='chronique'?viewChronique():viewApercu());}
+ if(t==='sanctuaire'){const s=subOf(t);return subnav(t)+(s==='batir'?builderPanel()+viewSanctuaire():s==='defense'?viewDefense():s==='chronique'?viewChronique():viewApercu());}
  if(t==='personnages'){const s=subOf(t);return subnav(t)+(s==='apprentis'?viewApprentis():s==='formation'?viewFormation():s==='relations'?viewRelations():viewChevaliers());}
  if(t==='armures')return viewArmures();
  if(t==='monde')return viewMonde();
@@ -121,4 +124,45 @@ function viewRelations(){
  const T=[];for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const c=compat(P[i],P[j]);if(c.v<=-2)T.push({a:P[i],b:P[j],c});}
  if(T.length)h+='<div class="sec-h" style="margin-top:12px"><h2>Tensions</h2></div><div class="houses">'+T.sort((x,y)=>x.c.v-y.c.v).slice(0,10).map(x=>'<div class="house-r rel"><span class="duo">'+ptImg(x.a,x.a.rank)+ptImg(x.b,x.b.rank)+'</span><span class="main"><b>'+esc(x.a.name)+' & '+esc(x.b.name)+'</b><small>'+compatLabel(x.c.v)+(x.c.why[0]?' · '+esc(x.c.why[0].replace(/^[+−] /,'')):'')+'</small></span></div>').join('')+'</div>';
  return h+'</section>';
+}
+
+/* ---------- savoir-faire des bâtisseurs ---------- */
+export function builderPanel(){
+ const free=slotsFor(S.b.artisans)-S.jobs.length;
+ let h='<details class="sec builders" open><summary><span class="bt">'+icon('hammer',20)+'<b>Savoir-faire des bâtisseurs</b></span><span class="aside">rang '+builderRank()+' · <b class="num">'+Math.floor(bp())+'</b> points</span></summary>';
+ h+='<p class="hint">Chaque chantier terminé rapporte des points de bâtisseur (davantage aux niveaux élevés et pour les maisons du zodiaque), et les artisans apprennent pendant les travaux. Investissez-les, avec des ressources, dans ces savoir-faire. Chantiers : <b>'+S.jobs.length+' / '+slotsFor(S.b.artisans)+'</b>'+(free>0?' ('+free+' libre'+(free>1?'s':'')+')':'')+'.</p><div class="techs">';
+ TECH_KEYS.forEach(k=>{const T=TECHS[k],l=techLv(k),max=l>=T.max,c=T.cost(l+1),need=c.bp,res=Object.assign({},c);delete res.bp;const ok=!max&&bp()>=need&&afford(res);
+  h+='<div class="tech"><div class="main"><b>'+T.n+' <span class="chip">'+l+' / '+T.max+'</span></b><small>'+(l?'Acquis : '+T.d(l):'Pas encore acquis')+(max?'':' · niveau '+(l+1)+' : '+T.d(l+1))+'</small>'+(max?'':'<div class="cost"><span class="'+(bp()<need?'no':'')+'">'+need+' points</span></div>'+costHtml(res))+'</div><button class="btn sm" data-act="tech:'+k+'"'+(ok?'':' disabled')+'>'+(max?'Maîtrisé':'Apprendre')+'</button></div>';});
+ return h+'</div></details>';
+}
+
+/* ---------- fiche d'un bâtiment au survol de la carte ---------- */
+function jobOf(b){return(S.jobs||[]).find(j=>j.b===b);}
+function workLine(b){const j=jobOf(b);return j?'<div class="mt-w">'+icon('hammer',14)+' Chantier → niveau '+j.lvl+' · encore '+dur(j.end-S.gt)+'</div>':'';}
+export function mapTipHtml(h){
+ if(!h)return '';
+ if(h.type==='pope'){const p=pope();return '<b>Palais du Grand Pope</b><div>'+(p?esc(p.name)+' y siège.':'Le trône est vide : nommez un Grand Pope.')+'</div>';}
+ if(h.type==='houses'){
+  if(h.house==null)return '<b>Les douze maisons</b><div>'+S.houses.filter(x=>x>0).length+' / 12 relevées. Touchez pour les gérer.</div>';
+  const i=h.house,s=SIGNS[i],lv=S.houses[i],g=S.knights.find(k=>k.rank==='or'&&CONS_BY[k.cons]&&CONS_BY[k.cons].sign===i);
+  return '<b>'+s.s+' Maison '+de(s.n)+'</b><div>'+(lv?'Niveau '+lv+' / 5':'En ruines')+' · formation des natifs +'+10*lv+' %</div><div>'+(g?'Gardée par '+esc(g.name):'Sans gardien d’or')+' · défense '+fmt(defenseOf('h'+i)+(g?power(g,g.rank):0))+'</div>'+workLine('h'+i);
+ }
+ const id=h.id,B=BUILD[id];if(!B)return '';
+ const l=S.b[id]||0;let x='<b>'+B.n+'</b><div>'+(l?'Niveau '+l:'En ruines')+(l?' · '+B.eff(l):'')+'</div>';
+ if(WORK[id]&&l)x+='<div>Travailleurs : '+usedSlots(id)+' / '+siteSlots(id)+'</div>';
+ if(WORK[id]&&WORK[id].res&&l)x+='<div>Production : '+fmt(siteProd(id))+' '+RES[WORK[id].res].n.toLowerCase()+' / h</div>';
+ if(id==='jardin'&&l)x+='<div>Production : '+fmt(siteProd('jardin'))+' herbes / h</div>';
+ x+=jobOf(id)?workLine(id):'<div class="mt-n">Niveau suivant : '+B.eff(l+1)+'</div>';
+ return x;
+}
+let tipEl=null;
+export function installMapTips(){
+ setMapHoverHandler((h,cx,cy)=>{
+  if(!tipEl){tipEl=document.createElement('div');tipEl.id='maptip';tipEl.setAttribute('role','tooltip');document.body.appendChild(tipEl);}
+  const html=h?mapTipHtml(h):'';
+  if(!html){tipEl.hidden=true;return;}
+  tipEl.innerHTML=html;tipEl.hidden=false;
+  const w=tipEl.offsetWidth,ht=tipEl.offsetHeight,vw=innerWidth;
+  tipEl.style.left=Math.max(8,Math.min(vw-w-8,cx-w/2))+'px';tipEl.style.top=Math.max(8,cy-ht-16)+'px';
+ });
 }

@@ -69,6 +69,11 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
    - Bâtiments : oliveraies, carrière, mine, bibliothèque, jardin des simples, herboristerie, ateliers d'artisanat, réserves, dortoirs, arène, atelier des armures, village des artisans.
    - Les douze maisons du zodiaque se relèvent jusqu'au niveau 5.
    - Le nombre de chantiers simultanés est limité.
+   - **Savoir-faire des bâtisseurs (demandé par Seba le 2026-10-25, `src/core/builders.js`)** :
+     - chaque chantier terminé rapporte des points de bâtisseur (davantage pour les niveaux élevés et les maisons), et les travaux en cours aussi ;
+     - on les investit, avec des ressources, dans 4 savoir-faire à niveaux : chantiers en parallèle (+1 chantier par niveau), échafaudages (chantiers plus rapides), taille de pierre (moins de marbre et de métal), architecture sacrée (maisons du zodiaque moins longues et moins chères) ;
+     - sur la carte, les chantiers en cours portent des échafaudages et une barre d'avancement ;
+     - le survol (ou l'appui long au doigt) d'un bâtiment ou d'une maison affiche son nom, son niveau et ses statistiques.
 2. **Ressources** : vivres, marbre, métal, savoir, herbes, plus des objets fabriqués (potion d'endurance, onguent, tisane, élixir, lingot, outils, matériel, ambroisie, huile sacrée).
 3. **Carte animée du Sanctuaire**
    - Les villageois font la navette entre leur site et les réserves.

@@ -25,6 +25,7 @@ import { openDuel } from './duel.js';
 import { openTrialFight } from './trialfight.js';
 import { TABS as HUB_TABS, goTab, setFormView, tabBadges, viewHub } from './hub.js';
 import { RES_ICON, icon } from './icons.js';
+import { TECHS } from '../core/builders.js';
 import { makeGuardFrom, makeWorker, newGame } from '../core/people.js';
 import { CB, DUO_E, HOUSE_MAX, POSTS, SESS, SESS_E, affinity, afford, apsAt, arena, artReady, bestSmith, bonusOf, byId, cap, capacity, cardPrice, cb, consScore, cosmosLabel, costOf, craftRate, defenseOf, elemScores, emax, fkey, forgeRate, friendBonus, friendLv, friendsOf, guardRate, have, houseCost, houseTime, knightRate, knightsWith, levelUpAp, masterOf, need, pay, people, pope, postName, power, rates, recomputeCB, recruitInterval, reqOk, research, reqText, sanctPower, siteProd, siteSlots, slotsFor, timeOf, trialEval, usedSlots, villageCap, workerCost, workersAt, xpRate } from '../core/rules.js';
 import { exportCode, importCode, save } from '../core/save.js';
@@ -658,6 +659,7 @@ export function act(a){
  case'site':openSite(x);return;
  case'houses':openModal(housesModal);return;
  case'afilter':armorFilter=x;render();return;
+ case'tech':{const T=TECHS[x];if(!T)return;S.tech=S.tech||{};const l=S.tech[x]||0;if(l>=T.max)return;const c=T.cost(l+1),res=Object.assign({},c);delete res.bp;if((S.bp||0)<c.bp||!afford(res))return;S.bp-=c.bp;pay(res);S.tech[x]=l+1;flash='';log('Les bâtisseurs maîtrisent désormais : '+T.n.toLowerCase()+' (niveau '+(l+1)+').');break;}
  case'apview':apView=x;render();window.scrollTo(0,0);return;
  case'farank':faRank=x;render();return;
  case'faall':faAll=x==='1';render();return;

@@ -12,7 +12,7 @@ import { backgroundSig, drawBackground } from './background.js';
 
 const R=Math.min(3,Math.max(2,Math.ceil(window.devicePixelRatio||1)));
 const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-let game=null,host=null,parking=null,onTap=()=>{},bgSig='';
+let game=null,host=null,parking=null,onTap=()=>{},onHover=()=>{},bgSig='';
 
 // '#rrggbb' → entier Phaser
 const hex=s=>parseInt(s.slice(1),16);
@@ -30,9 +30,14 @@ class MapScene extends Phaser.Scene{
   this.emitters=[];this.cosmosSig='';
   this.stars=[];const rs=mulberry32(11);for(let i=0;i<60;i++)this.stars.push({x:rs()*VW,y:rs()*150,s:.5+rs()*1.1,p:rs()*6.28});
   this.cameras.main.setZoom(R).centerOn(VW/2,VH/2);
-  let down=null;
-  this.input.on('pointerdown',p=>{down={x:p.x,y:p.y,t:p.downTime};});
-  this.input.on('pointerup',p=>{if(!down)return;const moved=Math.hypot(p.x-down.x,p.y-down.y);down=null;if(moved<12*R)onTap(p.worldX,p.worldY);});
+  let down=null,press=null,pressed=false;
+  // Toucher : ouvre le site. Appui long (ou survol à la souris) : fiche du bâtiment.
+  const ev=p=>p.event||{};
+  this.input.on('pointerdown',p=>{down={x:p.x,y:p.y,t:p.downTime};pressed=false;clearTimeout(press);
+   if(p.wasTouch)press=setTimeout(()=>{pressed=true;onHover(p.worldX,p.worldY,ev(p).clientX,ev(p).clientY,true);},450);});
+  this.input.on('pointermove',p=>{if(down&&Math.hypot(p.x-down.x,p.y-down.y)>12*R)clearTimeout(press);if(!p.wasTouch)onHover(p.worldX,p.worldY,ev(p).clientX,ev(p).clientY,false);});
+  this.input.on('pointerup',p=>{clearTimeout(press);if(!down)return;const moved=Math.hypot(p.x-down.x,p.y-down.y);down=null;if(pressed){setTimeout(()=>onHover(null),2200);return;}if(moved<12*R)onTap(p.worldX,p.worldY);});
+  this.input.on('gameout',()=>onHover(null));
   bgSig='';
  }
  update(time,delta){
@@ -42,6 +47,7 @@ class MapScene extends Phaser.Scene{
   const g=this.fx;g.clear();
   if(S.b.forge>0){const rc=SITES.forge.r;const f=.6+.4*Math.sin(time/120)*Math.sin(time/330);g.fillStyle(0xff8c3c,.35+.35*f);g.fillCircle(rc[0]+rc[2]/2,rc[1]+rc[3]-18,5+2*f);
    g.fillStyle(0xc8c8d2,.18);for(let i=0;i<3;i++){const sy=(time/40+i*14)%40;g.fillCircle(rc[0]+rc[2]-18+Math.sin(time/600+i)*3,rc[1]-sy*.6,2+sy/12);}}
+  drawWorks(g,time);
   AG.slice().sort((a,b)=>a.y-b.y).forEach(a=>drawFigure(g,a));
   SPARKS.forEach(s=>{const [r0,g0,b0]=s.c.split(',').map(Number);g.fillStyle((r0<<16)|(g0<<8)|b0,clamp(s.l*1.2,0,1));if(s.puff)g.fillCircle(s.x,s.y,1.6+(1.2-s.l)*2);else g.fillRect(s.x,s.y,1.2,1.2);});
   this.drawSky(time);
@@ -94,6 +100,25 @@ function drawFigure(g,a){
  if(a.kind==='spar'){const hm=Math.sin(a.ph*1.7);g.lineStyle(1.2,hex(a.skin),1);g.lineBetween(x,y-7,x+(a.fl?-4:4),y-8+hm);}
 }
 
+// Chantiers en cours : échafaudages de bois, étincelles d'outils, barre d'avancement dorée.
+function drawWorks(g,time){
+ (S.jobs||[]).forEach(j=>{
+  const p=Math.max(0,Math.min(1,(S.gt-j.start)/(j.end-j.start)));
+  let x,y,w,h;
+  if(/^h\d+$/.test(j.b)){const [hx,hy]=HOUSE_PTS[+j.b.slice(1)];x=hx-10;y=hy-16;w=20;h=16;}
+  else if(SITES[j.b]){const r=SITES[j.b].r;x=r[0]+4;y=r[1]+2;w=r[2]-8;h=r[3]-12;}
+  else if(j.b==='entrepot'){x=DEPOT[0]-12;y=DEPOT[1]-16;w=24;h=14;}
+  else return;
+  g.lineStyle(1.2,0x9a7348,.95);
+  for(let k=0;k<=3;k++){const px=x+k*w/3;g.lineBetween(px,y+h,px,y);}
+  for(let yy=y+h;yy>=y;yy-=6)g.lineBetween(x,yy,x+w,yy);
+  g.lineStyle(.8,0x6e5233,.8);g.lineBetween(x,y+h,x+w/3,y);g.lineBetween(x+2*w/3,y+h,x+w,y);
+  if(!reduced&&Math.sin(time/90+x)>.6){g.fillStyle(0xffe08a,.9);g.fillCircle(x+w*(.3+.4*Math.abs(Math.sin(time/700+x))),y+h*.4,1.1);}
+  g.fillStyle(0x1c130e,.85);g.fillRect(x,y-5,w,3);g.fillStyle(0xf6d48a,1);g.fillRect(x,y-5,w*p,3);
+ });
+}
+// La maison du zodiaque la plus proche d'un point de la colline.
+export function houseAt(x,y){let best=-1,bd=12;HOUSE_PTS.forEach(([hx,hy],i)=>{const d=Math.hypot(x-hx,y-(hy-4));if(d<bd){bd=d;best=i;}});return best;}
 // Zones touchables, comme dans le prototype : sommet = Pope, colline = maisons, sinon un site.
 export function hitTest(x,y){
  if(y<46)return{type:'pope'};
@@ -103,6 +128,8 @@ export function hitTest(x,y){
  return null;
 }
 export function setMapTapHandler(fn){onTap=(x,y)=>{const h=hitTest(x,y);if(h)fn(h);};}
+// Survol (souris) ou appui long (doigt) : fn(zone ou null, x, y à l'écran).
+export function setMapHoverHandler(fn){onHover=(x,y,cx,cy,touch)=>{if(x==null){fn(null);return;}const h=hitTest(x,y);if(h&&h.type==='houses'){const i=houseAt(x,y);if(i>=0)h.house=i;}fn(h,cx,cy,touch);};}
 
 function boot(){
  host=document.createElement('div');host.id='mapHost';
