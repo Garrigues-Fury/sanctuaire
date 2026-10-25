@@ -23,6 +23,8 @@ import { RELICS } from '../core/data/stars.js';
 import { cardArt } from '../art/cards.js';
 import { openDuel } from './duel.js';
 import { openTrialFight } from './trialfight.js';
+import { TABS as HUB_TABS, goTab, setFormView, tabBadges, viewHub } from './hub.js';
+import { RES_ICON, icon } from './icons.js';
 import { makeGuardFrom, makeWorker, newGame } from '../core/people.js';
 import { CB, DUO_E, HOUSE_MAX, POSTS, SESS, SESS_E, affinity, afford, apsAt, arena, artReady, bestSmith, bonusOf, byId, cap, capacity, cardPrice, cb, consScore, cosmosLabel, costOf, craftRate, defenseOf, elemScores, emax, fkey, forgeRate, friendBonus, friendLv, friendsOf, guardRate, have, houseCost, houseTime, knightRate, knightsWith, levelUpAp, masterOf, need, pay, people, pope, postName, power, rates, recomputeCB, recruitInterval, reqOk, research, reqText, sanctPower, siteProd, siteSlots, slotsFor, timeOf, trialEval, usedSlots, villageCap, workerCost, workersAt, xpRate } from '../core/rules.js';
 import { exportCode, importCode, save } from '../core/save.js';
@@ -48,7 +50,7 @@ export function costHtml(c){return '<div class="cost">'+Object.keys(c).map(r=>'<
 export function traitChips(p){return (p.qual||[]).map(t=>'<span class="chip q"'+tip(QUAL[t.k].n+' '+ROMAN[t.lv]+'\n'+traitText(t.k,t.lv,false))+'>'+QUAL[t.k].n+' '+ROMAN[t.lv]+'</span>').join('')+(p.flaw||[]).map(t=>'<span class="chip f"'+tip(FLAW[t.k].n+' '+ROMAN[t.lv]+'\n'+traitText(t.k,t.lv,true))+'>'+FLAW[t.k].n+' '+ROMAN[t.lv]+'</span>').join('');}
 export function nrgBar(p){return '<div class="nrg"><span'+tip('nrg')+'>Énergie</span><div class="bar green"><i data-nrg="'+p.id+'" style="width:'+clamp(p.nrg/emax(p)*100,0,100)+'%"></i></div><b data-nrgv="'+p.id+'">'+Math.floor(p.nrg)+'</b></div>';}
 export function openSite(id){
- if(id==='dortoirs'){act('tab:apprentis');return;}
+ if(id==='dortoirs'){act('sub:personnages:apprentis');return;}
  if(id==='arene'){openModal(()=>bldBlock('arene')+'<p class="hint">Les apprentis qui ont un maître s’entraînent ici. Les maîtres se tiennent au bord de l’arène.</p><button class="btn ghost" data-act="tab:apprentis">Voir les apprentis</button>');return;}
  if(id==='artisans'){openModal(villageModal);return;}
  if(id==='entrepot'){openModal(()=>bldBlock('entrepot'));return;}
@@ -106,15 +108,14 @@ export function guardModal(id){return()=>{const g=(S.guards||[]).find(x=>x.id===
  return h+'</div>';};}
 export const TABS=[['sanctuaire','Sanctuaire','Δ'],['monde','Monde','◎'],['chevaliers','Chevaliers','✦'],['apprentis','Apprentis','☉'],['armures','Armures','⛨'],['pope','Pope','♛'],['chronique','Chronique','⌛']];
 export function renderTabs(){
- const W=S.world;
- const badge={monde:W?W.events.length+(W.active?1:0):0,apprentis:S.pending.length+S.aps.filter(a=>a.sp>0).length,chevaliers:S.knights.filter(k=>k.sp>0).length+(S.guards||[]).filter(g=>g.sp>0).length};
- $('#tabs').innerHTML=TABS.map(([k,n,g])=>'<button data-act="tab:'+k+'"'+(S.tab===k?' aria-current="page"':'')+'><span class="g">'+g+'&#xFE0E;</span>'+n+(badge[k]?'<span class="badge">'+badge[k]+'</span>':'')+'</button>').join('');
+ const badge=tabBadges();
+ $('#tabs').innerHTML=HUB_TABS.map(([k,n,ic])=>'<button data-act="tab:'+k+'"'+(S.tab===k?' aria-current="page"':'')+'>'+icon(ic,22)+'<span>'+n+'</span>'+(badge[k]?'<span class="badge">'+badge[k]+'</span>':'')+'</button>').join('');
 }
 export function renderRes(){
  const R=rates();
- $('#resbar').innerHTML=RKEYS.map(r=>'<div class="res"'+tip(r)+'><div class="k"><i style="background:'+RES[r].c+'"></i>'+RES[r].n+'</div><div class="v" data-res="'+r+'">'+fmt(S.res[r])+'</div><div class="r">'+(R[r]>=0?'+':'')+fmt(R[r])+'/h · max '+fmt(cap(r))+'</div></div>').join('');
+ $('#resbar').innerHTML=RKEYS.map(r=>'<div class="res"'+tip(r)+'><div class="k"><span style="color:'+RES[r].c+'">'+icon(RES_ICON[r],14)+'</span>'+RES[r].n+'</div><div class="v" data-res="'+r+'">'+fmt(S.res[r])+'</div><div class="r">'+(R[r]>=0?'+':'')+fmt(R[r])+'/h · max '+fmt(cap(r))+'</div></div>').join('');
  $('#speedTag').hidden=S.speed===1;
- const sb=$('#soundBtn');if(sb){const on=soundPrefs().on;sb.setAttribute('aria-pressed',on);sb.classList.toggle('off',!on);sb.setAttribute('aria-label',on?'Couper le son':'Activer le son');}
+ const sb=$('#soundBtn');if(sb){const on=soundPrefs().on;sb.innerHTML=icon(on?'sound':'mute',20);sb.setAttribute('aria-pressed',on);sb.classList.toggle('off',!on);sb.setAttribute('aria-label',on?'Couper le son':'Activer le son');}
 }
 export function bar(pct,attrs,cls){return '<div class="bar'+(cls?' '+cls:'')+'"><i '+(attrs||'')+' style="width:'+clamp(pct,0,100).toFixed(1)+'%"></i></div>';}
 export function bldBlock(id){
@@ -277,13 +278,13 @@ function discipleCard(a){
   h+='</div>';});
  return h+'</div>';
 }
-function viewFormDisciples(){
+export function viewFormDisciples(){
  let h='<section class="sec">'+orientBanner();
  if(!S.aps.length)return h+'<div class="empty">Aucun apprenti pour l’instant.</div></section>';
  h+='<p class="hint">Pour chaque disciple : son maître (touchez un chevalier pour l’y affecter), ses armures pressenties, et les maîtres capables de le guider. <span class="chip guide on" style="--gc:var(--gold)">En couleur</span> : un chevalier porte cette armure. <span class="chip guide off">En gris</span> : elle n’a pas encore de porteur.</p>';
  return h+S.aps.slice().sort((a,b)=>b.lv-a.lv).map(discipleCard).join('')+'</section>';
 }
-function viewFormArmures(){
+export function viewFormArmures(){
  let h='<section class="sec">'+orientBanner();
  h+='<div class="seg" role="tablist">'+['bronze','argent','or'].map(rk=>'<button role="tab" aria-selected="'+(faRank===rk)+'" data-act="farank:'+rk+'">'+RANKS[rk]+'</button>').join('')+'</div>';
  h+='<div class="btns"><button class="btn sm'+(faAll?' ghost':'')+'" data-act="faall:0">Avec candidats</button><button class="btn sm'+(faAll?'':' ghost')+'" data-act="faall:1">Toutes</button></div>';
@@ -298,9 +299,7 @@ function viewFormArmures(){
  return h+'</section>';
 }
 export function viewApprentis(){
- let h='<div class="seg" role="tablist" style="margin-bottom:10px">'+[['liste','Apprentis'],['disciples','Par disciple'],['armures','Par armure']].map(([k,n])=>'<button role="tab" aria-selected="'+(apView===k)+'" data-act="apview:'+k+'">'+n+'</button>').join('')+'</div>';
- if(apView==='disciples')return h+viewFormDisciples();
- if(apView==='armures')return h+viewFormArmures();
+ let h='';
  if(S.pending.length){h+='<section class="sec"><div class="sec-h"><h2>Aux portes du Sanctuaire</h2><span class="aside">'+S.pending.length+' / 3</span></div>';
   S.pending.forEach((a,i)=>{const full=S.aps.length>=capacity();h+='<div class="recruit">'+ptImg(a,null)+'<div class="main" style="min-width:0;display:grid;gap:4px"><div class="name" style="font-weight:700">'+esc(a.name)+' <span class="hint" style="font-weight:400">'+a.age+' ans · '+NATS[a.nat].n+'</span></div><div class="meta" style="display:flex;flex-wrap:wrap;gap:6px">'+signChip(a.sign)+'<span class="chip '+(a.imp==='Exceptionnel'?'or':a.imp==='Prometteur'?'argent':'')+'">'+a.imp+(cb('REVEAL')?' · '+a.pot:'')+'</span>'+traitChips(a)+'</div><div class="hint">Force '+a.st.fo+' · Vitesse '+a.st.vi+' · Dextérité '+a.st.de+' · Endurance '+a.st.en+' · Psychokinésie '+a.st.ps+' · Cosmos '+a.st.co+'</div></div><p class="bio-p">'+a.bio.map(esc).join(' ')+'</p><div class="btns"><button class="btn sm" data-act="accept:'+i+'"'+(full?' disabled':'')+'>'+(full?'Dortoirs pleins':'Accueillir')+'</button><button class="btn sm ghost" data-act="dismiss:'+i+'">Renvoyer chez '+(a.sex==='F'?'elle':'lui')+'</button></div></div>';});
   h+='</section>';}
@@ -352,8 +351,7 @@ function errorBox(where,e){console.error(e);return '<div class="banner bad"><b>E
 export function render(){
  S._dirty=false;
  try{renderRes();renderTabs();}catch(e){console.error(e);}
- if(!VIEWS[S.tab])S.tab='sanctuaire';
- let html;try{html=VIEWS[S.tab]();}catch(e){html=errorBox('onglet '+S.tab,e);}
+ let html;try{html=viewHub();}catch(e){html=errorBox('onglet '+S.tab,e);}
  $('#view').innerHTML=html;
  try{mountMap(document.getElementById('mapSlot'));syncAgents();}catch(e){console.error(e);}
  liveUpdate();
@@ -611,7 +609,9 @@ export let guardArm=null,forfeitArm=false;
 export function act(a){
  const [k,x,y,z]=a.split(':');
  switch(k){
- case'tab':S.tab=x;closeModal();render();window.scrollTo(0,0);return;
+ case'tab':goTab(x);closeModal();render();window.scrollTo(0,0);return;
+ case'sub':goTab(x,y);closeModal();render();window.scrollTo(0,0);return;
+ case'formview':setFormView(x);render();return;
  case'close':lastTrial=null;closeModal();render();return;
  case'site':openSite(x);return;
  case'houses':openModal(housesModal);return;

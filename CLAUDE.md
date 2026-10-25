@@ -24,6 +24,14 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
 - `src/core/` : règles et données, sans affichage. `rules.js` reprend les formules du prototype telles quelles ; `migrate.js` reprend `migrate()` ; `save.js` gère la sauvegarde et le code (même encodage que le prototype, même clé `localStorage`). L'état `S` vit dans `state.js` et ne se réaffecte que par `setS()`.
 - `src/map/` : carte animée en Phaser 4. Le décor fixe est dessiné en Canvas 2D (`background.js`) puis passé à Phaser ; les personnages sont redessinés à chaque image (`agents.js`, `map.js`).
 - `src/ui/app.js` : interface HTML des onglets et fenêtres (reprise du prototype). Choix assumé : menus en HTML, scènes animées en Phaser.
+- **Navigation (refonte UX du 2026-10-25, `src/ui/hub.js`, icônes vectorielles `src/ui/icons.js`)** : 5 onglets en bas.
+  - **Sanctuaire**, avec 4 rubriques :
+    - **Aperçu** : tableau de bord avec la puissance, les présages, la liste « À faire », les forces, l'économie, les chantiers et les éléments ;
+    - **Bâtir** : la carte et les bâtiments ;
+    - **Défense** : les 12 maisons et les zones avec leur défense, et les menaces des dieux ;
+    - **Chronique**.
+  - **Personnages**, avec 4 rubriques : Chevaliers, Apprentis, Formation (par disciple, par armure) et Relations (liens les plus forts, tensions).
+  - **Armures**, **Monde** et **Astres** (le duel du Pope).
 - `tests/` : tests Vitest (`npm test`), dont la reprise des sauvegardes v1 à v6.
 - Commandes : `npm run dev` (jeu en développement), `npm run build` (site dans `dist/`), `npm run icons` (icônes depuis `public/icon.svg`).
 - Hébergement : `.github/workflows/deploy.yml` publie sur GitHub Pages à chaque envoi sur `main`.
