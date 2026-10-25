@@ -14,6 +14,8 @@ import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity } from './armor.js';
 import { ensureSkills, grantSkill, skillCheck, skillPower, tickSkills } from './skills.js';
 import { orientF } from './formation.js';
 import { buildCostMult, buildTimeMult, extraSlots, gainOnBuilt, gainWhileBuilding } from './builders.js';
+import { tickResearch } from './research.js';
+import { recoveryMult, tickMedicine } from './medicine.js';
 import { SKILLS } from './data/skills.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
@@ -63,7 +65,7 @@ export function need(lv){return Math.round(80*Math.pow(1.25,lv-1));}
 export function affinity(ap,m){if(!m)return{x:1,t:''};if(m.sign===ap.sign)return{x:1.5,t:'Même signe'};if(SIGNS[m.sign].el===SIGNS[ap.sign].el)return{x:1.25,t:'Même élément'};return{x:1,t:''};}
 export function masterOf(ap){return S.knights.find(k=>k.id===ap.master&&isMaster(k))||null;}
 export function emax(p){return 100-10*fl(p,'colerique');}
-export function eregen(p){return E_REGEN*medMult(p)*(1+.15*ql(p,'perseverant'))*(1-.15*fl(p,'fragile'))*(1+cb('NRG')/100);}
+export function eregen(p){return E_REGEN*medMult(p)*recoveryMult()*(1+.15*ql(p,'perseverant'))*(1-.15*fl(p,'fragile'))*(1+cb('NRG')/100);}
 export function fkey(a,b){return a<b?a+'-'+b:b+'-'+a;}
 export function friendLv(a,b){return S.friend[fkey(a,b)]||0;}
 export function friendsOf(p){const out=[];for(const k in S.friend){const [a,b]=k.split('-').map(Number);if(a!==p.id&&b!==p.id)continue;const o=byId(a===p.id?b:a);if(o&&S.friend[k]>0)out.push({p:o,lv:S.friend[k]});}return out.sort((x,y)=>y.lv-x.lv);}
@@ -130,7 +132,7 @@ export function step(h,sum){
  ['herbo','atelier'].forEach(ws=>{const q=S.craft[ws];if(!q.length)return;let left=craftRate(ws)*h;while(left>0&&q.length){const j=q[0];const r=REC_BY[j.k];const need=r.work-j.prog;if(left>=need){left-=need;q.shift();S.items[j.k]=(S.items[j.k]||0)+1;S._dirty=true;if(sum)sum.made[j.k]=(sum.made[j.k]||0)+1;else emit('crafted',j.k);}else{j.prog+=left;left=0;}}});
  S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
  S.gt+=h;
- tickWorld(sum);tickSocial(h,sum);
+ tickWorld(sum);tickSocial(h,sum);tickResearch(h,sum);tickMedicine(h,sum);
  gainWhileBuilding(h);
  for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;gainOnBuilt(/^h\d+$/.test(j.b),j.lvl);if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
  if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}

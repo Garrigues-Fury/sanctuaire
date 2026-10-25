@@ -11,6 +11,8 @@ import { dur, esc, fmt } from '../core/util.js';
 import { RES_ICON, icon } from './icons.js';
 import { tip } from './tips.js';
 import { TECHS, TECH_KEYS, bp, builderRank, techLv } from '../core/builders.js';
+import { LORE, loreLevel, loreMult } from '../core/research.js';
+import { survivalChance } from '../core/medicine.js';
 import { WORK } from '../core/data/economy.js';
 import { setMapHoverHandler } from '../map/map.js';
 import { bar, costHtml, ptImg, viewApprentis, viewArmures, viewChevaliers, viewChronique, viewFormArmures, viewFormDisciples, viewPope, viewSanctuaire } from './app.js';
@@ -85,6 +87,8 @@ function viewApercu(){
   kpi('cap','Apprentis',S.aps.length+'<small>/'+capacity()+'</small>',S.pending.length?S.pending.length+' aux portes':'')+
   kpi('shield','Gardes',(S.guards||[]).length,'')+
   kpi('users','Villageois',S.workers.length+'<small>/'+villageCap(S.b.artisans)+'</small>','')+'</div></section>';
+ const nR=S.knights.filter(k=>k.role==='biblio').length,nM=S.knights.filter(k=>k.role==='medecin').length;
+ h+='<section class="sec"><div class="sec-h"><h2>Savoir et soins</h2></div><div class="kpis">'+kpi('book','Savoirs retrouvés',loreLevel()+'<small>/'+LORE.length+'</small>',nR?'apprentissage +'+Math.round((loreMult()-1)*100)+' % · '+nR+' chercheur'+(nR>1?'s':''):'aucun chercheur')+kpi('heart','Survie des blessés graves',survivalChance()+' %',nM?nM+' médecin'+(nM>1?'s':''):'aucun médecin')+'</div></section>';
  const R=rates();
  h+='<section class="sec"><div class="sec-h"><h2>Économie</h2><span class="aside">par heure</span></div><div class="eco">'+RKEYS.map(r=>'<div class="eco-i"'+tip(r)+'>'+icon(RES_ICON[r],20)+'<div class="main"><div class="ek">'+RES[r].n+'</div>'+bar(S.res[r]/cap(r)*100)+'</div><div class="ev num" style="color:var(--'+(R[r]>=0?'ok':'bad')+')">'+(R[r]>=0?'+':'')+fmt(R[r])+'</div></div>').join('')+'</div>';
  h+='<div class="sec-h" style="margin-top:12px"><h2>Chantiers</h2><span class="aside">'+S.jobs.length+' / '+slotsFor(S.b.artisans)+'</span></div>';

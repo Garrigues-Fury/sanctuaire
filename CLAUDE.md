@@ -154,6 +154,9 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
         - études : savoir, fondamentale Harmonie.
       - Séances ciblées à l'énergie pour chaque statistique.
     - **Dextérité** : précision (l'ennemi esquive moins) et coups précis à ×1,5 en combat ; atelier d'artisanat ; actions de mission (désarmer, ligoter). **Psychokinésie** : barrière qui amortit les coups (jusqu'à 20 %) et cosmos de départ plus haut ; herboristerie ; actions de mission (soulever le chariot, barrière autour d'un village). Les anciens personnages reçoivent dextérité = (force + vitesse) / 2 et psychokinésie = (cosmos + endurance) / 2.
+    - **Métiers ajoutés le 2026-10-25** :
+      - **Chercheur** (`src/core/research.js`) : en plus du savoir, il retrouve à la bibliothèque 10 savoirs perdus, de plus en plus longs à retrouver ; chacun ajoute +5 % à l'apprentissage et à la transmission des compétences.
+      - **Médecin** (`src/core/medicine.js`) : repos après une épreuve jusqu'à −40 % et énergie jusqu'à +15 %. Il apprend la compétence **Maintien en vie** : découverte après 72 h de pratique, puis 10 niveaux très longs (des mois à plein temps). La survie d'un chevalier grièvement blessé passe de 10 % sans médecin à 27 % au niveau 1, puis jusqu'à 90 % ; elle servira à l'étape 4.
     - Étape 3 : tableau des missions (auto ou en direct). Étape 4 : fatigue, blessures (un blessé ne fait que se soigner), mort, armure à rapporter, cimetière, réparation à l'orichalque.
     - **Mort (décision de Seba le 2026-10-24)** : possible **seulement sur une mission risquée lancée par le joueur**, avec un avertissement clair avant le départ. **Jamais pendant une absence** si rien n'a été lancé.
 16. **Comptes à rebours** : réveil de Poséidon au jour 90, guerre sainte contre Hadès au jour 270. La réincarnation d'Athéna sera révélée plus tard.

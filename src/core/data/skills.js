@@ -83,7 +83,8 @@ const SPEC_RAW=[
  ['colosse','Force colossale','phy','Soulever, briser, repousser une masse énorme.'],
  ['reparation','Réparation d’armure','men','Comprendre la matière des armures et la réparer.'],
  ['mythes','Savoir des mythes','men','Connaître les dieux, les dimensions et les anciennes guerres.'],
- ['guerison','Soins par le cosmos','men','Refermer les blessures, apaiser la douleur.']
+ ['guerison','Soins par le cosmos','men','Refermer les blessures, apaiser la douleur.'],
+ ['vie','Maintien en vie','men','Compétence du médecin, très longue à apprendre : garder en vie un chevalier grièvement blessé. Chaque niveau augmente ses chances de survie.']
 ];
 const FAM_ST={psy:['ps','co'],ctl:['ps','de'],pro:['co','fo'],cor:['fo','de'],ele:['co','ps'],art:['de','vi'],def:['en','ps'],phy:['fo','en'],men:['ps','co']};
 export const SPEC=SPEC_RAW.map(([id,n,fam,d])=>({id,n,fam,d,st:FAM_ST[fam]}));

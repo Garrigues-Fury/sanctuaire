@@ -44,7 +44,8 @@ export const ROLES={
  intendant:{n:'Intendant',d:'+15 % de production des ressources.'},
  oeuvre:{n:'Maître d’œuvre',d:'Dirige les artisans : chantiers 20 % plus rapides.'},
  apprentissage:{n:'Maître d’apprentissage',d:'Oriente les apprentis vers leurs maîtres : révèle jusqu’où chacun peut aller (bronze, argent, or) et accélère leurs découvertes de compétences (jusqu’à +15 %).'},
- biblio:{n:'Chercheur',d:'Étudie les parchemins de la bibliothèque (à bâtir) : produit du savoir, davantage s’il est studieux.'}
+ biblio:{n:'Chercheur',d:'Recherche à la bibliothèque (à bâtir) : produit du savoir et retrouve les savoirs perdus, qui améliorent l’apprentissage et la transmission des compétences (+5 % par savoir retrouvé).'},
+ medecin:{n:'Médecin',d:'Soigne les blessés : repos plus court après une épreuve et énergie plus vite rechargée. Développe avec le temps la compétence Maintien en vie (très longue à apprendre), qui donne à un chevalier grièvement blessé de bons espoirs de survie.'}
 };
 export const ARMOR_COST={bronze:{metal:150,savoir:40},argent:{marbre:300,metal:700,savoir:250},or:{marbre:1500,metal:3000,savoir:1200}};
 export const ARMOR_WORK={bronze:6,argent:24,or:96};

@@ -26,6 +26,8 @@ import { openTrialFight } from './trialfight.js';
 import { TABS as HUB_TABS, goTab, setFormView, tabBadges, viewHub } from './hub.js';
 import { RES_ICON, icon } from './icons.js';
 import { TECHS } from '../core/builders.js';
+import { LORE, loreLevel, loreMult, loreNeed, researchRate } from '../core/research.js';
+import { careF, restHours, survivalChance, survivalOf, vieLevel } from '../core/medicine.js';
 import { makeGuardFrom, makeWorker, newGame } from '../core/people.js';
 import { CB, DUO_E, HOUSE_MAX, POSTS, SESS, SESS_E, affinity, afford, apsAt, arena, artReady, bestSmith, bonusOf, byId, cap, capacity, cardPrice, cb, consScore, cosmosLabel, costOf, craftRate, defenseOf, elemScores, emax, fkey, forgeRate, friendBonus, friendLv, friendsOf, guardRate, have, houseCost, houseTime, knightRate, knightsWith, levelUpAp, masterOf, need, pay, people, pope, postName, power, rates, recomputeCB, recruitInterval, reqOk, research, reqText, sanctPower, siteProd, siteSlots, slotsFor, timeOf, trialEval, usedSlots, villageCap, workerCost, workersAt, xpRate } from '../core/rules.js';
 import { exportCode, importCode, save } from '../core/save.js';
@@ -215,7 +217,8 @@ export function planEffects(p,kind){
   else if(p.role==='intendant')fx='+'+Math.round(15*j)+' % de production';
   else if(p.role==='oeuvre')fx='chantiers '+Math.round(20*j)+' % plus rapides';
   else if(p.role==='recruteur'){const iv=recruitInterval();fx=iv<Infinity?'un candidat toutes les '+dur(iv)+' environ':'aucune recherche';}
-  else if(p.role==='biblio')fx=S.b.biblio>0?'+'+fmt1(research(p))+' savoir / h':'bibliothèque à bâtir d’abord';
+  else if(p.role==='biblio')fx=S.b.biblio>0?'+'+fmt1(research(p))+' savoir / h · savoirs perdus retrouvés : '+loreLevel()+' / '+LORE.length+' (apprentissage +'+Math.round((loreMult()-1)*100)+' %)'+(loreLevel()<LORE.length?' · prochain dans '+dur(Math.max(0,(loreNeed(loreLevel()+1)-((S.lore&&S.lore.pts)||0))/Math.max(.01,researchRate())))+' au rythme actuel':''):'bibliothèque à bâtir d’abord';
+  else if(p.role==='medecin'){const lv=vieLevel(p);fx='repos −'+Math.round(40*Math.min(1,careF()))+' %, énergie +'+Math.round(15*Math.min(1,careF()))+' % · Maintien en vie '+(lv?'niveau '+lv+' (survie '+survivalOf(lv)+' %)':'en apprentissage ('+Math.round(Math.min(1,((p.skp&&p.skp.vie)||0)/72)*100)+' %)');}
   h+='<div>'+R.n+' : <b>'+pct(j)+'</b> de l’effet plein · '+fx+'.</div>';}
  else h+='<div>Sans métier : son temps va à ses disciples et à son entraînement.</div>';
  const n=S.aps.filter(a=>a.master===p.id).length;
@@ -724,13 +727,13 @@ export function act(a){
  case'trialpick':trialPick=y==='none'?null:{id:+x,k:y};render();return;
  case'trialOpen':lastTrial=null;trialPick=null;openModal(trialModal(+x));return;
  case'trial':{const kp=S.knights.find(q=>q.id===+x),c0=CONS_BY[y];
-  if(kp&&c0){const e=trialEval(kp,c0);if(!e.ok)return;const win=Math.random()<e.ch;const cd=ql(kp,'orgueilleux')?24:12;
+  if(kp&&c0){const e=trialEval(kp,c0);if(!e.ok)return;const win=Math.random()<e.ch;const cd=restHours(kp);
    if(win){(e.resonance||[]).forEach(id=>grantSkill(kp,id));const old=CONS_BY[kp.cons];S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
     if(c0.rank==='or'&&!S.houses[c0.sign])S.houses[c0.sign]=1;log('★ '+kp.name+' est promu'+G(kp,'e')+' : '+armorLow(c0)+' ! L’'+armorLow(old)+' attend un nouveau porteur.');}
    else{kp.cd=S.gt+cd;log(kp.name+' échoue à l’épreuve de l’'+armorLow(c0)+'.');}
    lastTrial={id:kp.id,win,name:kp.name,rank:c0.rank,cons:c0.n,sex:kp.sex,cd};save();render();return;}
   const ap=S.aps.find(q=>q.id===+x),c=CONS_BY[y];if(!ap||!c)return;const e=trialEval(ap,c);if(!e.ok)return;
-  const cd=ql(ap,'orgueilleux')?24:12;
+  const cd=restHours(ap);
   // certaines armures se disputent en combat contre un autre disciple
   if(trialKind(c)!=='epreuve'&&z==='live'){trialPick=null;closeModal();render();openTrialFight(ap,c,e,cd);return;}
   if(trialKind(c)!=='epreuve'){trialPick=null;const r=runDuel(ap,c,e,cd);lastTrial={id:ap.id,win:r.win,name:ap.name,rank:c.rank,cons:c.n,sex:ap.sex,cd,duel:r};save();render();return;}

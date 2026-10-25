@@ -12,6 +12,8 @@ import { NEXT_RANK, armorAffinity } from './armor.js';
 import { discoverMult, partShare, trainTime } from './program.js';
 import { teachF } from './schedule.js';
 import { S } from './state.js';
+import { loreMult } from './research.js';
+import { vieLevel } from './medicine.js';
 import { clamp } from './util.js';
 
 const RANK_I={bronze:1,argent:2,or:3};
@@ -26,7 +28,7 @@ const thr=s=>s.fam==='fond'?THRESH.fond:s.fam==='vit'?THRESH[s.id]:THRESH.spec;
 export function skillsOf(p){if(!p.sk)p.sk={};if(!p.skp)p.skp={};if(!p.skx)p.skx={};return p;}
 export function hasSkill(p,id){return !!(p.sk&&p.sk[id]);}
 // Niveau 1 à 10, selon l'XP accumulée depuis la découverte.
-export function skillLevel(p,id){if(!hasSkill(p,id))return 0;const x=(p.skx&&p.skx[id])||0;return Math.min(10,1+Math.floor(Math.log(1+x/200)/Math.log(1.5)));}
+export function skillLevel(p,id){if(!hasSkill(p,id))return 0;if(id==='vie')return vieLevel(p);const x=(p.skx&&p.skx[id])||0;return Math.min(10,1+Math.floor(Math.log(1+x/200)/Math.log(1.5)));}
 export function progressOf(p,id){const s=SKILLS[id];return hasSkill(p,id)?1:clamp(((p.skp&&p.skp[id])||0)/thr(s),0,1);}
 // Aptitude naturelle : ses statistiques liées, comparées à sa moyenne (et quelques qualités).
 export function aptitude(p,s){
@@ -62,11 +64,11 @@ export function focusOf(p,s){return .6+2.4*partShare(p,s);}
    Renvoie la liste des compétences découvertes. */
 export function tickSkills(p,h,xpPerH,master,bond=1){
  skillsOf(p);
- const dx=(xpPerH||0)*h*bond;if(dx>0)for(const id in p.sk){const s=SKILLS[id];p.skx[id]=(p.skx[id]||0)+dx*aptitude(p,s)*focusOf(p,s);}
+ const dx=(xpPerH||0)*h*bond;if(dx>0)for(const id in p.sk){if(id==='vie')continue;const s=SKILLS[id];p.skx[id]=(p.skx[id]||0)+dx*aptitude(p,s)*focusOf(p,s);}
  const kn=S.knights.includes(p),ap=S.aps.includes(p);if(!kn&&!ap)return[];
  const tt=trainTime(p)*h;if(tt<=0)return[];
  // maître, lien avec lui et amitiés, expérience acquise (le niveau)
- const mf=(ap?mentorFactor(master)*(master?Math.max(.3,teachF(master)):1):.6)*bond*(1+(p.lv||1)/40);
+ const mf=(ap?mentorFactor(master)*(master?Math.max(.3,teachF(master)):1):.6)*bond*(1+(p.lv||1)/40)*loreMult();
  const found=[],push=s=>{if(s)found.push(s);};
  // chaque part du programme fait découvrir ses familles de compétences
  FUND.forEach(s=>push(addProgress(p,s.id,2.5*tt*aptitude(p,s)*mf*discoverMult(p,s))));
@@ -83,11 +85,12 @@ export function tickSkills(p,h,xpPerH,master,bond=1){
 // S'entraîner avec plus fort que soi : coup de pouce aux découvertes de l'élève (lo) auprès de hi.
 export function learnFrom(lo,hi){
  const found=[];skillsOf(lo);
- FUND.forEach(s=>{if(!hasSkill(lo,s.id)&&hasSkill(hi,s.id)){const f=addProgress(lo,s.id,8);if(f)found.push(f);}});
+ const lm=loreMult();
+ FUND.forEach(s=>{if(!hasSkill(lo,s.id)&&hasSkill(hi,s.id)){const f=addProgress(lo,s.id,8*lm);if(f)found.push(f);}});
  const hr=RANK_I[hi.rank]||0;
- SPEED.forEach((s,i)=>{if(!hasSkill(lo,s.id)&&hasSkill(lo,'F1')&&(i===0||hasSkill(lo,SPEED[i-1].id))&&hr>=RANK_I[s.rank]&&hasSkill(hi,s.id)){const f=addProgress(lo,s.id,25);if(f)found.push(f);}});
+ SPEED.forEach((s,i)=>{if(!hasSkill(lo,s.id)&&hasSkill(lo,'F1')&&(i===0||hasSkill(lo,SPEED[i-1].id))&&hr>=RANK_I[s.rank]&&hasSkill(hi,s.id)){const f=addProgress(lo,s.id,25*lm);if(f)found.push(f);}});
  const c=targetArmor(lo);
- if(c&&hasSkill(lo,'F1'))specReq(c).forEach(id=>{if(hasSkill(hi,id)){const f=addProgress(lo,id,20);if(f)found.push(f);}});
+ if(c&&hasSkill(lo,'F1'))specReq(c).forEach(id=>{if(hasSkill(hi,id)){const f=addProgress(lo,id,20*lm);if(f)found.push(f);}});
  return found;
 }
 // Ce qui manque pour prétendre à une armure. Une affinité forte permet à l'armure de transmettre
