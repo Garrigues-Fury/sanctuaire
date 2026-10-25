@@ -56,6 +56,8 @@ class BattleScene extends Phaser.Scene{
   this.heroSpec=hs;const L=layersOf(hs);
   await Promise.all([loadTex(this,'h_back',svgLayer(hs,'back')),loadTex(this,'h_body',svgLayer(hs,'body')),loadTex(this,'h_arm',svgLayer(hs,'arm')),loadTex(this,'h_bust',svgBust(hs,{size:512,transparent:true}))]);
   const foeSpecs=b.foes.map((f,i)=>{
+   // duel pour une armure : l'adversaire est un vrai personnage (disciple ou chevalier)
+   if(C.foePeople&&C.foePeople[i]){const p=C.foePeople[i];return{spec:specOf(p,{rank:p.rank&&p.rank!=='garde'?p.rank:null})};}
    if(C.faction==='betes')return{beast:beastKind(f.n)};
    const r=rng((b.rs^(i*7919+17))>>>0),nat=Object.keys(NATS)[Math.floor(r()*193)];
    return{spec:specOf({seed:(b.rs^(i*104729+3))>>>0,sex:r()<.5?'F':'M',nat,sign:Math.floor(r()*12)},{faction:C.faction,boss:f.boss})};});

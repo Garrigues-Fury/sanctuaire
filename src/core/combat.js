@@ -69,7 +69,7 @@ function hit(b,f,raw,label,kind){
  if(dodge(b,b.hero.spd+(b.hero.acc||0),f.spd)){b.log.push({t:'hero',m:f.n+' esquive '+label+'.',miss:true,target:f.i});return;}
  const crit=rnd(b)<(b.hero.crit||0);
  const d=Math.max(1,Math.round(raw*dmgMult(b,f,kind)*(crit?1.5:1)*(.75+rnd(b)*.5)));f.hp=Math.max(0,f.hp-d);
- b.log.push({t:'hero',m:(crit?'Coup précis ! ':'')+label.charAt(0).toUpperCase()+label.slice(1)+' : '+d+' dégâts à '+f.n+(f.hp<=0?' — à terre !':'.'),dmg:d,target:f.i,crit});
+ b.log.push({t:'hero',m:(crit?'Coup précis ! ':'')+label.charAt(0).toUpperCase()+label.slice(1)+' : '+d+' dégâts à '+f.n+(f.hp<=0?' — à terre !':'.'),dmg:d,target:f.i,crit,kind:kind||'strike'});
 }
 export function canUse(b,a){return a==='strike'||a==='guard'||(a==='tech'&&b.hero.cos>=COST.tech)||(a==='sig'&&b.hero.cos>=COST.sig);}
 
@@ -84,7 +84,10 @@ export function heroAction(b,a,target){
  else if(a==='guard'){h.guard=true;h.cos=Math.min(10,h.cos+Math.max(1,3+T(h,'guardCos',0)));const heal=Math.round(h.max*(.06+T(h,'heal',0)));h.hp=Math.min(h.max,h.hp+heal);b.log.push({t:'hero',m:h.name+' se met en garde et rassemble son cosmos (+'+heal+' PV).'});}
  if(!alive(b).length){b.over=true;b.result='win';b.log.push({t:'info',m:'Victoire !',big:true});return b;}
  foesTurn(b);
- if(!b.over){b.turn++;h.cos=Math.min(10,h.cos+1);if(b.turn>25){b.over=true;b.result='retreat';b.log.push({t:'info',m:'Épuisés, les deux camps se séparent.'});}}
+ if(!b.over){b.turn++;h.cos=Math.min(10,h.cos+1);if(b.turn>25){b.over=true;
+  // en duel pour une armure, les juges tranchent selon l'état des deux combattants
+  if(b.duel){const f=b.foes[0];b.result=h.hp/h.max>=f.hp/f.max?'win':'lose';b.log.push({t:'info',m:'Après vingt-cinq échanges, les juges désignent '+(b.result==='win'?h.name:f.n)+'.',big:true});}
+  else{b.result='retreat';b.log.push({t:'info',m:'Épuisés, les deux camps se séparent.'});}}}
  return b;
 }
 function foesTurn(b){
@@ -96,8 +99,10 @@ function foesTurn(b){
   if(f.boss&&f.charge===1){f.charge=0;const raw=(f.atk*2.2-h.def*.5)*(h.guard?gr:1)*sh;const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));h.hp=Math.max(0,h.hp-d);b.log.push({t:'foe',m:f.n+' libère son attaque terrible : '+d+' dégâts !'+(h.guard?' La garde a tenu.':''),dmg:d,big:true,src:f.i});return;}
   if(f.boss&&b.turn%3===2){f.charge=1;b.log.push({t:'foe',m:f.n+' prépare un coup terrible… (se mettre en garde !)',warn:true,src:f.i});return;}
   if(dodge(b,f.spd,h.spd)||rnd(b)<T(h,'dodge',0)){b.log.push({t:'foe',m:h.name+' esquive '+f.n+'.',miss:true,src:f.i});return;}
-  const raw=(f.atk*elemMult(f.el,h.el)-h.def*.5)*(h.guard?gr:1)*sh;const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));
-  h.hp=Math.max(0,h.hp-d);h.cos=Math.min(10,h.cos+1);b.log.push({t:'foe',m:f.n+' frappe : '+d+' dégâts.',dmg:d,src:f.i});
+  // un adversaire en duel (disciple ou chevalier) lance parfois sa technique
+  const tec=f.tec&&rnd(b)<.3;
+  const raw=((tec?f.tec*1.4:f.atk)*elemMult(f.el,h.el)-h.def*.5)*(h.guard?gr:1)*sh;const d=Math.max(1,Math.round(raw*(.75+rnd(b)*.5)));
+  h.hp=Math.max(0,h.hp-d);h.cos=Math.min(10,h.cos+1);b.log.push({t:'foe',m:f.n+(tec?' lance « '+f.techN+' »':' frappe')+' : '+d+' dégâts.',dmg:d,src:f.i});
  });
  if(h.hp<=0&&!h.survived&&rnd(b)<T(h,'survive',0)){h.survived=true;h.hp=1;b.log.push({t:'info',m:h.name+' devrait être à terre… et pourtant, se relève.',big:true});}
  if(h.hp<=0){b.over=true;b.result='lose';b.log.push({t:'info',m:h.name+' tombe à genoux.',big:true});}
@@ -119,9 +124,10 @@ export { BEATS };
 // Duel pour une armure : entre deux disciples, ou face à un chevalier qui évalue (boostB < 1 : il retient ses coups).
 // boost : la résonance avec l'armure convoitée. Renvoie {win : A l'emporte, log : le récit,
 // st : pour chaque combattant, coups portés, techniques réussies, esquives, échanges tenus debout}.
-export function duelSim(A,B,boostA=1,boostB=1,seed=1){
+// hpB : endurance de B (un sempai encaisse beaucoup plus qu'un disciple).
+export function duelSim(A,B,boostA=1,boostB=1,seed=1,hpB=1){
  const b={rs:seed|0},log=[];
- const F=[A,B].map((p,i)=>{const h=heroStats(p);return{h,hp:h.max,cos:2+(h.cosPs||0),boost:i?boostB:boostA,n:p.name,st:{hits:0,techs:0,dodges:0,rounds:0}};});
+ const F=[A,B].map((p,i)=>{const h=heroStats(p);if(i)h.max=Math.round(h.max*hpB);return{h,hp:h.max,cos:2+(h.cosPs||0),boost:i?boostB:boostA,n:p.name,st:{hits:0,techs:0,dodges:0,rounds:0}};});
  for(let t=1;t<=30&&F[0].hp>0&&F[1].hp>0;t++){
   const order=F[0].h.spd+rnd(b)*10>=F[1].h.spd+rnd(b)*10?[0,1]:[1,0];
   for(const i of order){const me=F[i],op=F[1-i];if(me.hp<=0||op.hp<=0)continue;
@@ -138,4 +144,20 @@ export function duelSim(A,B,boostA=1,boostB=1,seed=1){
  const win=F[0].hp>0&&(F[1].hp<=0||F[0].hp/F[0].h.max>=F[1].hp/F[1].h.max);
  if(F[0].hp>0&&F[1].hp>0)log.push('Après trente échanges, les juges désignent '+(win?A.name:B.name)+'.');
  return{win,log,st:F.map(x=>x.st)};
+}
+
+// Duel pour une armure, joué en direct : A est votre apprenti, B son adversaire (disciple ou sempai).
+// boostB < 1 : le sempai retient ses coups.
+export function newDuelBattle(A,B,{boostA=1,boostB=1,seed=1,hpB=1}={}){
+ const b={rs:seed|0,turn:1,log:[],over:false,result:null,duel:true};
+ const h=heroStats(A);h.atk*=boostA;h.tec*=boostA;b.hero=Object.assign(h,{hp:h.max,cos:clamp(2+h.tr.cos0+(h.cosPs||0),0,10),guard:false});
+ const o=heroStats(B);o.max=Math.round(o.max*hpB);
+ b.foes=[{i:0,n:B.name,el:o.el,hp:o.max,max:o.max,atk:o.atk*boostB,tec:o.tec*boostB,techN:o.tech,def:o.def,spd:o.spd,boss:false,charge:0}];
+ b.log.push({t:'info',m:B.name+' s’avance.'});
+ return b;
+}
+// Ce que l'apprenti a montré pendant un duel joué : coups portés, techniques, esquives, échanges tenus.
+export function duelStats(b){
+ const L=b.log;return{hits:L.filter(l=>l.t==='hero'&&l.dmg).length,techs:L.filter(l=>l.t==='hero'&&l.dmg&&(l.kind==='tech'||l.kind==='sig')).length,
+  dodges:L.filter(l=>l.t==='foe'&&l.miss&&/esquive/.test(l.m)).length,rounds:b.hero.hp>0?b.turn:b.turn-1};
 }
