@@ -26,6 +26,7 @@ import { openTrialFight } from './trialfight.js';
 import { TABS as HUB_TABS, goTab, setFormView, tabBadges, viewHub } from './hub.js';
 import { RES_ICON, icon } from './icons.js';
 import { TECHS } from '../core/builders.js';
+import { deleteSlot, listSlots, saveSlot, slotCode, slotGame } from '../core/slots.js';
 import { LORE, loreLevel, loreMult, loreNeed, researchRate } from '../core/research.js';
 import { careF, restHours, survivalChance, survivalOf, vieLevel } from '../core/medicine.js';
 import { makeGuardFrom, makeWorker, newGame } from '../core/people.js';
@@ -622,6 +623,21 @@ export function absenceModal(dt,before,sum){return()=>{
  if(RKEYS.some(r=>S.res[r]>=cap(r)-.5))h+='<div class="banner">Certaines réserves sont pleines. Agrandissez les Réserves pour ne rien perdre la prochaine fois.</div>';
  return h+'<button class="btn" data-act="close">Reprendre</button>';};}
 export let resetArmed=false,ioMsg='';
+/* ---------- sauvegardes nommées ---------- */
+let slotArm=null,slotMsg='';
+export function savesModal(){
+ const L=listSlots(),when=t=>new Date(t).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+ let h='<div><h2 class="mh">Sauvegardes</h2><p class="hint">La partie en cours s’enregistre toute seule. Ici, vous gardez des sauvegardes nommées pour y revenir quand vous voulez. Avant chaque mise à jour du jeu, une sauvegarde automatique est faite.</p></div>';
+ h+='<div class="save-new"><label for="slotName" class="hint">Nom de la sauvegarde</label><input id="slotName" type="text" maxlength="60" placeholder="Jour '+(Math.floor(S.gt/24)+1)+' · avant l’épreuve de Pégase" autocomplete="off"><button class="btn" data-act="slotsave">'+icon('save',18)+' Sauvegarder la partie</button></div>';
+ if(slotMsg)h+='<p class="hint" style="color:var(--gold-hi)" role="status">'+esc(slotMsg)+'</p>';
+ h+='<div class="sec-h"><h2>Mes sauvegardes</h2><span class="aside">'+L.length+'</span></div>';
+ if(!L.length)h+='<div class="empty">Aucune sauvegarde pour l’instant.</div>';
+ else h+='<div class="houses">'+L.map(e=>'<div class="slot"><div class="main"><b>'+esc(e.name)+(e.auto?' <span class="chip">auto</span>':'')+'</b><small>'+when(e.date)+' · jour '+e.day+' · '+e.knights+' chevalier'+(e.knights>1?'s':'')+', '+e.aps+' apprenti'+(e.aps>1?'s':'')+'</small></div><div class="btns">'+
+  (slotArm==='load:'+e.id?'<button class="btn sm" data-act="slotload:'+e.id+'">Confirmer : charger</button><button class="btn sm ghost" data-act="slotcancel">Annuler</button>':
+   slotArm==='del:'+e.id?'<button class="btn sm danger" data-act="slotdel:'+e.id+'">Confirmer : supprimer</button><button class="btn sm ghost" data-act="slotcancel">Annuler</button>':
+   '<button class="btn sm" data-act="slotarm:load:'+e.id+'">Charger</button><button class="btn sm ghost" data-act="slotcopy:'+e.id+'">Copier le code</button><button class="btn sm ghost" data-act="slotarm:del:'+e.id+'" aria-label="Supprimer '+esc(e.name)+'">Supprimer</button>')+'</div></div>').join('')+'</div>';
+ return h+'<p class="hint">Charger une sauvegarde remplace la partie en cours. Pensez à sauvegarder celle-ci d’abord si vous voulez la garder. Pour passer d’un appareil à l’autre, copiez le code d’une sauvegarde et collez-le dans Réglages › Sauvegarde.</p>';
+}
 export function settingsModal(){
  let h='<div><h2 class="mh">Réglages</h2><p class="hint">'+(typeof __APP_VERSION__!=='undefined'?__APP_VERSION__:'développement')+' · partie commencée il y a '+dur((Date.now()-S.created)/36e5)+' (temps réel).</p></div>';
  const sp=soundPrefs();const vol=(k,n)=>'<label class="vol"><span>'+n+'</span><input type="range" min="0" max="100" step="5" value="'+Math.round(sp[k]*100)+'" data-vol="'+k+'"></label>';
@@ -743,6 +759,13 @@ export function act(a){
   lastTrial={id:ap.id,win,name:ap.name,rank:c.rank,cons:c.n,sex:ap.sex,cd};save();render();return;}
  case'restore':{const c=CONS_BY[x];const cost=ARMOR_COST[c.rank];if(S.forgeJob||S.b.forge<ARMOR_FORGE[c.rank]||bestSmith()<ARMOR_SMITH[c.rank]||!afford(cost)||S.armors[x]!=='brisee')return;pay(cost);S.forgeJob={cons:x,work:ARMOR_WORK[c.rank],prog:0};log('L’atelier commence la restauration de l’'+armorLow(c)+'.');break;}
  case'settings':resetArmed=false;ioMsg='';openModal(settingsModal);return;
+ case'saves':slotArm=null;slotMsg='';openModal(savesModal);return;
+ case'slotsave':{const n=($('#slotName')||{}).value||'';const e=saveSlot(n);slotMsg=e?'Partie sauvegardée : « '+e.name+' ».':'Le navigateur manque de place : supprimez une ancienne sauvegarde.';slotArm=null;render();return;}
+ case'slotarm':slotArm=x+':'+y;slotMsg='';render();return;
+ case'slotcancel':slotArm=null;render();return;
+ case'slotdel':deleteSlot(+x);slotArm=null;slotMsg='Sauvegarde supprimée.';render();return;
+ case'slotload':{const o=slotGame(+x);slotArm=null;if(!o){slotMsg='Cette sauvegarde ne peut pas être lue.';render();return;}setS(o);recomputeCB();ensureSchedules();S.lastReal=Date.now();save();closeModal();flash='';render();window.scrollTo(0,0);return;}
+ case'slotcopy':{const code=slotCode(+x);if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{slotMsg='Code copié : collez-le sur l’autre appareil (Réglages › Sauvegarde).';render();},()=>{slotMsg='Copie impossible ici.';render();});return;}
  case'speed':S.speed=+x;break;
  case'sound':unlockAudio();setSound({on:x==='toggle'?!soundPrefs().on:x==='on'});if(soundPrefs().on)sfx('confirm');break;
  case'exportSave':{save();const code=exportCode(S);const ta=$('#saveIo');ta.value=code;ta.select();

@@ -16,6 +16,7 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
 - **Moteur** : Phaser 3, ou mieux si c'est justifié. Projet multi-fichiers, avec Vite par exemple.
 - **Livraison sur le Pixel** : application web installable (PWA, hors ligne, icône sur l'écran d'accueil), hébergée gratuitement (GitHub Pages ou équivalent). Un APK via Capacitor est envisageable plus tard.
 - **Orientation portrait**, contrôle tactile, lisible sur un écran d'environ 412 px de large.
+- **Sauvegardes nommées (demandées par Seba le 2026-10-25, `src/core/slots.js`)** : bouton dans la barre du haut, pour créer, charger (avec confirmation), supprimer ou copier le code d'une sauvegarde. Une sauvegarde automatique est faite avant chaque mise à jour du jeu (les 3 dernières sont gardées). Une partie illisible n'est jamais écrasée : elle est mise de côté.
 - **Sauvegarde locale**, avec export et import d'un code de sauvegarde. Le code du prototype doit pouvoir être importé : reprendre sa fonction `migrate()` (versions 1 à 6).
 - **Temps réel** : le jeu progresse téléphone fermé et affiche un résumé d'absence au retour. Prévoir un mode test où le temps passe 60 fois plus vite.
 

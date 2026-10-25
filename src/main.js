@@ -15,6 +15,7 @@ import { registerSW } from 'virtual:pwa-register';
 import { S, setS } from './core/state.js';
 import { setMapTapHandler } from './map/map.js';
 import { installMapTips } from './ui/hub.js';
+import { keepUnreadable, snapshotOnUpdate } from './core/slots.js';
 import { ensureSchedules } from './core/program.js';
 import { sfx, unlockAudio } from './audio/audio.js';
 import { absenceModal, installClicks, liveUpdate, modalFn, onMapTap, openModal, render } from './ui/app.js';
@@ -35,8 +36,10 @@ function tick(){
 }
 function start(){
  setS(load());
- const fresh=!S;if(fresh){newGame();save();}
+ // une partie illisible n'est jamais écrasée : elle est mise de côté avant d'en commencer une nouvelle
+ const fresh=!S;if(fresh){keepUnreadable();newGame();save();}
  recomputeCB();ensureWorld();ensureDuel();ensureSchedules();
+ if(!fresh&&typeof __APP_VERSION__!=='undefined')snapshotOnUpdate(__APP_VERSION__);
  S.tab=S.tab||'sanctuaire';
  installClicks();installTips();setMapTapHandler(onMapTap);installMapTips();
  // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.

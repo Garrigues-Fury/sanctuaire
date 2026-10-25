@@ -565,3 +565,11 @@ nav.tabs button[aria-current="page"] .ico{filter:drop-shadow(0 0 6px rgba(246,21
 #maptip .mt-w{color:var(--warn);display:flex;align-items:center;gap:4px}#maptip .mt-n{color:var(--marble-faint)}
 nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vol .pfam{display:block;font-size:.72rem;color:var(--marble-faint);font-weight:400}
+
+/* sauvegardes nommées */
+.save-new{display:grid;gap:8px;padding:12px;border-radius:12px;border:1px solid rgba(246,212,138,.3);background:var(--night-2)}
+.save-new input{min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--night);color:var(--marble);font:inherit}
+.save-new input:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.save-new .btn{display:flex;align-items:center;justify-content:center;gap:8px}
+.slot{display:grid;gap:8px;padding:10px;border-radius:11px;border:1px solid var(--line);background:var(--night-2)}
+.slot .main{display:grid;gap:2px}.slot small{font-size:.78rem;color:var(--marble-dim)}
