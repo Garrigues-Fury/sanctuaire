@@ -68,5 +68,5 @@ export function newGame(){
  log('Deux enfants se présentent aux portes. Ils veulent devenir chevaliers.');
 }
 export function makeGuardFrom(ap){
- return{id:ap.id,seed:ap.seed,sex:ap.sex,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:'garde',lv:ap.lv,xp:0,st:Object.assign({},ap.st),sp:ap.sp||0,nrg:ap.nrg,tech:ap.tech.slice(),post:null,pot:ap.pot,origin:'apprenti'};
+ return{id:ap.id,seed:ap.seed,sex:ap.sex,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:'garde',lv:ap.lv,xp:0,st:Object.assign({},ap.st),sp:ap.sp||0,nrg:ap.nrg,tech:ap.tech.slice(),post:null,pot:ap.pot,origin:'apprenti',sk:ap.sk,skp:ap.skp,skx:ap.skx,tr:ap.tr};
 }

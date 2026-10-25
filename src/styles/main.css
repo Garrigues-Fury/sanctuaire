@@ -475,3 +475,11 @@ nav.tabs button{font-size:.68rem}
 .vol.off{opacity:.45}
 .vol b{color:var(--gold-hi)}
 .plan-out{display:grid;gap:3px;padding:8px 10px;border:1px solid rgba(232,196,106,.18);border-radius:10px;background:rgba(0,0,0,.18)}
+/* cartes de compétences */
+.skgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin-bottom:8px}
+.skc{position:relative;overflow:hidden;display:grid;gap:2px;padding:7px 8px 9px;border-radius:9px;border:1px solid var(--fc);background:linear-gradient(160deg,color-mix(in srgb,var(--fc) 22%,transparent),rgba(0,0,0,.25));font-size:.78rem;line-height:1.2}
+.skc b{color:var(--marble)}
+.skc small{color:var(--fc);font-weight:700}
+.skc i{position:absolute;left:0;bottom:0;height:3px;background:var(--fc)}
+.skc.wip{opacity:.8;border-style:dashed}
+.skc.lock{opacity:.4;border-style:dashed;filter:grayscale(.6)}

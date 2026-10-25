@@ -12,6 +12,8 @@ import { ITEM_TRADE, PAIR_E, TRAININGS, acceptChance, canTrain, pairPartners, re
 import { compat, compatLabel } from '../core/social.js';
 import { PROG, PROG_DEF, ensureSchedules, medMult, perDay, prog, setProg, studyMult } from '../core/program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity, bestArmors } from '../core/armor.js';
+import { FAMILIES, FUND, SKILLS, SPEED, specReq } from '../core/data/skills.js';
+import { ensureSkills, grantSkill, hasSkill, progressOf, skillLevel, targetArmor } from '../core/skills.js';
 import { APLAN, KPLAN, apHelpF, apTrainF, isMaster, jobF, plan, selfF, setShare, teachF, timeMult, timeWhy } from '../core/schedule.js';
 import { CONS, CONS_BY, EKEYS, ELEM, RANKS, RANK_MULT, SIGNS, armorLow, armorName, de } from '../core/data/world.js';
 import { cardOf, duelAvailable, duelLevel, ensureDuel, godState, levelMult, myStart, startDuel } from '../core/duel.js';
@@ -94,7 +96,7 @@ export function guardModal(id){return()=>{const g=(S.guards||[]).find(x=>x.id===
  let h=flashHtml()+'<div class="sheet-head">'+ptImg(g,'garde',true)+'<div class="main"><h2>'+esc(g.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="chip garde">Garde</span>'+signChip(g.sign)+sexChip(g)+'</div><div class="hint">'+(g.post?'En poste : '+esc(postName(g.post)):'Sans poste')+'</div></div></div>';
  h+=persoBlock(g);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+g.lv+'</b> · défense '+fmt(power(g,'garde'))+'</div>'+bar(g.xp/(need(g.lv)*1.5)*100)+nrgBar(g)+'</div>'+statsHtml(g,'g')+itemUse(g,'g');
- h+=progBlock(g,'g')+trainingBlock(g,'g')+selfWork(g,'g')+friendBlock(g);
+ h+=progBlock(g,'g')+skillsBlock(g,'g')+trainingBlock(g,'g')+selfWork(g,'g')+friendBlock(g);
  h+='<div class="sec-h"><h2>Poste</h2></div><div class="posts">';
  h+=SIGNS.map((s,i)=>'<button class="opt'+(g.post==='h'+i?' sel':'')+'" data-act="post:'+g.id+':h'+i+'"><b><span class="sign">'+s.s+'</span> '+s.n+'</b><span class="d">déf. '+fmt(defenseOf('h'+i))+'</span></button>').join('');
  h+=POSTS.map(p=>'<button class="opt'+(g.post===p?' sel':'')+'" data-act="post:'+g.id+':'+p+'"><b>'+esc(postName(p).replace(/^./,c=>c.toUpperCase()))+'</b><span class="d">déf. '+fmt(defenseOf(p))+'</span></button>').join('');
@@ -152,7 +154,23 @@ export function sexChip(p){return '<span class="chip" title="'+(p.sex==='F'?'Fem
 export function affHtml(af){const p=af.parts,bits=[];if(p.elem)bits.push('élément '+(p.elem>0?'+':'')+p.elem);bits.push('compétences +'+p.comp+' ('+af.keys.map(k=>STATN[k]).join(', ')+')');if(p.maitre)bits.push('maître +'+p.maitre);
  return '<b style="color:var(--'+(af.v>=70?'gold-hi':af.v>=45?'ok':af.v>=25?'marble':'bad')+')">'+affLabel(af.v)+' '+af.v+'</b> · '+bits.join(' · ');}
 // Les armures pressenties pour un personnage, avec leur état.
-export function foreseen(p,rank){const L=bestArmors(p,3,rank);return '<div class="list">'+L.map(({c,a})=>'<div class="item" style="grid-template-columns:minmax(0,1fr)"><div class="main"><div class="name">'+esc(armorName(c))+' '+armorState(c)+'</div><div class="sub">'+affHtml(a)+'</div></div></div>').join('')+'</div>';}
+export function foreseen(p,rank){const L=bestArmors(p,3,rank);return '<div class="list">'+L.map(({c,a})=>'<div class="item" style="grid-template-columns:minmax(0,1fr)"><div class="main"><div class="name">'+esc(armorName(c))+' '+armorState(c)+'</div><div class="sub">'+affHtml(a)+'</div><div class="sub">Exige : '+reqHtml(p,c)+'</div></div></div>').join('')+'</div>';}
+/* ---------- cartes de compétences ---------- */
+// Compétences exigées par une armure, cochées si le personnage les possède.
+export function reqHtml(p,c){return specReq(c).map(id=>(hasSkill(p,id)?'<span style="color:var(--ok)">✓ ':'<span style="color:var(--marble-dim)">○ ')+esc(SKILLS[id].n)+'</span>').join(' · ');}
+function skCard(p,s,note){const has=hasSkill(p,s.id),pr=progressOf(p,s.id),F=FAMILIES[s.fam];
+ return '<div class="skc'+(has?'':pr>0?' wip':' lock')+'" style="--fc:'+F.c+'"'+tip(s.n+' ('+F.n.toLowerCase()+') : '+s.d+(note?' '+note:''))+'><b>'+esc(s.n)+'</b><small>'+(has?'Niv. '+skillLevel(p,s.id):pr>0?Math.round(pr*100)+' %':(note?'verrouillée':'à découvrir'))+'</small>'+(has?'':'<i style="width:'+Math.round(pr*100)+'%"></i>')+'</div>';}
+export function skillsBlock(p,kind){
+ ensureSkills(p,kind);const nF=FUND.filter(s=>hasSkill(p,s.id)).length,tg=kind==='g'?null:targetArmor(p);
+ const RI={bronze:1,argent:2,or:3},m=kind==='a'?masterOf(p):null;
+ let h='<div class="sec-h"><h2>Compétences</h2><span class="aside">'+Object.keys(p.sk||{}).length+' cartes</span></div>';
+ h+='<p class="hint">Fondamentales : '+nF+' / 8. Elles se découvrent avec le temps d’entraînement, selon les aptitudes et le maître ; elles montent ensuite de niveau avec l’XP. Touchez une carte pour la lire.</p>';
+ h+='<div class="skgrid">'+FUND.map(s=>skCard(p,s)).join('')+'</div>';
+ h+='<div class="skgrid">'+SPEED.map(s=>skCard(p,s,hasSkill(p,s.id)?'':kind==='a'&&(!m||RI[m.rank]<RI[s.rank])?'Il faut un maître '+(s.rank==='or'?'d’or':s.rank==='argent'?'d’argent ou d’or':'chevalier')+' pour la découvrir.':kind!=='a'?'Elle se découvre en s’entraînant à deux avec un chevalier de ce rang.':'')).join('')+'</div>';
+ const spec=Object.keys(SKILLS).filter(id=>!/^[FV]\d$/.test(id)&&(hasSkill(p,id)||(p.skp&&p.skp[id])));
+ if(tg)specReq(tg).forEach(id=>{if(!spec.includes(id))spec.push(id);});
+ if(spec.length)h+=(tg?'<p class="hint">Spécifiques, dont celles de l’'+esc(armorLow(tg))+' visée :</p>':'')+'<div class="skgrid">'+spec.map(id=>skCard(p,SKILLS[id])).join('')+'</div>';
+ return h;}
 export function roleChip(k){const t=plan(k);let h=k.role?'<span class="chip role '+k.role+'">'+ROLES[k.role].n+' '+t.job+' %</span>':'';
  if(t.dis>0)h+='<span class="chip">Maître '+t.dis+' %</span>';
  if(t.self>0||!h)h+='<span class="chip">Entraînement '+t.self+' %</span>';return h;}
@@ -429,7 +447,7 @@ export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';
  const intro={or:'Seul un natif '+de(SIGNS[c.sign||0].n)+' peut prétendre à cette armure.',argent:'Une armure d’argent, pour un apprenti de niveau '+TRIAL_LV.argent+' au moins.',bronze:'Une armure de bronze, la première marche des chevaliers.'}[c.rank];
  let h='<div><h2 class="mh">'+esc(armorName(c))+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+rankChip(c.rank)+'<span class="chip el-'+c.el+'">'+ELEM[c.el]+'</span>'+armorState(c)+'</div></div>';
  if(img)h+='<figure class="fullbody"><img class="'+(s==='brisee'?'broken':'')+'" src="'+img+'" alt="" width="400" height="600">'+(s==='brisee'?'<figcaption>Telle qu’elle sera une fois restaurée. Pour l’instant, elle gît en morceaux.</figcaption>':'')+'</figure>';
- h+='<p class="hint">'+intro+'</p>';
+ h+='<p class="hint">'+intro+'</p><p class="hint">Compétences exigées : les 8 fondamentales, la vitesse '+({bronze:'Mach 1',argent:'Mach 5',or:'de la lumière'})[c.rank]+', et '+specReq(c).map(id=>SKILLS[id].n.toLowerCase()).join(', ')+'.</p>';
  if(s==='brisee')h+='<button class="btn ghost" data-act="tab:armures">Retour à l’atelier des armures</button>';
  return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
@@ -440,7 +458,7 @@ export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance '+fmt(power(k,k.rank))+'</div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+statsHtml(k,'k');
  h+=itemUse(k,'k');
  h+='<div class="hint">Techniques : '+(k.tech.length?k.tech.map(esc).join(' · '):'aucune')+'</div>';
- h+=planBlock(k,'k')+progBlock(k,'k')+trainingBlock(k,'k')+selfWork(k,'k')+friendBlock(k);
+ h+=planBlock(k,'k')+progBlock(k,'k')+skillsBlock(k,'k')+trainingBlock(k,'k')+selfWork(k,'k')+friendBlock(k);
  h+='<div class="sec-h"><h2>Métier</h2></div><div class="opts">';
  h+='<button class="opt'+(k.role===null?' sel':'')+'" data-act="role:'+k.id+':none"><b>Aucun métier</b><span class="d">Tout son temps va à ses disciples et à son entraînement.</span></button>';
  const p=pope();
@@ -461,7 +479,7 @@ export function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)re
  if(a.cd>S.gt&&(S.items.onguent||0)>0)h+='<button class="btn sm ghost" data-act="onguent:'+a.id+'">Appliquer un onguent : fin du repos · '+S.items.onguent+' en réserve</button>';
  h+='<div class="hint">Techniques : '+(a.tech.length?a.tech.map(esc).join(' · '):'aucune (première au niveau 10)')+'</div>';
  if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Réglez son temps ci-dessous. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
- h+=planBlock(a,'a')+progBlock(a,'a')+trainingBlock(a,'a')+selfWork(a,'a')+friendBlock(a);
+ h+=planBlock(a,'a')+progBlock(a,'a')+skillsBlock(a,'a')+trainingBlock(a,'a')+selfWork(a,'a')+friendBlock(a);
  h+='<div class="sec-h"><h2>Maître</h2></div><div class="opts">';
  const masters=S.knights;
  h+='<p class="hint">Tout chevalier peut former jusqu’à 3 disciples, selon le temps qu’il leur consacre (sa fiche, « Emploi du temps »).</p>';
@@ -484,7 +502,7 @@ export function trialModal(id){return()=>{const a=S.aps.find(x=>x.id===id)||S.kn
  let h='<div class="sheet-head">'+ptImg(a,kn?a.rank:null)+'<div class="main"><h2>Épreuve de '+esc(a.name)+'</h2><div class="hint">Niveau '+a.lv+' · '+signChip(a.sign)+'</div></div></div>';
  if(!avail.length)return h+'<div class="empty">Aucune armure restaurée n’attend de porteur. Restaurez-en une à l’Atelier des armures.</div>';
  h+='<p class="hint">Une armure n’accepte que ceux avec qui elle a une affinité : l’élément du signe, les compétences travaillées et les maîtres qui les ont formés. L’argent et l’or exigent des personnages très doués. Le caractère compte aussi.</p><div class="opts">';
- avail.forEach(c=>{const e=trialEval(a,c),af=e.af||armorAffinity(a,c);h+='<button class="opt" data-act="trial:'+a.id+':'+c.k+'"'+(e.ok?'':' disabled')+'><b>'+armorName(c)+'</b><span class="chip '+c.rank+'">'+(e.ok?Math.round(e.ch*100)+' %':RANKS[c.rank])+'</span><span class="d">'+affHtml(af)+(e.ok?'':'<br>'+esc(e.why))+'</span></button>';});
+ avail.forEach(c=>{const e=trialEval(a,c),af=e.af||armorAffinity(a,c);h+='<button class="opt" data-act="trial:'+a.id+':'+c.k+'"'+(e.ok?'':' disabled')+'><b>'+armorName(c)+'</b><span class="chip '+c.rank+'">'+(e.ok?Math.round(e.ch*100)+' %':RANKS[c.rank])+'</span><span class="d">'+affHtml(af)+'<br>Exige : '+reqHtml(a,c)+(e.ok&&e.resonance&&e.resonance.length?'<br><span style="color:var(--gold-hi)">Par résonance, l’armure lui transmettra : '+e.resonance.map(id=>esc(SKILLS[id].n.toLowerCase())).join(', ')+'</span>':'')+(e.ok?'':'<br>'+esc(e.why))+'</span></button>';});
  return h+'</div>';};}
 export function absenceModal(dt,before,sum){return()=>{
  let h='<div><h2 class="mh">Pendant votre absence</h2><p class="hint">'+dur(dt)+' se sont écoulées au Sanctuaire.</p></div>';
@@ -595,16 +613,17 @@ export function act(a){
  case'trialOpen':lastTrial=null;openModal(trialModal(+x));return;
  case'trial':{const kp=S.knights.find(q=>q.id===+x),c0=CONS_BY[y];
   if(kp&&c0){const e=trialEval(kp,c0);if(!e.ok)return;const win=Math.random()<e.ch;const cd=ql(kp,'orgueilleux')?24:12;
-   if(win){const old=CONS_BY[kp.cons];S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
+   if(win){(e.resonance||[]).forEach(id=>grantSkill(kp,id));const old=CONS_BY[kp.cons];S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
     if(c0.rank==='or'&&!S.houses[c0.sign])S.houses[c0.sign]=1;log('★ '+kp.name+' est promu'+G(kp,'e')+' : '+armorLow(c0)+' ! L’'+armorLow(old)+' attend un nouveau porteur.');}
    else{kp.cd=S.gt+cd;log(kp.name+' échoue à l’épreuve de l’'+armorLow(c0)+'.');}
    lastTrial={id:kp.id,win,name:kp.name,rank:c0.rank,cons:c0.n,sex:kp.sex,cd};save();render();return;}
   const ap=S.aps.find(q=>q.id===+x),c=CONS_BY[y];if(!ap||!c)return;const e=trialEval(ap,c);if(!e.ok)return;
   const win=Math.random()<e.ch;const cd=ql(ap,'orgueilleux')?24:12;
-  if(win){S.aps.splice(S.aps.indexOf(ap),1);S.armors[c.k]='portee';
-   const kn={id:ap.id,seed:ap.seed,sex:ap.sex,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:c.rank,cons:c.k,lv:ap.lv,xp:0,st:Object.assign({},ap.st),role:null,tech:ap.tech.concat([SIG_WORDS[ap.seed%SIG_WORDS.length]+' '+(c.rank==='or'?'d’or':de(c.n))]),origin:'forme',pot:ap.pot,sp:ap.sp||0,nrg:ap.nrg,tr:ap.tr,tacc:ap.tacc,mentors:(ap.mentors||[]).concat(ap.master!=null?[ap.master]:[])};
+  if(win){(e.resonance||[]).forEach(id=>grantSkill(ap,id));S.aps.splice(S.aps.indexOf(ap),1);S.armors[c.k]='portee';
+   const kn={id:ap.id,seed:ap.seed,sex:ap.sex,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:c.rank,cons:c.k,lv:ap.lv,xp:0,st:Object.assign({},ap.st),role:null,tech:ap.tech.concat([SIG_WORDS[ap.seed%SIG_WORDS.length]+' '+(c.rank==='or'?'d’or':de(c.n))]),origin:'forme',pot:ap.pot,sp:ap.sp||0,nrg:ap.nrg,tr:ap.tr,tacc:ap.tacc,sk:ap.sk,skp:ap.skp,skx:ap.skx,mentors:(ap.mentors||[]).concat(ap.master!=null?[ap.master]:[])};
    S.knights.push(kn);if(c.rank==='or'&&!S.houses[c.sign])S.houses[c.sign]=1;
-   log('★ '+ap.name+' obtient l’'+armorLow(c)+' et devient chevalier de '+RANKS[c.rank].toLowerCase()+' !');}
+   log('★ '+ap.name+' obtient l’'+armorLow(c)+' et devient chevalier de '+RANKS[c.rank].toLowerCase()+' !');
+   if((e.resonance||[]).length)log('Par résonance, l’armure transmet à '+ap.name+' : '+e.resonance.map(id=>SKILLS[id].n.toLowerCase()).join(', ')+'.');}
   else{ap.xp*=Math.min(1,.33*ql(ap,'perseverant'));ap.cd=S.gt+cd;log(ap.name+' échoue à l’épreuve de l’'+armorLow(c)+'.');}
   lastTrial={id:ap.id,win,name:ap.name,rank:c.rank,cons:c.n,sex:ap.sex,cd};save();render();return;}
  case'restore':{const c=CONS_BY[x];const cost=ARMOR_COST[c.rank];if(S.forgeJob||S.b.forge<ARMOR_FORGE[c.rank]||bestSmith()<ARMOR_SMITH[c.rank]||!afford(cost)||S.armors[x]!=='brisee')return;pay(cost);S.forgeJob={cons:x,work:ARMOR_WORK[c.rank],prog:0};log('L’atelier commence la restauration de l’'+armorLow(c)+'.');break;}

@@ -11,6 +11,8 @@ import { tickSocial } from './social.js';
 import { apHelpF, apTrainF, isMaster, jobF, selfF, teachF, timeMult } from './schedule.js';
 import { medMult, studyMult, trainStats } from './program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity } from './armor.js';
+import { ensureSkills, grantSkill, skillBonus, skillCheck, tickSkills } from './skills.js';
+import { SKILLS } from './data/skills.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
 
@@ -94,7 +96,7 @@ export function levelUpAp(ap,sum){
  ap.xp-=need(ap.lv);ap.lv++;
  ap.sp=(ap.sp||0)+2+Math.floor(ap.pot/30);bonusStats(ap);if(ap.awk)ap.st.co++;
  let msg='';
- if(ap.lv===5&&!ap.awk){ap.awk=true;ap.st.co+=5;msg=ap.name+' a senti brûler son cosmos pour la première fois.';}
+ if(ap.lv===5&&!ap.awk){ap.awk=true;ap.st.co+=5;grantSkill(ap,'F1');msg=ap.name+' a senti brûler son cosmos pour la première fois.';}
  const ti=[10,20,30].indexOf(ap.lv);
  if(ti>=0){const tn=TECH[SIGNS[ap.sign].el][ti];ap.tech.push(tn);msg=ap.name+' découvre une technique : '+tn+'.';gainQuality(ap,sum);}
  if(msg){log(msg);sum&&sum.ev.push(msg);}
@@ -112,6 +114,9 @@ export function step(h,sum){
  S.knights.forEach(k=>{k.xp+=knightRate(k)*h;let g=0;while(k.xp>=need(k.lv)*1.5&&g++<50)levelUpKnight(k);});
  (S.guards||[]).forEach(gd=>{gd.xp+=guardRate(gd)*h;let g=0;while(gd.xp>=need(gd.lv)*1.5&&g++<50){gd.xp-=need(gd.lv)*1.5;gd.lv++;gd.sp=(gd.sp||0)+2;bonusStats(gd);S._dirty=true;}});
  const am=arena();people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);trainStats(p,h,am);});
+ // compétences : découvertes et niveaux
+ const skf=(p,kind,rate,m)=>{ensureSkills(p,kind);tickSkills(p,h,rate,m).forEach(sk=>{const msg=p.name+' découvre une compétence : '+sk.n+'.';log(msg);sum?sum.ev.push(msg):emit('milestone',p.id);S._dirty=true;});};
+ S.aps.forEach(ap=>skf(ap,'a',xpRate(ap),masterOf(ap)));S.knights.forEach(k=>skf(k,'k',knightRate(k),null));(S.guards||[]).forEach(g=>skf(g,'g',guardRate(g),null));
  S.workers.forEach(w=>{if(!w.job)return;if(w.job==='forge'&&!S.forgeJob)return;if((w.job==='herbo'||w.job==='atelier')&&!S.craft[w.job].length)return;
   w.sxp+=h;while(w.skill<10&&w.sxp>=24*w.skill){w.sxp-=24*w.skill;w.skill++;if(w.skill===5&&w.job==='forge'){const m=w.name+' est désormais maître forgeron. Les armures d’or ne lui résistent plus.';log(m);sum&&sum.ev.push(m);}S._dirty=true;}});
  if(S.forgeJob)S.forgeJob.prog+=forgeRate()*h;
@@ -184,6 +189,11 @@ export function trialEval(a,c){
  if(af.v<AFF_MIN[c.rank])return{ok:false,af,why:'Affinité '+affLabel(af.v).toLowerCase()+' ('+af.v+'/100, il faut '+AFF_MIN[c.rank]+') : l’armure reste muette'};
  const el=c.el===SIGNS[a.sign].el;
  const tr=-.04*ql(a,'fougueux')+.04*ql(a,'patient')+.03*ql(a,'orgueilleux')-.05*fl(a,'impulsif')-(c.rank!=='bronze'?.06*fl(a,'peureux'):0);
- const ch=clamp(.32+.04*(a.lv-TRIAL_LV[c.rank])+af.v/250+a.st.co/300+tr+cb('TRIAL')/100,.1,.95);
- return{ok:true,ch,el,af};
+ // compétences : fondamentales et vitesse obligatoires ; une forte affinité fait transmettre les spécifiques manquantes
+ ensureSkills(a,knight?'k':'a');const ck=skillCheck(a,c,af.v);
+ if(ck.missF.length)return{ok:false,af,ck,why:'Compétences fondamentales à découvrir : '+ck.missF.map(id=>SKILLS[id].n).join(', ')};
+ if(!ck.speed)return{ok:false,af,ck,why:'Il faut d’abord atteindre la vitesse requise : '+SKILLS[ck.speedId].n};
+ if(!ck.resonance)return{ok:false,af,ck,why:'Compétences spécifiques manquantes : '+ck.missSpec.map(id=>SKILLS[id].n).join(', ')+(af.v<70?' (dès une affinité de 70, l’armure en transmet une par résonance)':'')};
+ const ch=clamp(.32+.04*(a.lv-TRIAL_LV[c.rank])+af.v/250+a.st.co/300+skillBonus(a,c)+tr+cb('TRIAL')/100,.1,.95);
+ return{ok:true,ch,el,af,ck,resonance:ck.resonance};
 }

@@ -4,6 +4,7 @@
 import { QUAL, fl, ql } from './data/traits.js';
 import { guardRate, knightRate, levelUpAp, levelUpKnight, need, xpRate } from './rules.js';
 import { isMaster } from './schedule.js';
+import { learnFrom } from './skills.js';
 import { S } from './state.js';
 
 export const TRAININGS=[
@@ -85,6 +86,7 @@ export function trainTogether(p,q,compatV){
  let msg=p.name+' et '+q.name+' s’entraînent ensemble : '+Math.round(h)+' h d’entraînement chacun'+(rankW(hi)>rankW(lo)?' (et un peu plus pour '+lo.name+')':'')+', amitié '+(S.friend[key]||0)+'/10.';
  // un chevalier peut transmettre une qualité à un apprenti
  if(kindOf(lo)==='a'&&kindOf(hi)==='k'&&(lo.qual||[]).length<3&&Math.random()<.15){const t=hi.qual.filter(x=>!ql(lo,x.k));if(t.length){const x=t[Math.floor(Math.random()*t.length)];lo.qual.push({k:x.k,lv:1});msg+=' Au contact de '+hi.name+', '+lo.name+' devient '+QUAL[x.k].n.toLowerCase()+'.';}}
+ const lf=learnFrom(lo,hi);if(lf.length)msg+=' '+lo.name+' découvre : '+lf.map(s=>s.n.toLowerCase()).join(', ')+'.';
  return{ok:true,msg};
 }
 // Lance une séance. Renvoie le message à afficher.
