@@ -9,6 +9,8 @@ import { S, setS } from '../src/core/state.js';
 
 beforeEach(() => { setS(null); newGame(); recomputeCB(); S.knights[0].role = 'pope'; ensureDuel(); });
 const gems = P => Object.values(P.gems).reduce((a, b) => a + b, 0);
+// les règles se testent mains vides (les gemmes de départ dépendent du nombre de survivants)
+const empty = P => { Object.keys(P.gems).forEach(k => P.gems[k] = 0); };
 
 describe('cartes', () => {
   it('102 cartes dont 10 artefacts, chacune avec un nom et un coût', () => {
@@ -21,7 +23,7 @@ describe('cartes', () => {
 
 describe('règles', () => {
   it('prendre : 3 différentes ou 2 identiques, pas de joker, limite de 10', () => {
-    const m = startDuel();
+    const m = startDuel(); empty(m.me);
     expect(canTake(m, m.me, ['feu', 'eau', 'air'])).toBe(true);
     expect(canTake(m, m.me, ['feu', 'feu', 'eau'])).toBe(false);
     expect(canTake(m, m.me, ['or'])).toBe(false);
@@ -39,7 +41,7 @@ describe('règles', () => {
     expect(m.rows[1]).toHaveLength(4);
   });
   it('réserver donne un cosmos d’or, 3 réserves au plus', () => {
-    const m = startDuel();
+    const m = startDuel(); empty(m.me);
     for (let i = 0; i < 3; i++) expect(reserve('me', m.rows[2][0])).toBe(true);
     expect(m.me.gems.or).toBe(3);
     expect(reserve('me', m.rows[2][0])).toBe(false);

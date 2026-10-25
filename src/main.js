@@ -18,7 +18,7 @@ import { installMapTips } from './ui/hub.js';
 import { keepUnreadable, snapshotOnUpdate } from './core/slots.js';
 import { ensureSchedules } from './core/program.js';
 import { sfx, unlockAudio } from './audio/audio.js';
-import { absenceModal, installClicks, liveUpdate, modalFn, onMapTap, openModal, render } from './ui/app.js';
+import { absenceModal, diffModal, installClicks, liveUpdate, modalFn, onMapTap, openModal, render } from './ui/app.js';
 
 // Rattrape un écart de temps réel dtReal (en heures) et montre le résumé d'absence s'il dépasse 6 minutes de jeu.
 function catchUp(dtReal){
@@ -50,6 +50,8 @@ function start(){
  const enter=()=>{unlockAudio();sfx('open');title.classList.add('out');setTimeout(()=>{title.hidden=true;},600);};
  title.addEventListener('click',enter);title.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')enter();});
  render();
+ // première partie : on choisit la difficulté (la partie a été créée en Moyen en attendant)
+ if(fresh)openModal(diffModal);
  if(!fresh){const dt=(Date.now()-S.lastReal)/36e5;S.lastReal=Date.now();if(dt>.01)catchUp(dt);}
  setInterval(tick,1000);
  // Au retour sur l'appli, on rattrape tout de suite au lieu d'attendre la seconde suivante.

@@ -581,3 +581,12 @@ nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:el
 .c3-stage canvas{display:block;width:100%!important;height:auto!important}
 .c3-wait{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--marble-dim);gap:6px}
 .c3-sl{display:grid;gap:10px;max-width:440px;width:100%;margin:0 auto}
+
+/* choix de la difficulté */
+.diffs{display:grid;gap:8px}
+.diff{display:grid;gap:4px;text-align:left;padding:12px;min-height:44px;border-radius:12px;border:1px solid rgba(246,212,138,.3);background:var(--night-2);color:var(--marble);font:inherit;cursor:pointer;touch-action:manipulation}
+.diff:hover,.diff:focus-visible{border-color:var(--gold);outline:none}
+.diff:active{transform:scale(.98)}
+.diff b{font-family:'Marcellus SC',serif;font-size:1.1rem;color:var(--gold-hi)}
+.diff .ranks{font-size:.9rem}.diff small{font-size:.8rem;color:var(--marble-dim)}
+.diff .r-or{color:#f2c94c}.diff .r-argent{color:#cfd8e3}.diff .r-bronze{color:#d39a62}

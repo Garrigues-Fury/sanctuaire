@@ -84,7 +84,7 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
    - Les villageois font la navette entre leur site et les réserves.
    - Forgerons et artisans travaillent sur place. Les apprentis s'entraînent dans l'arène et les maîtres les surveillent. Les gardes sont à leur poste.
    - Toucher un site ouvre sa gestion.
-4. **Survivants au départ** : 1 chevalier d'or, 1 d'argent, 2 de bronze. Rôles possibles : Grand Pope (unique), Recruteur, Maître (3 apprentis), Intendant, Maître d'œuvre, ou entraînement personnel.
+4. **Survivants au départ, selon la difficulté choisie en début de partie (demande de Seba du 2026-10-25, `DIFFS` dans `src/core/people.js`)** : Facile 4 or, 6 argent, 10 bronze ; Moyen 3 or, 4 argent, 8 bronze ; Difficile 2 or, 3 argent, 5 bronze. Le choix s'affiche au premier lancement (Moyen si on ferme la fenêtre) et dans Réglages › Nouvelle partie. Chaque chevalier mange 2 vivres par heure : les champs, les villageois et les réserves de départ suivent la difficulté pour que les vivres restent positives (environ +76/h en Facile, +33 en Moyen, +19 en Difficile). Chaque chevalier d'or relève sa maison au niveau 1. Rôles possibles : Grand Pope (unique), Recruteur, Maître (3 apprentis), Intendant, Maître d'œuvre, ou entraînement personnel.
 5. **Apprentis**
    - Profil : signe, élément, statistiques (force, vitesse, dextérité, endurance, psychokinésie, cosmos ; les deux nouvelles ajoutées le 2026-10-24 à la demande de Seba), potentiel caché (environ 1 % peuvent atteindre l'or), impression visible approximative.
    - Biographie de 3 lignes, nationalité.

@@ -36,7 +36,7 @@ describe('migrate()', () => {
     expect(m.v).toBe(VERSION);
     expect(m.workers).toHaveLength(5);
     expect(m.houses).toHaveLength(12);
-    expect(m.houses.reduce((a, b) => a + b, 0)).toBe(1); // la maison du chevalier d'or survivant
+    expect(m.houses.reduce((a, b) => a + b, 0)).toBe(m.knights.filter(k => k.rank === 'or').length); // les maisons des chevaliers d'or survivants
     m.knights.concat(m.pending).forEach(p => {
       expect(p.nat).toBe('Grèce');
       expect(p.qual[0]).toEqual({ k: 'fougueux', lv: 1 });

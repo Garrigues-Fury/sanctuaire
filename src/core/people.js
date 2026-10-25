@@ -46,25 +46,39 @@ export function makeWorker(job){
  const seed=(Math.random()*2**31)|0;const p=makePerson(seed,Math.random()<.75?'Grèce':null);
  return{id:uid(),seed,sex:p.sex,nat:p.nat,name:p.name,sign:p.sign,job:job||null,skill:1,sxp:0};
 }
-export function newGame(){
- setS({v:VERSION,idc:1,created:Date.now(),lastReal:Date.now(),gt:0,speed:1,
-  res:{vivres:320,marbre:220,metal:60,savoir:0},items:{herbes:10},
-  b:{champs:1,carriere:1,mine:1,biblio:0,jardin:0,herbo:0,atelier:0,arene:1,dortoirs:1,entrepot:1,forge:0,artisans:0},
+// Difficulté choisie au début d'une partie (demande de Seba du 2026-10-25) : nombre de survivants par rang.
+// Chaque chevalier mange 2 vivres par heure : les champs et les villageois du départ suivent, pour éviter une famine d'entrée.
+export const DIFFS={
+ facile:{n:'Facile',or:4,argent:6,bronze:10,champs:2,artisans:1,fields:4,res:{vivres:600,marbre:400,metal:140,savoir:40}},
+ moyen:{n:'Moyen',or:3,argent:4,bronze:8,champs:2,artisans:0,fields:2,res:{vivres:450,marbre:300,metal:100,savoir:20}},
+ dur:{n:'Difficile',or:2,argent:3,bronze:5,champs:1,artisans:0,fields:3,res:{vivres:320,marbre:220,metal:60,savoir:0}}
+};
+const NUM=['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix'];
+export function newGame(diff='moyen'){
+ const D=DIFFS[diff]||DIFFS.moyen;
+ setS({v:VERSION,idc:1,created:Date.now(),lastReal:Date.now(),gt:0,speed:1,diff:DIFFS[diff]?diff:'moyen',
+  res:Object.assign({},D.res),items:{herbes:10},
+  b:{champs:D.champs,carriere:1,mine:1,biblio:0,jardin:0,herbo:0,atelier:0,arene:1,dortoirs:1,entrepot:1,forge:0,artisans:D.artisans},
   houses:new Array(12).fill(0),tools:{},craft:{herbo:[],atelier:[]},friend:{},fp:3,fpAcc:0,guards:[],
   jobs:[],forgeJob:null,knights:[],aps:[],pending:[],workers:[],recruitAcc:0,armors:{},log:[],flags:{},tab:'sanctuaire'});
  CONS.forEach(c=>S.armors[c.k]='brisee');
- const goldSign=Math.floor(Math.random()*12);
- const silvers=CONS.filter(c=>c.rank==='argent'),bronzes=CONS.filter(c=>c.rank==='bronze').slice().sort(()=>Math.random()-.5);
- const sv=silvers[Math.floor(Math.random()*silvers.length)];
- [makeKnight('or','or-'+goldSign,38),makeKnight('argent',sv.k,21),makeKnight('bronze',bronzes[0].k,12),makeKnight('bronze',bronzes[1].k,10)].forEach(k=>{S.knights.push(k);S.armors[k.cons]='portee';});
- S.houses[goldSign]=1;
- S.friend[fkey(S.knights[0].id,S.knights[1].id)]=3;S.friend[fkey(S.knights[2].id,S.knights[3].id)]=2;
- S.armors[bronzes[2].k]='restauree';S.armors[bronzes[3].k]='restauree';
- ['champs','champs','carriere','carriere','mine'].forEach(j=>S.workers.push(makeWorker(j)));
+ const shuf=a=>a.slice().sort(()=>Math.random()-.5);
+ const golds=shuf(CONS.filter(c=>c.rank==='or')),silvers=shuf(CONS.filter(c=>c.rank==='argent')),bronzes=shuf(CONS.filter(c=>c.rank==='bronze'));
+ const lv=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+ golds.slice(0,D.or).forEach(c=>S.knights.push(makeKnight('or',c.k,lv(32,40))));
+ silvers.slice(0,D.argent).forEach(c=>S.knights.push(makeKnight('argent',c.k,lv(17,24))));
+ bronzes.slice(0,D.bronze).forEach(c=>S.knights.push(makeKnight('bronze',c.k,lv(8,14))));
+ S.knights.forEach(k=>{S.armors[k.cons]='portee';if(k.rank==='or')S.houses[CONS_BY[k.cons].sign]=1;});
+ // compagnons d'armes : les survivants se connaissent deux à deux
+ for(let i=0;i+1<S.knights.length;i+=2)S.friend[fkey(S.knights[i].id,S.knights[i+1].id)]=2+(i===0?1:0);
+ const found=bronzes.slice(D.bronze,D.bronze+2);found.forEach(c=>S.armors[c.k]='restauree');
+ const jobs=new Array(D.fields).fill('champs').concat(['carriere','carriere','mine']);
+ jobs.forEach(j=>S.workers.push(makeWorker(j)));
  S.pending.push(makeApprentice(),makeApprentice());S.perm=[];S.artefacts=[];S.faveur=0;S.gods={};S.duel={lastDate:'',lastGt:-999};S.match=null;
- log('La guerre sainte est finie. Le Sanctuaire n’est plus que ruines, et quatre chevaliers seulement ont survécu.');
- log('Cinq villageois sont montés aider aux champs, à la carrière et à la mine.');
- log('Deux armures de bronze ont été retrouvées intactes sous les décombres : '+bronzes[2].n+' et '+bronzes[3].n+'.');
+ const n=S.knights.length,say=x=>NUM[x]||String(x);
+ log('La guerre sainte est finie. Le Sanctuaire n’est plus que ruines, et '+n+' chevaliers seulement ont survécu : '+say(D.or)+' d’or, '+say(D.argent)+' d’argent, '+say(D.bronze)+' de bronze.');
+ log(say(jobs.length).replace(/^./,c=>c.toUpperCase())+' villageois sont montés aider aux champs, à la carrière et à la mine.');
+ if(found.length)log('Deux armures de bronze ont été retrouvées intactes sous les décombres : '+found.map(c=>c.n).join(' et ')+'.');
  log('Deux enfants se présentent aux portes. Ils veulent devenir chevaliers.');
 }
 export function makeGuardFrom(ap){

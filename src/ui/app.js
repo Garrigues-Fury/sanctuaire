@@ -29,7 +29,7 @@ import { TECHS } from '../core/builders.js';
 import { deleteSlot, listSlots, saveSlot, slotCode, slotGame } from '../core/slots.js';
 import { LORE, loreLevel, loreMult, loreNeed, researchRate } from '../core/research.js';
 import { careF, restHours, survivalChance, survivalOf, vieLevel } from '../core/medicine.js';
-import { makeGuardFrom, makeWorker, newGame } from '../core/people.js';
+import { DIFFS, makeGuardFrom, makeWorker, newGame } from '../core/people.js';
 import { CB, DUO_E, HOUSE_MAX, POSTS, SESS, SESS_E, affinity, afford, apsAt, arena, artReady, bestSmith, bonusOf, byId, cap, capacity, cardPrice, cb, consScore, cosmosLabel, costOf, craftRate, defenseOf, elemScores, emax, fkey, forgeRate, friendBonus, friendLv, friendsOf, guardRate, have, houseCost, houseTime, knightRate, knightsWith, levelUpAp, masterOf, need, pay, people, pope, postName, power, rates, recomputeCB, recruitInterval, reqOk, research, reqText, sanctPower, siteProd, siteSlots, slotsFor, timeOf, trialEval, usedSlots, villageCap, workerCost, workersAt, xpRate } from '../core/rules.js';
 import { exportCode, importCode, save } from '../core/save.js';
 import { HADES_H, KEY, POSEIDON_H, S, log, setS } from '../core/state.js';
@@ -37,7 +37,7 @@ import { G, ROMAN, clamp, dur, esc, fmt, fmt1 } from '../core/util.js';
 import { syncAgents } from '../map/agents.js';
 import { mountMap } from '../map/map.js';
 import { setSound, sfx, soundPrefs, unlockAudio } from '../audio/audio.js';
-import { startExpedition, startHomeScene } from '../core/expeditions.js';
+import { ensureWorld, startExpedition, startHomeScene } from '../core/expeditions.js';
 import { eventModal, viewMonde } from './world.js';
 import { openScene } from './scene.js';
 import { fullBody, portrait } from './portraits.js';
@@ -639,13 +639,21 @@ export function savesModal(){
    '<button class="btn sm" data-act="slotarm:load:'+e.id+'">Charger</button><button class="btn sm ghost" data-act="slotcopy:'+e.id+'">Copier le code</button><button class="btn sm ghost" data-act="slotarm:del:'+e.id+'" aria-label="Supprimer '+esc(e.name)+'">Supprimer</button>')+'</div></div>').join('')+'</div>';
  return h+'<p class="hint">Charger une sauvegarde remplace la partie en cours. Pensez à sauvegarder celle-ci d’abord si vous voulez la garder. Pour passer d’un appareil à l’autre, copiez le code d’une sauvegarde et collez-le dans Réglages › Sauvegarde.</p>';
 }
+/* ---------- difficulté d'une nouvelle partie ---------- */
+const DIFF_TXT={facile:'Un Sanctuaire bien défendu, des vivres en abondance et un village déjà agrandi.',moyen:'L’équilibre prévu : assez de monde pour tout lancer, sans marge excessive.',dur:'Peu de survivants et des réserves maigres : chaque recrue compte.'};
+function diffChoices(){
+ return '<div class="diffs">'+Object.keys(DIFFS).map(k=>{const D=DIFFS[k];return '<button class="diff" data-act="newgame:'+k+'"><b>'+D.n+'</b><span class="ranks"><span class="r-or">'+D.or+' or</span> · <span class="r-argent">'+D.argent+' argent</span> · <span class="r-bronze">'+D.bronze+' bronze</span></span><small>'+DIFF_TXT[k]+'</small></button>';}).join('')+'</div>';
+}
+export function diffModal(){
+ return '<div><h2 class="mh">Nouvelle partie</h2><p class="hint">La guerre sainte est finie et le Sanctuaire est en ruines. Combien de chevaliers ont survécu ? Plus ils sont nombreux, plus le début est facile.</p></div>'+diffChoices()+'<p class="hint">Si vous fermez cette fenêtre, la partie commence en Moyen.</p>';
+}
 export function settingsModal(){
  let h='<div><h2 class="mh">Réglages</h2><p class="hint">'+(typeof __APP_VERSION__!=='undefined'?__APP_VERSION__:'développement')+' · partie commencée il y a '+dur((Date.now()-S.created)/36e5)+' (temps réel).</p></div>';
  const sp=soundPrefs();const vol=(k,n)=>'<label class="vol"><span>'+n+'</span><input type="range" min="0" max="100" step="5" value="'+Math.round(sp[k]*100)+'" data-vol="'+k+'"></label>';
  h+='<div class="sec"><div class="sec-h"><h2>Son</h2></div><div class="btns"><button class="btn sm'+(sp.on?'':' ghost')+'" data-act="sound:on">Son activé</button><button class="btn sm'+(sp.on?' ghost':'')+'" data-act="sound:off">Silence</button></div>'+vol('amb','Ambiance (vent, cigales, grillons)')+vol('sfx','Bruitages')+'</div>';
  h+='<div class="sec"><div class="sec-h"><h2>Vitesse du temps</h2></div><p class="hint">Le mode test accélère tout par 60 (1 minute = 1 heure de jeu) pour juger l’équilibrage. Revenez au temps normal pour jouer.</p><div class="btns"><button class="btn sm'+(S.speed===1?'':' ghost')+'" data-act="speed:1">Temps normal</button><button class="btn sm'+(S.speed===60?'':' ghost')+'" data-act="speed:60">Mode test ×60</button></div></div>';
  h+='<div class="sec"><div class="sec-h"><h2>Sauvegarde</h2></div><p class="hint">La partie est enregistrée dans ce navigateur. Copiez régulièrement le code ci-dessous et gardez-le dans une note : il permet de restaurer la partie si les données de Chrome sont effacées.</p><textarea id="saveIo" aria-label="Code de sauvegarde" spellcheck="false"></textarea><div class="btns"><button class="btn sm" data-act="exportSave">Générer et copier le code</button><button class="btn sm ghost" data-act="importSave">Charger le code collé</button></div>'+(ioMsg?'<p class="hint" style="color:var(--gold-hi)">'+esc(ioMsg)+'</p>':'')+'</div>';
- h+='<div class="sec"><div class="sec-h"><h2>Nouvelle partie</h2></div>'+(resetArmed?'<div class="banner bad">Toute la progression sera perdue. Confirmez-vous ?</div><div class="btns"><button class="btn sm danger" data-act="resetGo">Oui, tout recommencer</button><button class="btn sm ghost" data-act="resetCancel">Annuler</button></div>':'<button class="btn sm ghost" data-act="resetArm">Recommencer une partie</button>')+'</div>';
+ h+='<div class="sec"><div class="sec-h"><h2>Nouvelle partie</h2>'+(S.diff&&DIFFS[S.diff]?'<span class="aside">difficulté : '+DIFFS[S.diff].n.toLowerCase()+'</span>':'')+'</div>'+(resetArmed?'<div class="banner bad">Toute la progression sera perdue. Pensez à sauvegarder la partie en cours si vous voulez la garder. Choisissez la difficulté pour confirmer.</div>'+diffChoices()+'<div class="btns"><button class="btn sm ghost" data-act="resetCancel">Annuler</button></div>':'<button class="btn sm ghost" data-act="resetArm">Recommencer une partie</button>')+'</div>';
  return h;
 }
 
@@ -775,7 +783,7 @@ export function act(a){
  case'importSave':{const v=$('#saveIo').value.trim();const o=importCode(v);if(o){setS(o);recomputeCB();ensureSchedules();S.lastReal=Date.now();save();ioMsg='Partie chargée.';}else{ioMsg='Ce code n’est pas reconnu. Vérifiez qu’il a été collé en entier.';}break;}
  case'resetArm':resetArmed=true;break;
  case'resetCancel':resetArmed=false;break;
- case'resetGo':try{localStorage.removeItem(KEY);}catch(e){}newGame();recomputeCB();save();closeModal();render();return;
+ case'newgame':newGame(x);recomputeCB();ensureWorld();ensureDuel();ensureSchedules();resetArmed=false;save();closeModal();flash='';goTab('sanctuaire');render();window.scrollTo(0,0);return;
  }
  save();render();
 }
