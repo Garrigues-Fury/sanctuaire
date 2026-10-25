@@ -93,6 +93,11 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
         - **épreuve classique** pour les autres armures (chance de réussite).
       - **Résonance** : l'armure est vivante. Avec une affinité de 70, elle accepte un porteur à qui il manque une compétence spécifique et la lui transmet ; dès 85, elle les transmet toutes. Les fondamentales et la vitesse restent obligatoires.
       - À venir : quels maîtres transmettent le mieux quelles compétences, et les effets des niveaux en combat.
+10 bis. **Suivi des formations (demandé par Seba le 2026-10-25, `src/core/formation.js`, onglet Apprentis)** :
+    - Métier **Maître d'apprentissage** : il oriente les apprentis, révèle jusqu'où chacun peut aller (bronze, argent, or) et accélère leurs découvertes (jusqu'à +15 %).
+    - **Vue par disciple** : potentiel, fondamentales, vitesse ; répartition vers un maître en touchant un chevalier (lien de signe ou d'élément, compétences utiles, place sur 3) ; 3 armures pressenties avec les compétences exigées.
+    - **Vue par armure** : les candidats, prêts ou non, et le type d'épreuve.
+    - Dans les deux vues, **les maîtres qui peuvent guider** : les constellations dont l'armure maîtrise une compétence exigée (le Verseau pour le froid du Cygne). **En couleur** si un chevalier porte cette armure, **en gris** sinon. Il reste alors la résonance si l'affinité est très forte.
 11. **Gardes** : un apprenti qui a raté son épreuve ou qui est surpassé devient garde. Il est affecté à une maison, au village ou à un site, et sa valeur de défense comptera lors des attaques.
 12. **Lecture des astres**, le duel quotidien du Pope contre un dieu :
     - **Fréquence** : une partie par jour réel, toutes les 24 minutes en mode test. Il faut un Grand Pope en poste.

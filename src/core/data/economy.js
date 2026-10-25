@@ -43,6 +43,7 @@ export const ROLES={
  recruteur:{n:'Recruteur',d:'Parcourt le monde et ramène des candidats apprentis. Plus son cosmos est fort, plus il trouve vite.'},
  intendant:{n:'Intendant',d:'+15 % de production des ressources.'},
  oeuvre:{n:'Maître d’œuvre',d:'Dirige les artisans : chantiers 20 % plus rapides.'},
+ apprentissage:{n:'Maître d’apprentissage',d:'Oriente les apprentis vers leurs maîtres : révèle jusqu’où chacun peut aller (bronze, argent, or) et accélère leurs découvertes de compétences (jusqu’à +15 %).'},
  biblio:{n:'Chercheur',d:'Étudie les parchemins de la bibliothèque (à bâtir) : produit du savoir, davantage s’il est studieux.'}
 };
 export const ARMOR_COST={bronze:{metal:150,savoir:40},argent:{marbre:300,metal:700,savoir:250},or:{marbre:1500,metal:3000,savoir:1200}};

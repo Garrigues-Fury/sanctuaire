@@ -12,6 +12,7 @@ import { apHelpF, apTrainF, isMaster, jobF, selfF, teachF, timeMult } from './sc
 import { medMult, studyMult, trainStats } from './program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity } from './armor.js';
 import { ensureSkills, grantSkill, skillCheck, skillPower, tickSkills } from './skills.js';
+import { orientF } from './formation.js';
 import { SKILLS } from './data/skills.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
@@ -117,7 +118,9 @@ export function step(h,sum){
  const am=arena();people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);trainStats(p,h,am);});
  // compétences : découvertes et niveaux
  // lien : affinité de signe ou d'élément avec le maître, et amitiés
- const skf=(p,kind,rate,m)=>{ensureSkills(p,kind);const bond=(m?affinity(p,m).x:1)*(1+friendBonus(p));tickSkills(p,h,rate,m,bond).forEach(sk=>{const msg=p.name+' découvre une compétence : '+sk.n+'.';log(msg);sum?sum.ev.push(msg):emit('milestone',p.id);S._dirty=true;});};
+ // le maître d'apprentissage oriente les apprentis : découvertes plus rapides
+ const orient=1+.15*orientF();
+ const skf=(p,kind,rate,m)=>{ensureSkills(p,kind);const bond=(m?affinity(p,m).x:1)*(1+friendBonus(p))*(kind==='a'?orient:1);tickSkills(p,h,rate,m,bond).forEach(sk=>{const msg=p.name+' découvre une compétence : '+sk.n+'.';log(msg);sum?sum.ev.push(msg):emit('milestone',p.id);S._dirty=true;});};
  S.aps.forEach(ap=>skf(ap,'a',xpRate(ap),masterOf(ap)));S.knights.forEach(k=>skf(k,'k',knightRate(k),null));(S.guards||[]).forEach(g=>skf(g,'g',guardRate(g),null));
  S.workers.forEach(w=>{if(!w.job)return;if(w.job==='forge'&&!S.forgeJob)return;if((w.job==='herbo'||w.job==='atelier')&&!S.craft[w.job].length)return;
   w.sxp+=h;while(w.skill<10&&w.sxp>=24*w.skill){w.sxp-=24*w.skill;w.skill++;if(w.skill===5&&w.job==='forge'){const m=w.name+' est désormais maître forgeron. Les armures d’or ne lui résistent plus.';log(m);sum&&sum.ev.push(m);}S._dirty=true;}});
