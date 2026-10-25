@@ -9,7 +9,7 @@ import { FUND, SKILLS, SPEED, SPEED_OF, specReq } from './data/skills.js';
 import { ql } from './data/traits.js';
 import { CONS, CONS_BY } from './data/world.js';
 import { NEXT_RANK, armorAffinity } from './armor.js';
-import { trainTime } from './program.js';
+import { prog, trainTime } from './program.js';
 import { teachF } from './schedule.js';
 import { S } from './state.js';
 import { clamp } from './util.js';
@@ -53,14 +53,20 @@ export function addProgress(p,id,pts){
 }
 export function grantSkill(p,id){skillsOf(p);if(!p.sk[id]){p.sk[id]=1;p.skx[id]=0;delete p.skp[id];}}
 
-/* Une tranche de temps h. xpPerH : l'XP gagnée par heure ; master : le maître (apprenti) ou null.
+// Part du programme d'entraînement consacrée aux statistiques d'une compétence (0,6 à 1,8).
+export function focusOf(p,s){const t=prog(p);return .6+1.2*s.st.reduce((a,k)=>a+(t[k]||0),0)/100;}
+/* Une tranche de temps h. xpPerH : l'XP gagnée par heure ; master : le maître (apprenti) ou null ;
+   bond : le lien avec le maître (signe, élément) et les amitiés, calculé par rules.js.
+   Les niveaux ne suivent pas simplement l'XP : chaque carte progresse selon l'aptitude du personnage,
+   la part de son programme d'entraînement qui la nourrit et ses liens.
    Renvoie la liste des compétences découvertes. */
-export function tickSkills(p,h,xpPerH,master){
+export function tickSkills(p,h,xpPerH,master,bond=1){
  skillsOf(p);
- const dx=(xpPerH||0)*h;if(dx>0)for(const id in p.sk)p.skx[id]=(p.skx[id]||0)+dx;
+ const dx=(xpPerH||0)*h*bond;if(dx>0)for(const id in p.sk){const s=SKILLS[id];p.skx[id]=(p.skx[id]||0)+dx*aptitude(p,s)*focusOf(p,s);}
  const kn=S.knights.includes(p),ap=S.aps.includes(p);if(!kn&&!ap)return[];
  const tt=trainTime(p)*h;if(tt<=0)return[];
- const mf=ap?mentorFactor(master)*(master?Math.max(.3,teachF(master)):1):.6;
+ // maître, lien avec lui et amitiés, expérience acquise (le niveau)
+ const mf=(ap?mentorFactor(master)*(master?Math.max(.3,teachF(master)):1):.6)*bond*(1+(p.lv||1)/40);
  const found=[],push=s=>{if(s)found.push(s);};
  FUND.forEach(s=>push(addProgress(p,s.id,2.5*tt*aptitude(p,s)*mf)));
  if(!hasSkill(p,'F1'))return found; // le cosmos doit s'éveiller d'abord
@@ -92,13 +98,21 @@ export function skillCheck(p,c,aff){
  const allowed=aff>=85?missSpec.length:aff>=70?1:0;
  return{missF,speed,speedId:sp,missSpec,resonance:missSpec.length<=allowed?missSpec:null};
 }
-// Bonus de réussite à l'épreuve : niveaux des compétences spécifiques déjà maîtrisées.
-export function skillBonus(p,c){return Math.min(.12,specReq(c).reduce((t,id)=>t+skillLevel(p,id),0)*.01);}
+// Ce que les cartes apportent au combat : niveau moyen des fondamentales, palier de vitesse, somme des spécifiques.
+export function skillPower(p){
+ if(!p.sk)return{fund:0,speed:0,spec:0};
+ const fund=FUND.reduce((t,s)=>t+skillLevel(p,s.id),0)/FUND.length;
+ const speed=hasSkill(p,'V3')?3:hasSkill(p,'V2')?2:hasSkill(p,'V1')?1:0;
+ let spec=0;for(const id in p.sk)if(!/^[FV]d$/.test(id))spec+=skillLevel(p,id);
+ return{fund,speed,spec};
+}
 // Anciennes sauvegardes : les chevaliers savent déjà ce que leur rang et leur armure exigent.
 export function ensureSkills(p,kind){
+ // chevaliers déjà convertis avec des niveaux uniformes : on les ajuste une fois à leur profil
+ if(p.sk&&kind==='k'&&!p.skv){for(const id in p.sk)p.skx[id]=(p.skx[id]||0)*aptitude(p,SKILLS[id]);p.skv=1;}
  if(p.sk)return;skillsOf(p);
  if(kind==='k'){FUND.forEach(s=>grantSkill(p,s.id));SPEED.forEach(s=>{if(RANK_I[s.rank]<=RANK_I[p.rank])grantSkill(p,s.id);});
-  const c=CONS_BY[p.cons];if(c)specReq(c).forEach(id=>grantSkill(p,id));for(const id in p.sk)p.skx[id]=p.lv*40;}
+  const c=CONS_BY[p.cons];if(c)specReq(c).forEach(id=>grantSkill(p,id));for(const id in p.sk)p.skx[id]=p.lv*40*aptitude(p,SKILLS[id]);p.skv=1;}
  else if(kind==='g')['F1','F3','F4','F7'].forEach(id=>grantSkill(p,id));
  else if(p.awk)grantSkill(p,'F1');
 }

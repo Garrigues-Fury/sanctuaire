@@ -11,7 +11,7 @@ import { tickSocial } from './social.js';
 import { apHelpF, apTrainF, isMaster, jobF, selfF, teachF, timeMult } from './schedule.js';
 import { medMult, studyMult, trainStats } from './program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity } from './armor.js';
-import { ensureSkills, grantSkill, skillBonus, skillCheck, tickSkills } from './skills.js';
+import { ensureSkills, grantSkill, skillCheck, skillPower, tickSkills } from './skills.js';
 import { SKILLS } from './data/skills.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
@@ -73,7 +73,8 @@ export function xpRate(ap){
  return 10*arena()*mm*tr*(1+.1*S.houses[ap.sign])*(1+ap.st.en/200)*(1+popeBonus())*(1+friendBonus(ap))*(1+cb('XP')/100)*(S.starve?.5:1)*apTrainF(ap)*studyMult(ap);
 }
 export function knightRate(k){return 6*arena()*selfF(k)*studyMult(k)*(1+popeBonus())*(1+friendBonus(k))*(1+cb('XP')/100)*(S.starve?.5:1);}
-export function power(p,rank){const s=p.st;return((s.fo+s.vi+s.en+(s.de||0)+(s.ps||0))*.8+s.co*2)*(rank?RANK_MULT[rank]:.5)*(1+p.lv/20);}
+// Puissance : statistiques, rang, niveau, et cartes de compétences (vitesse surtout : le fossé entre les rangs).
+export function power(p,rank){const s=p.st,sp=skillPower(p);return((s.fo+s.vi+s.en+(s.de||0)+(s.ps||0))*.8+s.co*2)*(1+sp.fund*.03+sp.spec*.01)*[1,1.15,1.6,2.6][sp.speed]*(rank?RANK_MULT[rank]:.5)*(1+p.lv/20);}
 export function sanctPower(){let t=0;S.knights.forEach(k=>t+=power(k,k.rank));S.aps.forEach(a=>t+=power(a,null)*.5);S.houses.forEach(h=>t+=h*40);return t;}
 export const RANK_W={apprenti:.5,garde:1,bronze:2,argent:4,or:8};
 export function weightOf(p){return RANK_W[p.rank||'apprenti']*(p.role==='pope'?1.5:1)*(1+p.st.co/50);}
@@ -115,7 +116,8 @@ export function step(h,sum){
  (S.guards||[]).forEach(gd=>{gd.xp+=guardRate(gd)*h;let g=0;while(gd.xp>=need(gd.lv)*1.5&&g++<50){gd.xp-=need(gd.lv)*1.5;gd.lv++;gd.sp=(gd.sp||0)+2;bonusStats(gd);S._dirty=true;}});
  const am=arena();people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);trainStats(p,h,am);});
  // compétences : découvertes et niveaux
- const skf=(p,kind,rate,m)=>{ensureSkills(p,kind);tickSkills(p,h,rate,m).forEach(sk=>{const msg=p.name+' découvre une compétence : '+sk.n+'.';log(msg);sum?sum.ev.push(msg):emit('milestone',p.id);S._dirty=true;});};
+ // lien : affinité de signe ou d'élément avec le maître, et amitiés
+ const skf=(p,kind,rate,m)=>{ensureSkills(p,kind);const bond=(m?affinity(p,m).x:1)*(1+friendBonus(p));tickSkills(p,h,rate,m,bond).forEach(sk=>{const msg=p.name+' découvre une compétence : '+sk.n+'.';log(msg);sum?sum.ev.push(msg):emit('milestone',p.id);S._dirty=true;});};
  S.aps.forEach(ap=>skf(ap,'a',xpRate(ap),masterOf(ap)));S.knights.forEach(k=>skf(k,'k',knightRate(k),null));(S.guards||[]).forEach(g=>skf(g,'g',guardRate(g),null));
  S.workers.forEach(w=>{if(!w.job)return;if(w.job==='forge'&&!S.forgeJob)return;if((w.job==='herbo'||w.job==='atelier')&&!S.craft[w.job].length)return;
   w.sxp+=h;while(w.skill<10&&w.sxp>=24*w.skill){w.sxp-=24*w.skill;w.skill++;if(w.skill===5&&w.job==='forge'){const m=w.name+' est désormais maître forgeron. Les armures d’or ne lui résistent plus.';log(m);sum&&sum.ev.push(m);}S._dirty=true;}});
@@ -194,6 +196,6 @@ export function trialEval(a,c){
  if(ck.missF.length)return{ok:false,af,ck,why:'Compétences fondamentales à découvrir : '+ck.missF.map(id=>SKILLS[id].n).join(', ')};
  if(!ck.speed)return{ok:false,af,ck,why:'Il faut d’abord atteindre la vitesse requise : '+SKILLS[ck.speedId].n};
  if(!ck.resonance)return{ok:false,af,ck,why:'Compétences spécifiques manquantes : '+ck.missSpec.map(id=>SKILLS[id].n).join(', ')+(af.v<70?' (dès une affinité de 70, l’armure en transmet une par résonance)':'')};
- const ch=clamp(.32+.04*(a.lv-TRIAL_LV[c.rank])+af.v/250+a.st.co/300+skillBonus(a,c)+tr+cb('TRIAL')/100,.1,.95);
+ const ch=clamp(.32+.04*(a.lv-TRIAL_LV[c.rank])+af.v/250+a.st.co/300+tr+cb('TRIAL')/100,.1,.95);
  return{ok:true,ch,el,af,ck,resonance:ck.resonance};
 }

@@ -12,6 +12,7 @@ import { ITEM_TRADE, PAIR_E, TRAININGS, acceptChance, canTrain, pairPartners, re
 import { compat, compatLabel } from '../core/social.js';
 import { PROG, PROG_DEF, ensureSchedules, medMult, perDay, prog, setProg, studyMult } from '../core/program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity, bestArmors } from '../core/armor.js';
+import { duelChance, promoteApprentice, runDuel, trialKind } from '../core/trial.js';
 import { FAMILIES, FUND, SKILLS, SPEED, specReq } from '../core/data/skills.js';
 import { ensureSkills, grantSkill, hasSkill, progressOf, skillLevel, targetArmor } from '../core/skills.js';
 import { APLAN, KPLAN, apHelpF, apTrainF, isMaster, jobF, plan, selfF, setShare, teachF, timeMult, timeWhy } from '../core/schedule.js';
@@ -495,14 +496,14 @@ export function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)re
  return h;};}
 export let lastTrial=null;
 export function trialModal(id){return()=>{const a=S.aps.find(x=>x.id===id)||S.knights.find(x=>x.id===id);
- if(lastTrial&&lastTrial.id===id){const t=lastTrial;return '<div class="result '+(t.win?'win':'lose')+'"><h3>'+(t.win?'L’armure a choisi '+esc(t.name):'L’armure reste muette')+'</h3><p class="hint">'+(t.win?esc(t.name)+' devient chevalier de '+RANKS[t.rank].toLowerCase()+' '+esc(de(t.cons))+'. Retrouvez-'+(t.sex==='F'?'la':'le')+' dans l’onglet Chevaliers.':esc(t.name)+' a échoué cette fois et doit se reposer '+t.cd+' h. Un onguent peut abréger ce repos.')+'</p></div><button class="btn" data-act="close">Continuer</button>';}
+ if(lastTrial&&lastTrial.id===id){const t=lastTrial,du=t.duel;return '<div class="result '+(t.win?'win':'lose')+'"><h3>'+(t.win?'L’armure a choisi '+esc(t.name):du?esc(du.rival)+' l’emporte':'L’armure reste muette')+'</h3>'+(du?'<p class="hint">Combat contre '+esc(du.rival)+(du.rivalNpc?', disciple d’un autre maître':', votre apprenti'+(t.sex==='F'?'e':''))+' :</p><div class="log">'+du.log.map(m=>'<div style="grid-template-columns:1fr">'+esc(m)+'</div>').join('')+'</div>'+(du.rivalWon?'<p class="hint" style="color:var(--gold-hi)">'+esc(du.rival)+' gagne l’armure et devient chevalier.</p>':''):'')+'<p class="hint">'+(t.win?esc(t.name)+' devient chevalier de '+RANKS[t.rank].toLowerCase()+' '+esc(de(t.cons))+'. Retrouvez-'+(t.sex==='F'?'la':'le')+' dans l’onglet Chevaliers.':esc(t.name)+' a échoué cette fois et doit se reposer '+t.cd+' h. Un onguent peut abréger ce repos.')+'</p></div><button class="btn" data-act="close">Continuer</button>';}
  if(!a)return '<p>Ce personnage n’est plus là.</p>';
  const kn=S.knights.includes(a);
  const avail=CONS.filter(c=>S.armors[c.k]==='restauree'&&(!kn||c.rank===NEXT_RANK[a.rank])).sort((x,y)=>armorAffinity(a,y).v-armorAffinity(a,x).v);
  let h='<div class="sheet-head">'+ptImg(a,kn?a.rank:null)+'<div class="main"><h2>Épreuve de '+esc(a.name)+'</h2><div class="hint">Niveau '+a.lv+' · '+signChip(a.sign)+'</div></div></div>';
  if(!avail.length)return h+'<div class="empty">Aucune armure restaurée n’attend de porteur. Restaurez-en une à l’Atelier des armures.</div>';
  h+='<p class="hint">Une armure n’accepte que ceux avec qui elle a une affinité : l’élément du signe, les compétences travaillées et les maîtres qui les ont formés. L’argent et l’or exigent des personnages très doués. Le caractère compte aussi.</p><div class="opts">';
- avail.forEach(c=>{const e=trialEval(a,c),af=e.af||armorAffinity(a,c);h+='<button class="opt" data-act="trial:'+a.id+':'+c.k+'"'+(e.ok?'':' disabled')+'><b>'+armorName(c)+'</b><span class="chip '+c.rank+'">'+(e.ok?Math.round(e.ch*100)+' %':RANKS[c.rank])+'</span><span class="d">'+affHtml(af)+'<br>Exige : '+reqHtml(a,c)+(e.ok&&e.resonance&&e.resonance.length?'<br><span style="color:var(--gold-hi)">Par résonance, l’armure lui transmettra : '+e.resonance.map(id=>esc(SKILLS[id].n.toLowerCase())).join(', ')+'</span>':'')+(e.ok?'':'<br>'+esc(e.why))+'</span></button>';});
+ avail.forEach(c=>{const e=trialEval(a,c),af=e.af||armorAffinity(a,c),duelInfo=e.ok&&!kn&&trialKind(c)==='duel'?duelChance(a,c):null;h+='<button class="opt" data-act="trial:'+a.id+':'+c.k+'"'+(e.ok?'':' disabled')+'><b>'+armorName(c)+'</b><span class="chip '+c.rank+'">'+(e.ok?Math.round((duelInfo?duelInfo.ch:e.ch)*100)+' %':RANKS[c.rank])+'</span>'+(duelInfo?'<span class="d" style="color:var(--warn)">Épreuve : combat contre '+esc(duelInfo.o.name)+(duelInfo.o.npc?', disciple d’un autre maître':', votre apprenti'+(duelInfo.o.sex==='F'?'e':''))+'</span>':'')+'<span class="d">'+affHtml(af)+'<br>Exige : '+reqHtml(a,c)+(e.ok&&e.resonance&&e.resonance.length?'<br><span style="color:var(--gold-hi)">Par résonance, l’armure lui transmettra : '+e.resonance.map(id=>esc(SKILLS[id].n.toLowerCase())).join(', ')+'</span>':'')+(e.ok?'':'<br>'+esc(e.why))+'</span></button>';});
  return h+'</div>';};}
 export function absenceModal(dt,before,sum){return()=>{
  let h='<div><h2 class="mh">Pendant votre absence</h2><p class="hint">'+dur(dt)+' se sont écoulées au Sanctuaire.</p></div>';
@@ -618,12 +619,11 @@ export function act(a){
    else{kp.cd=S.gt+cd;log(kp.name+' échoue à l’épreuve de l’'+armorLow(c0)+'.');}
    lastTrial={id:kp.id,win,name:kp.name,rank:c0.rank,cons:c0.n,sex:kp.sex,cd};save();render();return;}
   const ap=S.aps.find(q=>q.id===+x),c=CONS_BY[y];if(!ap||!c)return;const e=trialEval(ap,c);if(!e.ok)return;
-  const win=Math.random()<e.ch;const cd=ql(ap,'orgueilleux')?24:12;
-  if(win){(e.resonance||[]).forEach(id=>grantSkill(ap,id));S.aps.splice(S.aps.indexOf(ap),1);S.armors[c.k]='portee';
-   const kn={id:ap.id,seed:ap.seed,sex:ap.sex,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:c.rank,cons:c.k,lv:ap.lv,xp:0,st:Object.assign({},ap.st),role:null,tech:ap.tech.concat([SIG_WORDS[ap.seed%SIG_WORDS.length]+' '+(c.rank==='or'?'d’or':de(c.n))]),origin:'forme',pot:ap.pot,sp:ap.sp||0,nrg:ap.nrg,tr:ap.tr,tacc:ap.tacc,sk:ap.sk,skp:ap.skp,skx:ap.skx,mentors:(ap.mentors||[]).concat(ap.master!=null?[ap.master]:[])};
-   S.knights.push(kn);if(c.rank==='or'&&!S.houses[c.sign])S.houses[c.sign]=1;
-   log('★ '+ap.name+' obtient l’'+armorLow(c)+' et devient chevalier de '+RANKS[c.rank].toLowerCase()+' !');
-   if((e.resonance||[]).length)log('Par résonance, l’armure transmet à '+ap.name+' : '+e.resonance.map(id=>SKILLS[id].n.toLowerCase()).join(', ')+'.');}
+  const cd=ql(ap,'orgueilleux')?24:12;
+  // certaines armures se disputent en combat contre un autre disciple
+  if(trialKind(c)==='duel'){const r=runDuel(ap,c,e,cd);lastTrial={id:ap.id,win:r.win,name:ap.name,rank:c.rank,cons:c.n,sex:ap.sex,cd,duel:r};save();render();return;}
+  const win=Math.random()<e.ch;
+  if(win)promoteApprentice(ap,c,e.resonance);
   else{ap.xp*=Math.min(1,.33*ql(ap,'perseverant'));ap.cd=S.gt+cd;log(ap.name+' échoue à l’épreuve de l’'+armorLow(c)+'.');}
   lastTrial={id:ap.id,win,name:ap.name,rank:c.rank,cons:c.n,sex:ap.sex,cd};save();render();return;}
  case'restore':{const c=CONS_BY[x];const cost=ARMOR_COST[c.rank];if(S.forgeJob||S.b.forge<ARMOR_FORGE[c.rank]||bestSmith()<ARMOR_SMITH[c.rank]||!afford(cost)||S.armors[x]!=='brisee')return;pay(cost);S.forgeJob={cons:x,work:ARMOR_WORK[c.rank],prog:0};log('L’atelier commence la restauration de l’'+armorLow(c)+'.');break;}

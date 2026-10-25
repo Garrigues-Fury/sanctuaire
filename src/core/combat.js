@@ -5,6 +5,11 @@ import { BEATS, FOES, elemMult } from './data/worldmap.js';
 import { TECH, fl, ql } from './data/traits.js';
 import { SIGNS } from './data/world.js';
 import { clamp } from './util.js';
+import { skillPower } from './skills.js';
+
+// Cartes de compétences en combat. Sans cartes (chevalier de référence, adversaire inventé) : valeurs types du rang et du niveau.
+const TIER={bronze:1,argent:2,or:3};
+function cardsOf(k){if(k.sk)return skillPower(k);const fund=Math.min(10,1+k.lv/6);return{fund,speed:TIER[k.rank]||0,spec:2*fund};}
 
 function rnd(b){b.rs=(b.rs+0x6D2B79F5)|0;let t=b.rs;t=Math.imul(t^t>>>15,1|t);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
 const RK={bronze:1,argent:1.25,or:1.6,garde:.9};
@@ -15,12 +20,14 @@ export const COST={tech:4,sig:7};
 export function heroStats(k){
  const rk=RK[k.rank]||1,lv=k.lv,s=k.st;
  const el=SIGNS[k.sign].el;
- const sigI=k.origin==='survivant'?0:k.tech.length-1;
- const sig=k.tech[sigI]||'Météores '+(['de feu','d’écume','de vent','de pierre'][['feu','eau','air','terre'].indexOf(el)]);
- const techs=k.tech.filter((t,i)=>i!==sigI);
+ const kt=k.tech||[],sigI=k.origin==='survivant'?0:kt.length-1;
+ const sig=kt[sigI]||'Météores '+(['de feu','d’écume','de vent','de pierre'][['feu','eau','air','terre'].indexOf(el)]);
+ const techs=kt.filter((t,i)=>i!==sigI);
  const tr=traitMods(k);
- return{id:k.id,name:k.name,el,max:Math.round((40+s.en*2.5+lv*4)*rk*tr.hp),atk:(8+s.fo*1.1+lv)*rk,tec:(8+s.co*1.3+lv)*rk,
-  def:((2+s.en*.4+lv*.4)*rk+(ARMOR_DEF[k.rank]||0))*tr.def,spd:s.vi+lv*.5,tech:techs[0]||TECH[el][0],sig,tr,
+ // fondamentales : tout le corps ; spécifiques : les techniques ; vitesse : un palier par rang (Mach 1, Mach 5, lumière)
+ const cs=cardsOf(k),fm=1+.03*cs.fund,sm=1+Math.min(.4,.01*cs.spec),vb=[0,8,20,45][cs.speed];
+ return{id:k.id,name:k.name,el,max:Math.round((40+s.en*2.5+lv*4)*rk*tr.hp*fm),atk:(8+s.fo*1.1+lv)*rk*fm,tec:(8+s.co*1.3+lv)*rk*fm*sm,
+  def:((2+s.en*.4+lv*.4)*rk+(ARMOR_DEF[k.rank]||0))*tr.def*fm,spd:s.vi+lv*.5+vb,tech:techs[0]||TECH[el][0],sig,tr,
   // dextérité : précision (l'ennemi esquive moins) et coups critiques ; psychokinésie : barrière et cosmos de départ
   acc:(s.de||0)*.3,crit:clamp(.03+(s.de||0)/400,0,.3),shield:clamp((s.ps||0)/400,0,.2),cosPs:Math.min(2,Math.floor((s.ps||0)/30))};
 }
@@ -109,3 +116,23 @@ export function autoResolve(b){let g=0;while(!b.over&&g++<40){const p=autoPick(b
 // Chance de victoire estimée par simulation.
 export function winChance(k,ev,mods={},n=60){let w=0;for(let i=0;i<n;i++){const b=autoResolve(newBattle(k,ev,mods,7919*i+13));if(b.result==='win')w++;}return w/n;}
 export { BEATS };
+// Duel entre deux disciples pour une armure (comme deux apprentis qui se disputent la même armure).
+// boost : la résonance avec l'armure convoitée. Renvoie {win : A l'emporte, log : le récit}.
+export function duelSim(A,B,boostA=1,boostB=1,seed=1){
+ const b={rs:seed|0},log=[];
+ const F=[A,B].map((p,i)=>{const h=heroStats(p);return{h,hp:h.max,cos:2+(h.cosPs||0),boost:i?boostB:boostA,n:p.name};});
+ for(let t=1;t<=30&&F[0].hp>0&&F[1].hp>0;t++){
+  const order=F[0].h.spd+rnd(b)*10>=F[1].h.spd+rnd(b)*10?[0,1]:[1,0];
+  for(const i of order){const me=F[i],op=F[1-i];if(me.hp<=0||op.hp<=0)continue;
+   const tech=me.cos>=COST.tech,what=tech?'« '+me.h.tech+' »':'un coup';
+   if(tech)me.cos-=COST.tech;else me.cos=Math.min(10,me.cos+2);
+   if(rnd(b)<clamp(.05+(op.h.spd-me.h.spd-(me.h.acc||0))/120,.02,.35)){if(log.length<12)log.push(op.n+' esquive '+what+' de '+me.n+'.');continue;}
+   const crit=rnd(b)<(me.h.crit||0),raw=(tech?me.h.tec*1.5-op.h.def*.3:me.h.atk-op.h.def*.5)*me.boost;
+   const d=Math.max(1,Math.round(raw*(crit?1.5:1)*(1-(op.h.shield||0))*(.75+rnd(b)*.5)));op.hp=Math.max(0,op.hp-d);
+   if(log.length<12||op.hp<=0)log.push((crit?'Coup précis ! ':'')+me.n+(tech?' lance '+what:' frappe')+' : '+d+' dégâts'+(op.hp<=0?'. '+op.n+' ne se relève pas.':'.'));
+  }
+ }
+ const win=F[0].hp>0&&(F[1].hp<=0||F[0].hp/F[0].h.max>=F[1].hp/F[1].h.max);
+ if(F[0].hp>0&&F[1].hp>0)log.push('Après trente échanges, les juges désignent '+(win?A.name:B.name)+'.');
+ return{win,log};
+}

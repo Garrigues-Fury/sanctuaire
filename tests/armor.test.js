@@ -70,6 +70,8 @@ describe('cartes de compétences', () => {
     const mk = () => { const a = makeApprentice(); S.aps.push(a); ensureSkills(a, 'a'); grantSkill(a, 'F1'); return a; };
     const a1 = mk(), a2 = mk();
     const gold = S.knights.find(x => x.rank === 'or'), bronze = S.knights.find(x => x.rank === 'bronze');
+    gold.role = null; gold.tm = { job: 0, dis: 50, self: 50 }; bronze.role = null; bronze.tm = { job: 0, dis: 50, self: 50 };
+    [a1, a2].forEach(p => { p.st.vi = 12; });
     for (let i = 0; i < 40; i++) { tickSkills(a1, 1, 10, gold); tickSkills(a2, 1, 10, null); }
     const n = p => Object.keys(p.sk).length + Object.values(p.skp).reduce((t, v) => t + v, 0) / 100;
     expect(n(a1)).toBeGreaterThan(n(a2));
@@ -86,5 +88,26 @@ describe('cartes de compétences', () => {
     const e = trialEval(a, CONS_BY.pegase);
     if (armorAffinity(a, CONS_BY.pegase).v >= 85) { expect(e.ok).toBe(true); expect(e.resonance.length).toBe(2); }
     else expect(e.why).toMatch(/spécifiques/);
+  });
+});
+
+describe('épreuve en combat entre disciples', () => {
+  it('le plus fort gagne le plus souvent, et la résonance avec l’armure aide', async () => {
+    const { duelSim } = await import('../src/core/combat.js');
+    const A = ap({ name: 'Fort', st: { fo: 30, vi: 30, de: 30, en: 30, ps: 30, co: 30 } }), B = ap({ name: 'Faible', id: 9002, st: { fo: 10, vi: 10, de: 10, en: 10, ps: 10, co: 10 } });
+    let w = 0; for (let i = 0; i < 40; i++) if (duelSim(A, B, 1, 1, 31 * i + 7).win) w++;
+    expect(w).toBeGreaterThan(30);
+    const r = duelSim(A, B, 1, 1, 5); expect(r.log.length).toBeGreaterThan(0);
+  });
+  it('si votre apprenti rival gagne, c’est lui qui reçoit l’armure', async () => {
+    const { runDuel, trialKind } = await import('../src/core/trial.js');
+    const c = CONS_BY.pegase; expect(trialKind(c)).toBe('duel'); S.armors.pegase = 'restauree';
+    const ready = (o) => { const p = ap(o); S.aps.push(p); ensureSkills(p, 'a'); ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'V1', 'rafale', 'aerien'].forEach(id => grantSkill(p, id)); return p; };
+    const weak = ready({ id: 9101, name: 'Cassandre', sign: 2, st: { fo: 4, vi: 12, de: 5, en: 4, ps: 4, co: 12 } });
+    const strong = ready({ id: 9102, name: 'Stelios', sign: 2, lv: 14, st: { fo: 30, vi: 45, de: 30, en: 30, ps: 30, co: 45 } });
+    const e = trialEval(weak, c); expect(e.ok).toBe(true);
+    const r = runDuel(weak, c, e, 12);
+    expect(r.rival).toBe('Stelios');
+    if (!r.win) { expect(r.rivalWon).toBe(true); expect(S.knights.some(k => k.name === 'Stelios' && k.cons === 'pegase')).toBe(true); }
   });
 });
