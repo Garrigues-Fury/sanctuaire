@@ -10,7 +10,7 @@ import { FLAW, QUAL, SIG_WORDS, fl, ql, traitText } from '../core/data/traits.js
 import { TIP, tip } from './tips.js';
 import { ITEM_TRADE, PAIR_E, TRAININGS, acceptChance, canTrain, pairPartners, refusedRecently, train, trainTogether, unavailable } from '../core/training.js';
 import { compat, compatLabel } from '../core/social.js';
-import { PROG, PROG_DEF, ensureSchedules, medMult, perDay, prog, setProg, studyMult } from '../core/program.js';
+import { FUND_PART, PROG, PROG_DEF, ensureSchedules, medMult, perDay, prog, setProg, studyMult } from '../core/program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity, bestArmors, profileOf } from '../core/armor.js';
 import { KIND_N, duelChance, promoteApprentice, runDuel, trialKind } from '../core/trial.js';
 import { candidatesFor, guidesFor, mastersFor, reachOf, revealed } from '../core/formation.js';
@@ -232,7 +232,7 @@ export function planBlock(p,kind){
 }
 /* ---------- programme d'entraînement ---------- */
 export function progEffects(p){
- const d=perDay(p,arena()),parts=PROG.filter(x=>d[x.k]>0.005).map(x=>'+'+fmt1(d[x.k])+' '+x.gain);
+ const d=perDay(p,arena()),parts=['fo','vi','de','en','ps','co'].filter(k=>d[k]>0.005).map(k=>'+'+fmt1(d[k])+' '+STATN[k]);
  let h='<div>Par jour : '+(parts.length?parts.join(' · '):'aucun gain de statistique')+'.</div>';
  const m=Math.round((medMult(p)-1)*100),e=Math.round((studyMult(p)-1)*100);
  if(m||e)h+='<div>'+(m?'Méditation : énergie +'+m+' %':'')+(m&&e?' · ':'')+(e?'Études : XP +'+e+' %':'')+'.</div>';
@@ -241,7 +241,8 @@ export function progEffects(p){
 export function progBlock(p,kind){
  const t=prog(p);
  let h='<div class="sec-h"><h2>Programme d’entraînement</h2><button class="btn sm ghost" data-act="progdef:'+kind+':'+p.id+'">Équilibrer</button></div><p class="hint">Comment '+esc(p.name)+' emploie son temps d’entraînement. Le total fait toujours 100 %.</p><div class="plan">';
- PROG.forEach(x=>{h+='<label class="vol"'+tip(x.k==='med'?'Méditation : recharge l’énergie plus vite (jusqu’à +80 %) et fait monter un peu le cosmos.':x.k==='etu'?'Études : la progression (XP) va plus vite, jusqu’à +60 % (davantage pour un studieux).':x.k)+'><span>'+x.n+' <b data-progv="'+x.k+'">'+t[x.k]+' %</b></span><input type="range" min="0" max="100" step="5" value="'+t[x.k]+'" data-prog="'+kind+':'+p.id+':'+x.k+'" aria-label="'+x.n+'"></label>';});
+ PROG.forEach(x=>{const fams=[...new Set(x.fam.map(fm=>FAMILIES[fm].n.toLowerCase()).concat(Object.keys(FUND_PART).filter(id=>FUND_PART[id]===x.k).map(id=>SKILLS[id].n.toLowerCase())))];
+  h+='<label class="vol"'+tip(x.n+' : '+(x.k==='etu'?'la progression (XP) va plus vite, jusqu’à +60 % (davantage pour un studieux)':x.k==='med'?'fait monter le cosmos et la psychokinésie, et recharge l’énergie plus vite (jusqu’à +50 %)':'fait monter la '+x.gain)+'. Fait découvrir plus vite : '+fams.join(', ')+'.')+'><span>'+x.n+' <b data-progv="'+x.k+'">'+t[x.k]+' %</b><small class="pfam">'+fams.slice(0,3).join(' · ')+'</small></span><input type="range" min="0" max="100" step="5" value="'+t[x.k]+'" data-prog="'+kind+':'+p.id+':'+x.k+'" aria-label="'+x.n+'"></label>';});
  return h+'<div class="hint plan-out" data-progout>'+progEffects(p)+'</div></div>';
 }
 function onProgInput(el,done){

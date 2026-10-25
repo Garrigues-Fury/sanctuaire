@@ -9,7 +9,7 @@ import { FUND, SKILLS, SPEED, SPEED_OF, specReq } from './data/skills.js';
 import { ql } from './data/traits.js';
 import { CONS, CONS_BY } from './data/world.js';
 import { NEXT_RANK, armorAffinity } from './armor.js';
-import { prog, trainTime } from './program.js';
+import { discoverMult, partShare, trainTime } from './program.js';
 import { teachF } from './schedule.js';
 import { S } from './state.js';
 import { clamp } from './util.js';
@@ -53,8 +53,8 @@ export function addProgress(p,id,pts){
 }
 export function grantSkill(p,id){skillsOf(p);if(!p.sk[id]){p.sk[id]=1;p.skx[id]=0;delete p.skp[id];}}
 
-// Part du programme d'entraînement consacrée aux statistiques d'une compétence (0,6 à 1,8).
-export function focusOf(p,s){const t=prog(p);return .6+1.2*s.st.reduce((a,k)=>a+(t[k]||0),0)/100;}
+// Niveaux : la part du programme qui nourrit la carte (×1 pour une part moyenne, de ×0,6 à ×3).
+export function focusOf(p,s){return .6+2.4*partShare(p,s);}
 /* Une tranche de temps h. xpPerH : l'XP gagnée par heure ; master : le maître (apprenti) ou null ;
    bond : le lien avec le maître (signe, élément) et les amitiés, calculé par rules.js.
    Les niveaux ne suivent pas simplement l'XP : chaque carte progresse selon l'aptitude du personnage,
@@ -68,15 +68,16 @@ export function tickSkills(p,h,xpPerH,master,bond=1){
  // maître, lien avec lui et amitiés, expérience acquise (le niveau)
  const mf=(ap?mentorFactor(master)*(master?Math.max(.3,teachF(master)):1):.6)*bond*(1+(p.lv||1)/40);
  const found=[],push=s=>{if(s)found.push(s);};
- FUND.forEach(s=>push(addProgress(p,s.id,2.5*tt*aptitude(p,s)*mf)));
+ // chaque part du programme fait découvrir ses familles de compétences
+ FUND.forEach(s=>push(addProgress(p,s.id,2.5*tt*aptitude(p,s)*mf*discoverMult(p,s))));
  if(!hasSkill(p,'F1'))return found; // le cosmos doit s'éveiller d'abord
  // vitesse : seulement auprès d'un maître de ce rang ou au-dessus
  // dans l'ordre : Mach 1, puis Mach 5, puis la lumière
- if(ap&&master)SPEED.forEach((s,i)=>{if(RANK_I[master.rank]>=RANK_I[s.rank]&&(i===0||hasSkill(p,SPEED[i-1].id)))push(addProgress(p,s.id,1.5*tt*aptitude(p,s)*mf));});
+ if(ap&&master)SPEED.forEach((s,i)=>{if(RANK_I[master.rank]>=RANK_I[s.rank]&&(i===0||hasSkill(p,SPEED[i-1].id)))push(addProgress(p,s.id,1.5*tt*aptitude(p,s)*mf*discoverMult(p,s)));});
  // l'armure visée est recalculée au plus une fois par heure de jeu (le calcul est coûteux au rattrapage d'absence)
  if(p.tgtT==null||Math.abs(S.gt-p.tgtT)>=1){const t=targetArmor(p);p.tgtK=t?t.k:null;p.tgtT=S.gt;}
  const c=p.tgtK?CONS_BY[p.tgtK]:null;
- if(c)specReq(c).forEach(id=>push(addProgress(p,id,1.2*tt*aptitude(p,SKILLS[id])*mf*(master&&hasSkill(master,id)?1.5:1))));
+ if(c)specReq(c).forEach(id=>push(addProgress(p,id,1.2*tt*aptitude(p,SKILLS[id])*mf*discoverMult(p,SKILLS[id])*(master&&hasSkill(master,id)?1.5:1))));
  return found;
 }
 // S'entraîner avec plus fort que soi : coup de pouce aux découvertes de l'élève (lo) auprès de hi.

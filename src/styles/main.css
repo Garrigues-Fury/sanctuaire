@@ -564,3 +564,4 @@ nav.tabs button[aria-current="page"] .ico{filter:drop-shadow(0 0 6px rgba(246,21
 #maptip b{display:block;color:var(--gold-hi);font-family:var(--f-display);font-size:.95rem;font-weight:400}
 #maptip .mt-w{color:var(--warn);display:flex;align-items:center;gap:4px}#maptip .mt-n{color:var(--marble-faint)}
 nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vol .pfam{display:block;font-size:.72rem;color:var(--marble-faint);font-weight:400}

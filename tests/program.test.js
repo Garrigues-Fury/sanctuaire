@@ -40,14 +40,14 @@ describe('combat', () => {
 describe('programme d’entraînement', () => {
   it('le total fait toujours 100 %', () => {
     const k = S.knights[0];
-    setProg(k, 'ps', 50);
+    setProg(k, 'med', 50);
     const t = prog(k);
     expect(Object.values(t).reduce((a, b) => a + b, 0)).toBe(100);
-    expect(t.ps).toBe(50);
+    expect(t.med).toBe(50);
   });
   it('la statistique travaillée monte, les autres non', () => {
     const k = S.knights[0]; k.role = null; k.tm = null; k.qual = []; k.flaw = [];
-    setProg(k, 'de', 100);
+    setProg(k, 'dex', 100);
     const de = k.st.de, fo = k.st.fo;
     trainStats(k, 24 * 5, 1);
     expect(k.st.de).toBeGreaterThan(de + 5);
@@ -63,5 +63,21 @@ describe('programme d’entraînement', () => {
     setProg(k, 'etu', 50);
     expect(studyMult(k)).toBeCloseTo(1.3);
     expect(knightRate(k)).toBeGreaterThan(x0);
+  });
+});
+
+describe('programme en 6 parts', () => {
+  it('les anciens programmes en 8 parts sont convertis', () => {
+    const p = { tr: { fo: 15, vi: 15, de: 10, en: 15, ps: 10, co: 15, med: 10, etu: 10 } };
+    expect(prog(p)).toEqual({ phy: 15, rap: 15, dex: 10, end: 15, med: 35, etu: 10 });
+  });
+  it('chaque part fait découvrir ses compétences plus vite', async () => {
+    const { discoverMult } = await import('../src/core/program.js');
+    const { SKILLS } = await import('../src/core/data/skills.js');
+    const k = S.knights[0];
+    setProg(k, 'med', 100);
+    expect(discoverMult(k, SKILLS.telekinesie)).toBeCloseTo(4);
+    expect(discoverMult(k, SKILLS.grappling)).toBeCloseTo(.4);
+    expect(discoverMult(k, SKILLS.F1)).toBeCloseTo(4);
   });
 });

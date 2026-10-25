@@ -141,7 +141,18 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
     - Code : `src/core/combat.js`, `src/core/expeditions.js`, `src/core/data/scenes.js` (le texte des scènes), `src/ui/world.js`, `src/ui/scene.js`.
 15. **Emploi du temps, missions, blessures (demandé le 2026-10-24, en 4 étapes)** :
     - **Étape 1, emploi du temps** (`src/core/schedule.js`) : un chevalier répartit son temps en % entre son métier (Grand Pope, Recruteur, Intendant, Maître d'œuvre, Chercheur à la bibliothèque), la formation de ses disciples (3 au plus ; « Maître » n'est plus un métier) et son entraînement personnel. Un apprenti en renfort répartit entre entraînement et aide au Sanctuaire. Le goût de l'effort (travailleur, persévérant) ou la paresse change le rendement de ce temps.
-    - **Étape 2, programme d'entraînement** (`src/core/program.js`, livré le 2026-10-24) : le temps d'entraînement se répartit en 8 curseurs (physique, rapidité, dextérité, endurance, psychokinésie, cosmos, méditation, études). Chaque part fait monter sa statistique en continu ; la méditation recharge l'énergie (jusqu'à +80 %) et nourrit un peu le cosmos ; les études accélèrent l'XP (jusqu'à +60 %, plus pour un studieux). Séances ciblées à l'énergie pour les nouvelles statistiques.
+    - **Étape 2, programme d'entraînement** (`src/core/program.js`, revu par Seba le 2026-10-25) : le temps d'entraînement se répartit en **6 curseurs**.
+      - **Physique** (force), **Rapidité** (vitesse), **Dextérité** (dextérité), **Endurance** (endurance) : chacun fait monter sa statistique.
+      - **Méditation** : cosmos et psychokinésie, et énergie jusqu'à +50 %.
+      - **Études** : XP jusqu'à +60 %, davantage pour un studieux.
+      - Chaque part fait aussi **découvrir plus vite ses compétences** et monter leurs niveaux :
+        - physique : physique, techniques corporelles, fondamentale Physique ;
+        - rapidité : vitesses ;
+        - dextérité : arts martiaux, contrôle, fondamentales Combat et Perception ;
+        - endurance : défense, fondamentale Survie ;
+        - méditation : psychique, éléments, projection, fondamentales Cosmos, Maîtrise et Mental ;
+        - études : savoir, fondamentale Harmonie.
+      - Séances ciblées à l'énergie pour chaque statistique.
     - **Dextérité** : précision (l'ennemi esquive moins) et coups précis à ×1,5 en combat ; atelier d'artisanat ; actions de mission (désarmer, ligoter). **Psychokinésie** : barrière qui amortit les coups (jusqu'à 20 %) et cosmos de départ plus haut ; herboristerie ; actions de mission (soulever le chariot, barrière autour d'un village). Les anciens personnages reçoivent dextérité = (force + vitesse) / 2 et psychokinésie = (cosmos + endurance) / 2.
     - Étape 3 : tableau des missions (auto ou en direct). Étape 4 : fatigue, blessures (un blessé ne fait que se soigner), mort, armure à rapporter, cimetière, réparation à l'orichalque.
     - **Mort (décision de Seba le 2026-10-24)** : possible **seulement sur une mission risquée lancée par le joueur**, avec un avertissement clair avant le départ. **Jamais pendant une absence** si rien n'a été lancé.
