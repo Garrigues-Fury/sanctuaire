@@ -699,3 +699,39 @@ nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:el
 .ccard.unseen{opacity:.45;filter:grayscale(1)}
 .cc-q{width:58px;height:58px;display:grid;place-items:center;border-radius:10px;background:var(--night-4);font-family:var(--f-display);font-size:1.5rem;color:var(--marble-dim)}
 .cc-bar{width:80%;height:4px;border-radius:2px;background:var(--night-4);overflow:hidden}.cc-bar>i{display:block;height:100%;background:var(--gold)}
+/* nouveaux mini-jeux */
+.canal{gap:2px;padding:6px;border-radius:12px;background:#2a2320;width:min(94vw,440px)}
+.cn{aspect-ratio:1;padding:0;border:0;border-radius:4px;background:#d8c7a6;cursor:pointer}.cn svg{width:100%;height:100%;display:block}
+.cn-edge{display:grid;place-items:center;font-size:1.2rem}.cn-edge .src{color:#5cc0ff}.cn-edge .fnt{color:#ffd36b}
+.sky{position:relative;width:min(92vw,420px);aspect-ratio:1;border-radius:14px;background:radial-gradient(circle at 50% 40%,#1d2a4a,#0b0f1d);overflow:hidden}
+.sky svg{position:absolute;inset:0;width:100%;height:100%}
+.star{position:absolute;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,230,160,.6);background:radial-gradient(circle,#fff6d0 0,#ffd36b 35%,rgba(255,211,107,.15) 70%);color:#2a1c10;font-weight:800;font-size:.85rem;cursor:pointer}
+.star.on{background:radial-gradient(circle,#fff,#9fe0a8 40%,rgba(159,224,168,.2) 70%)}.star.wrong{outline:3px solid var(--bad)}
+.bal{display:grid;justify-items:center;gap:14px;width:min(92vw,420px)}
+.beam{position:relative;width:90%;height:8px;border-radius:4px;background:#c9a24a;transition:transform .3s;display:flex;justify-content:space-between}
+.plate{margin-top:8px;width:84px;height:46px;border-radius:0 0 40px 40px;background:#6b5130;display:grid;place-items:center;font-size:1.2rem;color:#ffe9b0}
+.plate.l{margin-left:-20px}.plate.r{margin-right:-20px}.pillar{width:10px;height:70px;background:#6b5130;border-radius:4px}
+.weights{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.wt{min-width:52px;min-height:48px;border-radius:10px;border:1px solid #6b5130;background:#3b2d22;color:#f6e6c8;font-weight:700;font-size:1.05rem;cursor:pointer}.wt.on{background:#c9a24a;color:#1d140c}
+.card{aspect-ratio:3/4;border-radius:10px;border:1px solid #6b5130;background:repeating-linear-gradient(45deg,#3b2d22 0 6px,#33271e 6px 12px);color:#ffe9b0;font-size:1.8rem;cursor:pointer}
+.card.up{background:#f3e3c0;color:#7a1f1f}
+.maze{display:grid;width:min(94vw,440px);aspect-ratio:1;background:#d8c7a6;border:3px solid #3b2d22}
+.mz{position:relative;border:0 solid #3b2d22;display:grid;place-items:center}.mz.fog{background:#1d1411}
+.mz .me,.mz .ex{width:62%;height:62%;border-radius:50%}.mz .me{background:#3a7bd5;box-shadow:0 0 6px #3a7bd5}.mz .ex{background:#e8b84a;box-shadow:0 0 8px #e8b84a}
+.sent{width:min(92vw,400px)}
+.hole{aspect-ratio:1;border-radius:50%;border:3px solid #3b2d22;background:radial-gradient(circle,#1d1411 55%,#4a3a2c);color:#fff;display:grid;place-items:center;align-content:center;cursor:pointer;touch-action:manipulation}
+.hole b{font-size:1.6rem;line-height:1}.hole small{font-size:.62rem}.hole.foe{background:radial-gradient(circle,#e8642c,#7a1f1f)}.hole.ally{background:radial-gradient(circle,#7fb7be,#2b3b55)}
+.rain{position:relative;width:min(92vw,400px);height:min(56vh,440px);border-radius:12px;overflow:hidden;background:linear-gradient(#3b4a5c,#6b5130);touch-action:none}
+.rain .hero{position:absolute;bottom:4%;width:42px;height:42px;margin-left:-21px;border-radius:50%;background:radial-gradient(circle,#ffe9b0,#c9a24a);box-shadow:0 0 10px #ffd36b;transition:left .1s}
+.rain .hero.ouch{background:radial-gradient(circle,#fff,#de7563)}
+.rain .rock{position:absolute;width:34px;height:30px;margin-left:-17px;border-radius:45% 55% 40% 60%;background:linear-gradient(145deg,#8a7a66,#4a3a2c)}
+.quiz{display:grid;gap:10px;width:min(92vw,440px)}.qq{font-size:1.05rem;line-height:1.45;margin:0 0 6px}
+.qa{text-align:left;min-height:48px}.qa.good{border-color:var(--ok);color:var(--ok)}.qa.bad{border-color:var(--bad);color:var(--bad)}
+.words{display:grid;gap:14px;justify-items:center}
+.slots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}.slots i{width:30px;height:40px;border-bottom:3px solid var(--gold);display:grid;place-items:center;font-style:normal;font-size:1.3rem;font-weight:700;color:var(--gold-hi)}
+.letters{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:400px}
+.lt{width:46px;height:50px;border-radius:10px;border:1px solid #6b5130;background:#3b2d22;color:#f6e6c8;font-size:1.25rem;font-weight:700;cursor:pointer}.lt:disabled{opacity:.25}
+/* défis physiques */
+.defi-next{margin:2px 0;font-size:.92rem}.defi-next b{color:var(--gold-hi)}
+.btn.gpx{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.res-list{padding-left:18px;line-height:1.6}

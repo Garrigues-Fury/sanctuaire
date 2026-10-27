@@ -1,0 +1,62 @@
+/* Contenus des mini-jeux de langue et de culture. Mots en capitales sans accent (usage courant en capitales).
+   Questions : la première réponse est la bonne (l'ordre est mélangé à l'affichage) ; t = difficulté 1 à 3. */
+export const WORDS=['LION','LYRE','IRIS','ZEUS','HERA','ORION','ATLAS','TITAN','HARPE','FORGE','ARENE','OLIVE','HYDRE','ASTRE','LANCE','NUAGE',
+ 'COSMOS','ARMURE','TEMPLE','MARBRE','DRAGON','PHENIX','PERSEE','OLYMPE','NECTAR','ORACLE','DESTIN','BRAISE','ECLAIR','MEDUSE','ULYSSE','AURORE','COMETE','CANCER','BELIER','VIERGE','RODORIO','COLONNE','AMPHORE','OLIVIER','BALEINE','DAUPHIN','CORBEAU','COLOMBE','BALANCE','VERSEAU','TAUREAU','GEMEAUX','ENCLUME','MOISSON','LAURIER','TRIDENT','CADUCEE','ACHILLE','ODYSSEE','ECLIPSE','GALAXIE','LICORNE','HERCULE','TONNERRE',
+ 'BOUCLIER','ZODIAQUE','CENTAURE','SCORPION','POISSONS','AMBROISIE','CHOUETTE','CERBERE','MINOTAURE','PROMETHEE','ANDROMEDE','CHEVALIER','NEBULEUSE','SANCTUAIRE','CAPRICORNE','SAGITTAIRE','LABYRINTHE','CONSTELLER'];
+export const QUIZ=[
+ // facile
+ {t:1,q:'Quelle déesse veille sur la sagesse et la guerre juste ?',a:['Athéna','Aphrodite','Héra','Artémis']},
+ {t:1,q:'Quel dieu règne sur les mers ?',a:['Poséidon','Hadès','Apollon','Arès']},
+ {t:1,q:'Quel dieu règne sur les Enfers ?',a:['Hadès','Hermès','Héphaïstos','Dionysos']},
+ {t:1,q:'Qui est le roi des dieux de l’Olympe ?',a:['Zeus','Cronos','Ouranos','Apollon']},
+ {t:1,q:'Combien y a-t-il de signes du zodiaque ?',a:['12','10','13','7']},
+ {t:1,q:'Quel héros a accompli douze travaux ?',a:['Héraclès','Persée','Thésée','Achille']},
+ {t:1,q:'Quel dieu est le messager des dieux ?',a:['Hermès','Apollon','Arès','Héphaïstos']},
+ {t:1,q:'Quelle déesse est celle de l’amour et de la beauté ?',a:['Aphrodite','Athéna','Déméter','Hestia']},
+ {t:1,q:'Quel dieu forge les armes des dieux ?',a:['Héphaïstos','Arès','Hermès','Apollon']},
+ {t:1,q:'Quelle déesse veille sur les moissons ?',a:['Déméter','Héra','Artémis','Aphrodite']},
+ {t:1,q:'Quel signe du zodiaque vient juste après le Bélier ?',a:['Le Taureau','Les Gémeaux','Le Cancer','Les Poissons']},
+ {t:1,q:'Quelle ville grecque porte le nom d’Athéna ?',a:['Athènes','Sparte','Corinthe','Thèbes']},
+ {t:1,q:'Sur quelle montagne vivent les dieux grecs ?',a:['L’Olympe','Le Parnasse','L’Ida','Le Pélion']},
+ {t:1,q:'Quel monstre à tête de taureau vivait dans le labyrinthe de Crète ?',a:['Le Minotaure','Le Cyclope','Le Centaure','La Chimère']},
+ {t:1,q:'Quel est le dieu de la guerre brutale ?',a:['Arès','Athéna','Apollon','Hermès']},
+ // moyen
+ {t:2,q:'Qui a tranché la tête de Méduse ?',a:['Persée','Thésée','Jason','Bellérophon']},
+ {t:2,q:'Qui a vaincu le Minotaure ?',a:['Thésée','Héraclès','Persée','Ulysse']},
+ {t:2,q:'Comment s’appelle le chien à trois têtes qui garde les Enfers ?',a:['Cerbère','Orthos','Ladon','Typhon']},
+ {t:2,q:'Quel est l’arbre sacré d’Athéna ?',a:['L’olivier','Le laurier','Le chêne','Le cyprès']},
+ {t:2,q:'Quel oiseau accompagne Athéna ?',a:['La chouette','L’aigle','Le corbeau','Le paon']},
+ {t:2,q:'Quel oiseau est associé à Héra ?',a:['Le paon','La colombe','La chouette','Le cygne']},
+ {t:2,q:'Quel musicien est descendu aux Enfers chercher Eurydice ?',a:['Orphée','Apollon','Amphion','Linos']},
+ {t:2,q:'Qui a volé le feu des dieux pour le donner aux hommes ?',a:['Prométhée','Épiméthée','Atlas','Héphaïstos']},
+ {t:2,q:'Quel Titan porte le ciel sur ses épaules ?',a:['Atlas','Cronos','Hypérion','Prométhée']},
+ {t:2,q:'Qui était le père d’Andromède ?',a:['Céphée','Persée','Minos','Égée']},
+ {t:2,q:'Dans quelle constellation brille l’étoile Véga ?',a:['La Lyre','Le Cygne','L’Aigle','Le Bouvier']},
+ {t:2,q:'Dans quelle constellation brille l’étoile Altaïr ?',a:['L’Aigle','La Lyre','Le Cygne','Orion']},
+ {t:2,q:'Dans quelle constellation brille l’étoile Deneb ?',a:['Le Cygne','L’Aigle','La Lyre','Persée']},
+ {t:2,q:'Quelle constellation contient Bételgeuse et Rigel ?',a:['Orion','Le Taureau','Le Grand Chien','Les Gémeaux']},
+ {t:2,q:'Quelle est l’étoile la plus brillante du ciel nocturne ?',a:['Sirius','Véga','L’étoile Polaire','Bételgeuse']},
+ {t:2,q:'Dans quelle constellation se trouve Sirius ?',a:['Le Grand Chien','Le Petit Chien','Orion','Le Lièvre']},
+ {t:2,q:'Dans quelle constellation se trouve l’étoile Polaire ?',a:['La Petite Ourse','La Grande Ourse','Céphée','Cassiopée']},
+ {t:2,q:'Quelle déesse est la sœur jumelle d’Apollon ?',a:['Artémis','Athéna','Héra','Hestia']},
+ {t:2,q:'Quelle reine, mère d’Andromède, a été placée dans le ciel sur son trône ?',a:['Cassiopée','Héra','Pénélope','Hélène']},
+ {t:2,q:'Quel héros a dompté le cheval ailé Pégase ?',a:['Bellérophon','Persée','Jason','Thésée']},
+ // difficile
+ {t:3,q:'Quel centaure sage fut le maître d’Achille ?',a:['Chiron','Nessos','Pholos','Eurytion']},
+ {t:3,q:'Combien de constellations officielles compte le ciel aujourd’hui ?',a:['88','48','72','108']},
+ {t:3,q:'Quel savant antique a décrit 48 constellations ?',a:['Ptolémée','Aristote','Pythagore','Archimède']},
+ {t:3,q:'Quelle constellation dessine un W dans le ciel du Nord ?',a:['Cassiopée','Céphée','Persée','Le Cygne']},
+ {t:3,q:'La Chevelure de Bérénice tient son nom d’une reine. De quel pays ?',a:['L’Égypte','La Perse','La Lydie','La Crète']},
+ {t:3,q:'Le Verseau est souvent associé à quel jeune homme enlevé par Zeus ?',a:['Ganymède','Hyacinthe','Narcisse','Adonis']},
+ {t:3,q:'La Carène, la Poupe et les Voiles formaient autrefois un seul navire. Lequel ?',a:['L’Argo','L’Odyssée','Le Nautilus','Le Pégase']},
+ {t:3,q:'Quel guérisseur la constellation d’Ophiuchus représente-t-elle souvent ?',a:['Asclépios','Hippocrate','Chiron','Apollon']},
+ {t:3,q:'De quelle princesse la Couronne boréale serait-elle la couronne ?',a:['Ariane','Médée','Phèdre','Hélène']},
+ {t:3,q:'Quel fleuve des Enfers fait oublier sa vie passée ?',a:['Le Léthé','Le Styx','L’Achéron','Le Phlégéthon']},
+ {t:3,q:'Quel dieu porte le caducée ?',a:['Hermès','Asclépios','Apollon','Dionysos']},
+ {t:3,q:'Quel monstre marin devait dévorer Andromède ?',a:['Céto, la Baleine','Charybde','Scylla','L’Hydre']},
+ {t:3,q:'Quelle constellation la plus étendue du ciel représente un serpent d’eau ?',a:['L’Hydre','Le Serpent','Le Dragon','L’Éridan']},
+ {t:3,q:'Quel fleuve céleste coule au pied d’Orion ?',a:['L’Éridan','Le Styx','L’Alphée','Le Nil']},
+ {t:3,q:'Quel amas d’étoiles, dans le Taureau, porte le nom des sept sœurs ?',a:['Les Pléiades','Les Hyades','Les Muses','Les Grâces']}
+];
+// ︎ : signes affichés comme du texte, pas comme des émojis.
+export const ZODIAC=['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'].map(s=>s+'︎');

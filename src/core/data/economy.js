@@ -28,7 +28,7 @@ export const BUILD={
  herbo:{n:'Herboristerie',base:{marbre:80,vivres:60,savoir:10},t:1,eff:l=>l?siteSlots('herbo',l)+' herboristes · +'+10*l+' % de vitesse':'à bâtir'},
  atelier:{n:'Ateliers d’artisanat',base:{marbre:120,metal:60},t:1,eff:l=>l?siteSlots('atelier',l)+' artisans · +'+10*l+' % de vitesse':'à bâtir'},
  arene:{n:'Arène d’entraînement',base:{marbre:140,metal:50},t:1,eff:l=>'+'+15*l+' % d’XP pour tous'},
- dortoirs:{n:'Dortoirs des apprentis',base:{marbre:90,vivres:80},t:.75,eff:l=>(3+2*l)+' places d’apprentis'},
+ dortoirs:{n:'Dortoirs des apprentis',base:{marbre:80,vivres:70},t:.45,eff:l=>(4+4*l)+' places d’apprentis'},
  entrepot:{n:'Réserves',base:{marbre:80,metal:25},t:.66,eff:l=>fmt(capFor('marbre',l))+' max · savoir '+fmt(capFor('savoir',l))+' · herbes '+fmt(herbCap(l))},
  forge:{n:'Atelier des armures',base:{marbre:200,metal:120,savoir:20},t:1.5,eff:l=>l?('armures '+(l>=8?'d’or':l>=4?'d’argent':'de bronze')+' · '+siteSlots('forge',l)+' forgerons · +'+10*l+' % de vitesse'):'en ruines'},
  artisans:{n:'Village des artisans',base:{marbre:250,vivres:200,metal:100},t:2,eff:l=>slotsFor(l)+' chantier'+(slotsFor(l)>1?'s':'')+' · '+villageCap(l)+' villageois'}

@@ -68,7 +68,7 @@ export const HOUSE_MAX=5;
 export function have(k){return RES[k]?S.res[k]:(S.items[k]||0);}
 export function afford(c){for(const r in c)if(have(r)<c[r])return false;return true;}
 export function pay(c){for(const r in c){if(RES[r])S.res[r]-=c[r];else S.items[r]=(S.items[r]||0)-c[r];}}
-export function capacity(){return 3+2*S.b.dortoirs;}
+export function capacity(){return 4+4*S.b.dortoirs;}
 export function arena(){return 1+.15*S.b.arene;}
 export function need(lv){return Math.round(80*Math.pow(1.25,lv-1));}
 export function affinity(ap,m){if(!m)return{x:1,t:''};if(m.sign===ap.sign)return{x:1.5,t:'Même signe'};if(SIGNS[m.sign].el===SIGNS[ap.sign].el)return{x:1.25,t:'Même élément'};return{x:1,t:''};}
