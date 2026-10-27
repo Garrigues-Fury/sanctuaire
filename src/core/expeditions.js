@@ -2,7 +2,8 @@
    - Des alertes apparaissent avec le temps (une toutes les 6 à 10 h de jeu, 4 au plus) et disparaissent après 3 jours,
      sans aucune pénalité : on rate seulement la récompense.
    - Partir coûte 30 d'énergie au chevalier. Le départ est immédiat.
-   - Une scène au Sanctuaire se présente environ une fois par jour. */
+   - Une scène au Sanctuaire se présente toutes les 10 à 16 h : vie quotidienne, et depuis le 2026-10-27 amours, jalousies,
+     disputes, rivalités, réconciliations, soutien (data/lifescenes.js, core/romance.js). */
 import { GODS } from './data/gods.js';
 import { NATS } from './data/countries.js';
 import { FOES, REGIONS, regionOf } from './data/worldmap.js';
@@ -16,11 +17,15 @@ import { fkey, knightRate, levelUpAp, levelUpKnight, need, people, villageCap, x
 import { S, emit, log } from './state.js';
 import { G, clamp, mulberry32, pick } from './util.js';
 import { isAway, isKO } from './wounds.js';
+import { LIFE_NEEDS, acceptChance, applyLifeFx, castFor } from './romance.js';
+import { CX_LINES } from './data/lifescenes.js';
+import { fill } from './dialogue.js';
 
 export const EXP_E=30,MAX_EVENTS=4,EVENT_LIFE=72;
 const r=()=>Math.random();
 const ATTACK_SCENES=['defi','defi','deserteurs','banquet','champion'],RECRUIT_SCENES=['charrette','voleur','rival'];
-const HOME_SCENES=['doute','dispute','astres','trouvaille','complicite','tension','racines','complicite'];
+const HOME_SCENES=['doute','dispute','astres','trouvaille','complicite','tension','racines','complicite',
+ 'regard','regard','promenade','promenade','aveu','aveu','tendresse','jalousie','engueulade','reconciliation','rivalite','soutien','soutien','farce'];
 // Paires de personnages pour les scènes nées des affinités.
 function pairsFor(need){
  const P=people(),out=[];
@@ -54,7 +59,7 @@ export function tickWorld(sum){
  const before=W.events.length;W.events=W.events.filter(e=>e.until>S.gt||(W.active&&W.active.ev&&W.active.ev.id===e.id));
  if(W.events.length<before)S._dirty=true;
  while(S.gt>=W.nextAt){W.nextAt+=6+r()*4;const ev=spawn(r()<.6?'attack':'recruit');if(ev){S._dirty=true;const m=ev.type==='attack'?FOES[ev.foe].n+' menacent '+ev.v+' ('+ev.nat+').':'Une rumeur parle d’un enfant au cosmos étonnant à '+ev.v+' ('+ev.nat+').';log(m);sum?sum.ev.push(m):emit('alert');}}
- if(!W.home&&S.gt>=W.homeAt){W.homeAt=S.gt+18+r()*12;const ok=HOME_SCENES.filter(k=>homeCast(k));if(ok.length){W.home=pick(r,ok);S._dirty=true;}}
+ if(!W.home&&S.gt>=W.homeAt){W.homeAt=S.gt+10+r()*6;const ok=HOME_SCENES.filter(k=>homeCast(k));if(ok.length){W.home=pick(r,ok);S._dirty=true;}}
 }
 export function eventById(id){return(S.world&&S.world.events.find(e=>e.id===id))||null;}
 
@@ -66,6 +71,7 @@ function homeCast(key){
  if(need==='k2')return S.knights.length>=2;
  if(need==='pope')return S.knights.some(k=>k.role==='pope');
  if(need&&need.startsWith('pair'))return pairsFor(need).length>0;
+ if(LIFE_NEEDS.has(need))return castFor(need).length>0;
  return S.knights.length>0||ks.length>0;
 }
 function varsFor(k,extra){
@@ -90,12 +96,15 @@ export function startHomeScene(){
  const others=S.knights.filter(x=>x.id!==k.id);let k2=others[Math.floor(r()*others.length)]||null;
  const need=SCENES[key].need;
  if(need&&need.startsWith('pair')){const ps=pairsFor(need);if(ps.length){[k,k2]=pick(r,ps);if(r()<.5)[k,k2]=[k2,k];}}
+ let k3=null;
+ if(LIFE_NEEDS.has(need)){const cs=castFor(need);if(cs.length){[k,k2,k3]=pick(r,cs);if(['attract','date','couple','rival','cold'].includes(need)&&r()<.5)[k,k2]=[k2,k];}}
  const ap=S.aps[Math.floor(r()*S.aps.length)]||null;
  const lieux=['les ruines de la carrière','l’ancienne bibliothèque','les fondations du temple','le lit du torrent'];
  const nat=randomNat();
- const vars=varsFor(k,{ap:ap?ap.name:'',k2:k2?k2.name:'',e2:k2?G(k2,'e'):'',pope:pope?pope.name:'',pays:nat,lieu:pick(r,lieux),region:REGIONS[regionOf(k.nat)].n});
+ const vars=varsFor(k,{ap:ap?ap.name:'',k2:k2?k2.name:'',e2:k2?G(k2,'e'):'',il2:k2&&k2.sex==='F'?'elle':'il',Il2:k2&&k2.sex==='F'?'Elle':'Il',lui2:k2&&k2.sex==='F'?'elle':'lui',k3:k3?k3.name:'',e3:k3?G(k3,'e'):'',
+  cxline:k2&&k2.cx?CX_LINES[k2.cx.k]:'',acc:k&&k2?acceptChance(k,k2):.5,pope:pope?pope.name:'',pays:nat,lieu:pick(r,lieux),region:REGIONS[regionOf(k.nat)].n});
  W.home=null;
- W.active={kind:'home',scene:key,node:SCENES[key].start,kid:k.id,k2:k2&&k2.id,apId:ap&&ap.id,battle:null,mods:{},fx:[],vars,cast:{villageois:npc((r()*2**31)|0,'Grèce')},nat,log:[]};
+ W.active={kind:'home',scene:key,node:SCENES[key].start,kid:k.id,k2:k2&&k2.id,k3:k3&&k3.id,apId:ap&&ap.id,battle:null,mods:{},fx:[],vars,cast:{villageois:npc((r()*2**31)|0,'Grèce')},nat,log:[]};
  return W.active;
 }
 export function activeKnight(){const a=S.world&&S.world.active;return a?people().find(k=>k.id===a.kid)||null:null;}
@@ -138,9 +147,11 @@ export function finishScene(){
    if(f==='ap_co'&&ap){ap.st.co+=2;out.push(ap.name+' : +2 cosmos');}
    if(f==='kk_xp'&&k&&k2){[k,k2].forEach(q=>trainHours(q,6));out.push(k.name+' et '+k2.name+' : l’équivalent de 6 h d’entraînement');}
    if(f.startsWith('kk_friend:')&&k&&k2){const n=+f.split(':')[1],key=fkey(k.id,k2.id);S.friend[key]=Math.min(10,(S.friend[key]||0)+n);out.push('Amitié '+k.name+' – '+k2.name+' : '+S.friend[key]+'/10');}
+   if(/^(love|couple|breakup|rival|rival3|friend|friend3|friend23|bon|conf)(:|$)/.test(f))applyLifeFx(f,{k,k2,k3:people().find(x=>x.id===a.k3)},out);
    if(f==='spawn_recruit'){const ev=spawn('recruit',a.nat,.35);out.push(ev?'Une étoile brille sur la mappemonde : '+ev.v:'La mappemonde est déjà pleine d’alertes');}
   });
-  log('Au Sanctuaire : '+({doute:'un apprenti a douté, puis s’est relevé.',dispute:'deux chevaliers se sont défiés.',astres:'le Pope a lu les astres.',trouvaille:'les villageois ont fait une trouvaille.',complicite:'une soirée de rires entre '+a.vars.k+' et '+a.vars.k2+'.',tension:'le ton est monté entre '+a.vars.k+' et '+a.vars.k2+'.',racines:a.vars.k+' et '+a.vars.k2+' ont parlé de leur pays.'})[a.scene]);
+  const sl=SCENES[a.scene].log;
+  if(sl)log(fill(sl,a.vars));else log('Au Sanctuaire : '+({doute:'un apprenti a douté, puis s’est relevé.',dispute:'deux chevaliers se sont défiés.',astres:'le Pope a lu les astres.',trouvaille:'les villageois ont fait une trouvaille.',complicite:'une soirée de rires entre '+a.vars.k+' et '+a.vars.k2+'.',tension:'le ton est monté entre '+a.vars.k+' et '+a.vars.k2+'.',racines:a.vars.k+' et '+a.vars.k2+' ont parlé de leur pays.'})[a.scene]);
  }
  fx.forEach(f=>{
   const [t,x,y]=f.split(':');

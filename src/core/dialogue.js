@@ -4,10 +4,13 @@
 import { QUAL, FLAW } from './data/traits.js';
 import { clamp } from './util.js';
 import { legacy } from './scale.js';
+import { TONS } from './character.js';
 
 // Texte selon le caractère : la première qualité ou le premier défaut qui a une réplique dédiée l'emporte.
 export function pickText(t,p){
  if(typeof t==='string')return t;
+ // le ton de l'orateur d'abord (character.js), puis ses qualités et défauts
+ if(p&&p.ton&&t['t_'+p.ton])return t['t_'+p.ton];
  if(p){for(const q of(p.qual||[]))if(t[q.k])return t[q.k];for(const f of(p.flaw||[]))if(t[f.k])return t[f.k];}
  return t.default;
 }
@@ -21,6 +24,8 @@ export function reqOk(req,k,S){
  if(req.stat)return legacy(k,req.stat[0])>=req.stat[1];
  if(req.res)return(S.res[req.res[0]]||0)>=req.res[1];
  if(req.survivor)return k.origin==='survivant';
+ if(req.ton)return req.ton.split('|').includes(k.ton);
+ if(req.bon!=null)return(k.bon||0)>=req.bon;
  return true;
 }
 const STATN={fo:'Force',vi:'Vitesse',de:'Dextérité',en:'Endurance',ps:'Psychokinésie',co:'Cosmos'};
@@ -31,10 +36,13 @@ export function reqLabel(req){
  if(req.stat)return STATN[req.stat[0]]+' '+req.stat[1];
  if(req.res)return req.res[1]+' '+req.res[0];
  if(req.survivor)return'Survivant de la guerre sainte';
+ if(req.ton)return req.ton.split('|').map(t=>TONS[t].n).join(' ou ');
+ if(req.bon!=null)return'Cœur bienveillant';
  return'';
 }
 // Chance d'un tirage : selon une statistique du chevalier (de 20 % à 90 %), ou fixe.
-export function rollChance(roll,k){
+export function rollChance(roll,k,vars){
  if(typeof roll.p==='number')return roll.p;
+ if(typeof roll.p==='string')return clamp(+(vars&&vars[roll.p])||.5,.05,.95);
  const v=legacy(k,roll.stat);return clamp(.2+v/(roll.scale||100),.2,.9);
 }

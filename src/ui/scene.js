@@ -23,6 +23,7 @@ function speaker(who){
  if(who==='narr')return null;
  if(who==='k')return{p:activeKnight(),rank:activeKnight().rank||null,name:v.k};
  if(who==='k2'){const k=byId(a.k2);return k?{p:k,rank:k.rank||null,name:k.name}:null;}
+ if(who==='k3'){const k=byId(a.k3);return k?{p:k,rank:k.rank||null,name:k.name}:null;}
  if(who==='ap'){const p=S.aps.find(x=>x.id===a.apId);return p?{p,rank:null,name:p.name}:null;}
  if(who==='pope'){const p=S.knights.find(x=>x.role==='pope');return p?{p,rank:p.rank,name:p.name+', Grand Pope'}:null;}
  const c=a.cast[who];if(!c)return null;
@@ -78,7 +79,7 @@ function dialogueHtml(a){
 function lastOther(a){const ns=SCENES[a.scene].nodes;const w=Object.values(ns).map(n=>n.who).find(w=>w!=='k'&&w!=='narr');return w?speaker(w):null;}
 function controls(node,k){
  if(node.choices)return node.choices.map((c,i)=>{const ok=reqOk(c.req,k,S),lab=reqLabel(c.req);return '<button class="sc-choice" data-sc="ch:'+i+'"'+(ok?'':' disabled')+'>'+(lab?'<span class="req">['+esc(lab)+']</span> ':'')+esc(fill(c.t,S.world.active.vars))+'</button>';}).join('');
- if(node.roll){const p=Math.round(rollChance(node.roll,k)*100);return '<button class="btn" data-sc="roll">Tenter ('+p+' %)</button>';}
+ if(node.roll){const p=Math.round(rollChance(node.roll,k,S.world.active.vars)*100);return '<button class="btn" data-sc="roll">Tenter ('+p+' %)</button>';}
  if(node.fight)return '<button class="btn" data-sc="fight">Combattre</button><button class="btn ghost" data-sc="fightauto">Combat automatique</button>';
  if(node.end)return '<button class="btn" data-sc="end">Terminer</button>';
  return '<button class="btn" data-sc="next">Continuer ▸</button>';
@@ -139,7 +140,7 @@ function onClick(e){
  switch(k){
   case'next':sfx('tap');goTo(currentNode().next);break;
   case'ch':sfx('confirm');choose(+x);break;
-  case'roll':{const ok=doRoll(rollChance(currentNode().roll,activeKnight()));lastRoll=ok;sfx(ok?'confirm':'lose');break;}
+  case'roll':{const ok=doRoll(rollChance(currentNode().roll,activeKnight(),a.vars));lastRoll=ok;sfx(ok?'confirm':'lose');break;}
   case'fight':sfx('turn');beginFight();lastLog=0;break;
   case'fightauto':sfx('turn');beginFight();target=null;draw();ctl.ready.then(()=>startAuto());return;
   case'act':playTurn(x,target);return;

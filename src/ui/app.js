@@ -31,6 +31,7 @@ import { ensureAuto } from '../core/autotrain.js';
 import { setCensus } from './census.js';
 import { coefOf, gainStat, migrateScale, norm, promoteStats } from '../core/scale.js';
 import { COMPLEXES, TONS, ensureLife, heartLabel, heartText } from '../core/character.js';
+import { isCouple, loveOf, partnerOf, rivalOf } from '../core/romance.js';
 import { assign as defAssign, raid } from '../core/defense.js';
 import { launchMission } from '../core/missions.js';
 import { MP, missionModal } from './missions.js';
@@ -519,11 +520,13 @@ export function selfWork(p,kind){
 }
 export function friendBlock(p){
  const fs=friendsOf(p);const fb=friendBonus(p);
- let h='<details class="dt"><summary>Amitiés <span class="aside">+'+Math.round(fb*100)+' % d’XP</span></summary>';
+ const pa=partnerOf(p);
+ let h=pa?'<div class="couple-line">'+ptImg(pa,pa.rank||null)+'<span>En couple avec <b>'+esc(pa.name)+'</b></span></div>':'';
+ h+='<details class="dt"><summary>Amitiés <span class="aside">+'+Math.round(fb*100)+' % d’XP</span></summary>';
  h+='<p class="hint">Chaque niveau d’amitié donne +1 % d’XP aux deux personnes (+2 % entre un maître et son apprenti), plafonné à 30 %. Points disponibles : <b style="color:var(--gold-hi)">'+S.fp+'</b>.</p><div class="list">';
  people().filter(o=>o.id!==p.id).sort((a,b)=>friendLv(p.id,b.id)-friendLv(p.id,a.id)).forEach(o=>{const lv=friendLv(p.id,o.id);
   const c=compat(p,o);
-  h+='<div class="item fr">'+ptImg(o,o.rank||null)+'<div class="main"><div class="name">'+esc(o.name)+(c.v?' <span class="chip '+(c.v>0?'ok':'f')+'"'+tip(c.why.join('\n'))+'>'+compatLabel(c.v)+'</span>':'')+'</div><div class="hearts"'+tip('hearts')+' aria-label="Amitié '+lv+' sur 10">'+'<i class="on"></i>'.repeat(lv)+'<i></i>'.repeat(10-lv)+'</div></div><button class="btn sm ghost" data-act="friend:'+p.id+':'+o.id+'"'+(S.fp<1||lv>=10?' disabled':'')+'>+1</button></div>';});
+  h+='<div class="item fr">'+ptImg(o,o.rank||null)+'<div class="main"><div class="name">'+esc(o.name)+(c.v?' <span class="chip '+(c.v>0?'ok':'f')+'"'+tip(c.why.join('\n'))+'>'+compatLabel(c.v)+'</span>':'')+(isCouple(p,o)?' <span class="chip love">En couple</span>':loveOf(p,o)?' <span class="chip love">Attirance '+loveOf(p,o)+'/10</span>':'')+(rivalOf(p,o)?' <span class="chip f">Rival '+rivalOf(p,o)+'/10</span>':'')+'</div><div class="hearts"'+tip('hearts')+' aria-label="Amitié '+lv+' sur 10">'+'<i class="on"></i>'.repeat(lv)+'<i></i>'.repeat(10-lv)+'</div></div><button class="btn sm ghost" data-act="friend:'+p.id+':'+o.id+'"'+(S.fp<1||lv>=10?' disabled':'')+'>+1</button></div>';});
  return h+'</div></details>';
 }
 export function itemUse(p,kind){

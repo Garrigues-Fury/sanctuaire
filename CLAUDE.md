@@ -139,7 +139,13 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
     - **Cœur** (−100 haine à +100 bonté) : ±10 d'affinité avec toutes les armures ; une armure d'or refuse un cœur rancunier (sous −40 ; sous −70 pour les Gémeaux et le Cancer, qui connaissent la part d'ombre). Compte aussi dans les affinités entre personnages.
     - **Ton** (subtil, déconneur, taquin, franc, réservé, solennel, tendre) : façon de parler dans les scènes, et affinités.
     - **Complexes** (apparence, taille, origines, force, échec, parole) : −3 points aux épreuves par niveau tant que la confiance n'est pas revenue ; chaque jour, les amis bienveillants la font remonter.
-    - Romances prévues (étape 2) : **entre un homme et une femme adultes seulement** (choix de Seba), jamais avec un apprenti. Mini-jeux (étape 3) : gains limités par jour.
+14 ter. **Scènes de vie (demandées par Seba le 2026-10-27, `src/core/romance.js`, `src/core/data/lifescenes.js`)** :
+    - Une scène au Sanctuaire toutes les 10 à 16 h (au lieu d'une par jour), qui attend sans pénalité.
+    - 10 scènes à choix : regard (attirance), promenade (prendre la main), aveu (couple ou refus), tendresse, jalousie (couple + un tiers), dispute de couple, réconciliation, rivalité (course, duel), soutien d'un ami qui doute (confiance du complexe), farce.
+    - Les répliques varient selon le **ton** de l'orateur (clés `t_<ton>`), puis ses qualités et défauts ; certains choix exigent un ton ou un cœur bienveillant.
+    - Effets : attirance 0–10 (aveu possible à 6, chance d'acceptation selon l'attirance, l'entente et le cœur), couples, rivalités 0–10, amitié, cœur, confiance. Affichés dans Personnages › Relations (« Cœurs et rivalités ») et dans la rubrique Liens des fiches.
+    - **Romances entre un homme et une femme adultes seulement** (choix de Seba), jamais avec un apprenti.
+14 quater. **À faire (étape 3, demandée par Seba le 2026-10-27)** : mini-jeux à difficulté croissante qui ont une fin (jeu des flèches débloqué par le porteur de la Flèche : vitesse et dextérité ; d'autres par constellation), gains d'XP à répartir limités par jour ; chaque chevalier aura une quête d'histoire, des objectifs ou un mini-jeu à finir ; à 100 %, bonus pour le Sanctuaire ; menu de collectionneur (cartes de chevaliers, statistiques de complétion). Seba a d'autres idées de mini-jeux pour plus tard.
 15. **Gardes** : un apprenti qui a raté son épreuve ou qui est surpassé devient garde. Il est affecté à une maison, au village ou à un site, et sa valeur de défense comptera lors des attaques.
 12. **Lecture des astres**, le duel quotidien du Pope contre un dieu :
     - **Fréquence** : une partie par jour réel, toutes les 24 minutes en mode test. Il faut un Grand Pope en poste.

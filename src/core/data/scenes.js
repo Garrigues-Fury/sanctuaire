@@ -5,6 +5,8 @@
    Orateurs : narr, k, k2, ap, pope, ancien, parent, enfant, chef, rival, villageois.
    Un texte en objet varie selon le caractère de l'orateur : clé = qualité ou défaut (arrogant, loyal, drole…). */
 
+import { LIFE_SCENES } from './lifescenes.js';
+
 export const SCENES={
 
 /* ---------------- attaques de villages ---------------- */
@@ -195,4 +197,5 @@ racines:{kind:'home',need:'pairRoots',start:'a',nodes:{
  song:{who:'narr',text:'La chanson est maladroite, à deux voix qui ne s’accordent pas tout à fait. Les villageois sortent sur le pas de leur porte pour écouter.',end:'home'}
 }}
 };
+Object.assign(SCENES,LIFE_SCENES);
 export const SCENE_KEYS=Object.keys(SCENES);

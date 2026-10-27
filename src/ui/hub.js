@@ -6,6 +6,7 @@ import { CONS, CONS_BY, EKEYS, ELEM, RANKS, SIGNS, de } from '../core/data/world
 import { duelAvailable, godState } from '../core/duel.js';
 import { POSTS, afford, cap, capacity, defenseOf, elemScores, masterOf, siteProd, siteSlots, usedSlots, people, pope, postName, power, rates, sanctPower, slotsFor, trialEval, villageCap } from '../core/rules.js';
 import { compat, compatLabel } from '../core/social.js';
+import { ensureLove } from '../core/romance.js';
 import { HADES_H, POSEIDON_H, S } from '../core/state.js';
 import { dur, esc, fmt } from '../core/util.js';
 import { RES_ICON, icon } from './icons.js';
@@ -165,10 +166,27 @@ function viewRelations(){
  const P=people();
  const links=Object.entries(S.friend||{}).filter(([,v])=>v>0).map(([k,v])=>{const [a,b]=k.split('-').map(Number);return{a:P.find(p=>p.id===a),b:P.find(p=>p.id===b),v};}).filter(x=>x.a&&x.b).sort((x,y)=>y.v-x.v);
  let h='<section class="sec"><div class="kpis">'+kpi('heart','Points d’amitié',S.fp,'+1 toutes les 6 h')+kpi('users','Liens noués',links.length,'')+'</div><p class="hint">Les amitiés accélèrent la formation et les découvertes. Ouvrez une fiche pour offrir un point d’amitié.</p></section>';
+ h+=loveSection(P);
  h+='<section class="sec"><div class="sec-h"><h2>Liens les plus forts</h2></div>';
  h+=links.length?'<div class="houses">'+links.slice(0,20).map(x=>{const c=compat(x.a,x.b);return '<div class="house-r rel"><span class="duo">'+ptImg(x.a,x.a.rank)+ptImg(x.b,x.b.rank)+'</span><span class="main"><b>'+esc(x.a.name)+' & '+esc(x.b.name)+'</b><small>'+compatLabel(c.v)+(c.why[0]?' · '+esc(c.why[0].replace(/^[+−] /,'')):'')+'</small>'+bar(x.v*10,'','rose')+'</span><b class="num dv">'+x.v+'/10</b></div>';}).join('')+'</div>':'<div class="empty">Aucun lien pour l’instant : les amitiés se nouent avec le temps et les entraînements à deux.</div>';
  const T=[];for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const c=compat(P[i],P[j]);if(c.v<=-2)T.push({a:P[i],b:P[j],c});}
  if(T.length)h+='<div class="sec-h" style="margin-top:12px"><h2>Tensions</h2></div><div class="houses">'+T.sort((x,y)=>x.c.v-y.c.v).slice(0,10).map(x=>'<div class="house-r rel"><span class="duo">'+ptImg(x.a,x.a.rank)+ptImg(x.b,x.b.rank)+'</span><span class="main"><b>'+esc(x.a.name)+' & '+esc(x.b.name)+'</b><small>'+compatLabel(x.c.v)+(x.c.why[0]?' · '+esc(x.c.why[0].replace(/^[+−] /,'')):'')+'</small></span></div>').join('')+'</div>';
+ return h+'</section>';
+}
+
+// Couples, attirances et rivalités (core/romance.js), nés des scènes de vie au Sanctuaire.
+function loveSection(P){
+ ensureLove();
+ const pair=k=>{const [a,b]=k.split('-').map(Number);return[P.find(p=>p.id===a),P.find(p=>p.id===b)];};
+ const row=(a,b,label,v,cls)=>'<div class="house-r rel"><span class="duo">'+ptImg(a,a.rank)+ptImg(b,b.rank)+'</span><span class="main"><b>'+esc(a.name)+' & '+esc(b.name)+'</b><small>'+label+'</small>'+(v!=null?bar(v*10,'',cls):'')+'</span>'+(v!=null?'<b class="num dv">'+v+'/10</b>':'')+'</div>';
+ const couples=Object.keys(S.couple).map(k=>[...pair(k),S.couple[k]]).filter(x=>x[0]&&x[1]);
+ const loves=Object.entries(S.love).filter(([k,v])=>v>0&&S.couple[k]==null).map(([k,v])=>[...pair(k),v]).filter(x=>x[0]&&x[1]).sort((x,y)=>y[2]-x[2]);
+ const rivals=Object.entries(S.rival).filter(([,v])=>v>0).map(([k,v])=>[...pair(k),v]).filter(x=>x[0]&&x[1]).sort((x,y)=>y[2]-x[2]);
+ let h='<section class="sec"><div class="sec-h"><h2>Cœurs et rivalités</h2><span class="aside">'+couples.length+' couple'+(couples.length>1?'s':'')+'</span></div>';
+ if(!couples.length&&!loves.length&&!rivals.length)return h+'<div class="empty">Rien encore. Les scènes au Sanctuaire font naître des attirances, des rivalités, parfois des couples.</div></section>';
+ h+='<div class="houses">'+couples.map(([a,b,t])=>row(a,b,'En couple depuis le jour '+(Math.floor(t/24)+1),null)).join('')
+  +loves.slice(0,8).map(([a,b,v])=>row(a,b,v>=6?'Amoureux : un aveu se prépare':'Attirance',v,'rose')).join('')
+  +rivals.slice(0,8).map(([a,b,v])=>row(a,b,'Rivalité',v,'')).join('')+'</div>';
  return h+'</section>';
 }
 
