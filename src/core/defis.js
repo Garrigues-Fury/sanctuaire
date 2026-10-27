@@ -1,4 +1,5 @@
 /* Règles des défis physiques (data/defis.js). Rien ne quitte le téléphone : le fichier GPX est lu sur place.
+   - Un défi ne s'ouvre que quand un chevalier porte l'armure.
    - Un palier validé rapporte des heures d'entraînement à la réserve et des statistiques au porteur de l'armure,
      sans la limite par jour des mini-jeux : c'est un vrai effort.
    - Une même sortie GPX ne compte qu'une fois. */
@@ -10,6 +11,8 @@ import { S, log } from './state.js';
 export function ensureDefis(){if(!S.defis)S.defis={};if(!S.gpxUsed)S.gpxUsed=[];if(S.xpPool==null)S.xpPool=0;return S.defis;}
 export function defiOf(consK){ensureDefis();return S.defis[consK]||(S.defis[consK]={done:0,last:0});}
 export function defiType(consK){return DEFI_OF_CONS[consK]||null;}
+// Comme les mini-jeux, un défi ne s'ouvre que quand un chevalier porte l'armure (choix de Seba du 2026-10-28).
+export function defiOpen(consK){return!!S.knights.find(k=>k.cons===consK);}
 // Le prochain palier, et quand il sera ouvert (repos de 20 h entre deux paliers, en temps réel).
 export function nextStep(consK,now=Date.now()){
  const t=defiType(consK),d=defiOf(consK),T=DEFI_TYPES[t];if(!T||d.done>=T.steps.length)return null;
@@ -31,13 +34,14 @@ function validate(consK,now,out,what){
 }
 // Pompes, gainage, corde : sur l'honneur.
 export function validateHonor(consK,now=Date.now()){
- const t=defiType(consK),st=nextStep(consK,now);if(!t||!st||!st.ready||DEFI_TYPES[t].gpx)return null;
+ const t=defiType(consK),st=nextStep(consK,now);if(!t||!st||!st.ready||DEFI_TYPES[t].gpx||!defiOpen(consK))return null;
  return validate(consK,now,[],st.text);
 }
 // VTT et course : une trace GPX déjà lue (gpxSummary) ; la distance doit atteindre le palier.
 export function validateGpx(consK,g,now=Date.now()){
  const t=defiType(consK),st=nextStep(consK,now);
  if(!t||!st||!DEFI_TYPES[t].gpx)return{ok:false,why:'Ce défi ne se valide pas par un fichier GPX.'};
+ if(!defiOpen(consK))return{ok:false,why:'Ce défi s’ouvrira quand un chevalier portera cette armure.'};
  if(!st.ready)return{ok:false,why:'Repos : le prochain palier s’ouvrira plus tard.'};
  if(!g||!g.km)return{ok:false,why:'Aucun parcours lisible dans ce fichier.'};
  if(S.gpxUsed.includes(g.sig))return{ok:false,why:'Cette sortie a déjà été comptée.'};

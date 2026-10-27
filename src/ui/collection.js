@@ -6,7 +6,7 @@ import { CONS, CONS_BY, ELEM, RANKS, armorName } from '../core/data/world.js';
 import { MG_LEVELS, BONUS_N, bonusText, epBonus, gameOf } from '../core/data/minigames.js';
 import { DEFI_OF_CONS, DEFI_TYPES, DEFI_REST_H } from '../core/data/defis.js';
 import { DAY_FULL, ensureMG, mgOf } from '../core/minigames.js';
-import { defiOf, ensureDefis, nextStep } from '../core/defis.js';
+import { defiOf, defiOpen, ensureDefis, nextStep } from '../core/defis.js';
 import { bearerOf, cardStats, epreuveOf, isDone, progressOf, seenCons } from '../core/epreuves.js';
 import { armorImg } from '../core/data/art.js';
 import { people, power } from '../core/rules.js';
@@ -31,6 +31,7 @@ function gameBlock(c,b){
 function defiBlock(c){
  const t=DEFI_OF_CONS[c.k],T=DEFI_TYPES[t],d=defiOf(c.k),st=nextStep(c.k),n=T.steps.length;
  let h='<div class="obj"><span>'+esc(T.n)+'</span><b class="num">'+d.done+' / '+n+'</b>'+bar(d.done/n*100,'','green')+'</div>';
+ if(!defiOpen(c.k))return h+'<p class="hint">S’ouvrira quand un chevalier portera cette armure.</p>';
  if(!st)return h+'<p class="hint">Défi terminé : bravo !</p>';
  h+='<p class="defi-next">Palier '+(st.i+1)+' : <b>'+esc(st.text)+'</b></p>';
  if(!st.ready)return h+'<p class="hint">Repos : prochain palier dans '+dur((st.readyAt-Date.now())/3600e3)+'. Le repos fait partie de l’entraînement.</p>';
@@ -43,8 +44,8 @@ export function viewEpreuves(){
  ensureMG();ensureDefis();
  const P=people().filter(p=>!S.pending.includes(p));
  // défis physiques
- const DC=CONS.filter(c=>DEFI_OF_CONS[c.k]).sort((a,b)=>(nextStep(b.k)?.ready?1:0)-(nextStep(a.k)?.ready?1:0));
- let h='<section class="sec"><div class="sec-h"><h2>Défis du Sanctuaire</h2><span class="aside">dans la vraie vie</span></div><p class="hint">Ces épreuves, c’est vous qui les accomplissez. Dix paliers chacune, un par jour au plus ('+DEFI_REST_H+' h de repos). Échauffez-vous, écoutez votre corps, et ne trichez pas : c’est vous que le Sanctuaire veut rendre meilleur. Chaque palier rapporte de 6 à 15 h à la réserve et des statistiques au porteur de l’armure ; à 100 %, un bonus double.</p><div class="ep-list">';
+ const ALL=CONS.filter(c=>DEFI_OF_CONS[c.k]),DC=ALL.filter(c=>defiOpen(c.k)).sort((a,b)=>(nextStep(b.k)?.ready?1:0)-(nextStep(a.k)?.ready?1:0));
+ let h='<section class="sec"><div class="sec-h"><h2>Défis du Sanctuaire</h2><span class="aside">dans la vraie vie</span></div><p class="hint">Ces épreuves, c’est vous qui les accomplissez. Dix paliers chacune, un par jour au plus ('+DEFI_REST_H+' h de repos). Échauffez-vous, écoutez votre corps, et ne trichez pas : c’est vous que le Sanctuaire veut rendre meilleur. Chaque palier rapporte de 6 à 15 h à la réserve et des statistiques au porteur de l’armure ; à 100 %, un bonus double. Comme les jeux, chaque défi s’ouvre quand un chevalier porte son armure.</p>'+(DC.length?'':'<div class="empty">Aucun défi ouvert pour l’instant.</div>')+(ALL.length>DC.length?'<p class="hint">Encore à débloquer : '+ALL.filter(c=>!defiOpen(c.k)).map(c=>esc(c.n)+' ('+DEFI_TYPES[DEFI_OF_CONS[c.k]].n.toLowerCase()+')').join(', ')+'.</p>':'')+'<div class="ep-list">';
  DC.forEach(c=>{const b=bearerOf(c),d=isDone(c.k);h+='<div class="ep'+(d?' done':'')+'"><div class="ep-h">'+(b?ptImg(b,b.rank):'<span class="mg-lock">'+icon('bolt',20)+'</span>')+'<div><b>'+esc(armorName(c))+'</b><small>'+(b?'porteur : '+esc(b.name):'sans porteur pour l’instant')+'</small></div><b class="num ep-p">'+(d?'✓':pct(progressOf(c)))+'</b></div>'+defiBlock(c)+'<small class="hint">'+(d?'Accompli : ':'À 100 % : ')+bonusText(epBonus(c.k))+'.</small></div>';});
  h+='</div></section>';
  h+='<section class="sec"><div class="sec-h"><h2>Réserve d’entraînement</h2><span class="aside"><b class="num">'+S.xpPool+'</b> h</span></div>';
@@ -61,7 +62,7 @@ export function viewEpreuves(){
 /* ---------- collection ---------- */
 const RANK_ORDER=['or','argent','bronze'];
 function card(c){
- const seen=seenCons().includes(c.k)||isDone(c.k)||!!DEFI_OF_CONS[c.k],b=bearerOf(c),d=isDone(c.k),p=progressOf(c);
+ const seen=seenCons().includes(c.k)||isDone(c.k),b=bearerOf(c),d=isDone(c.k),p=progressOf(c);
  const img=b?ptImg(b,b.rank):armorImg(c.k,true)?'<img class="pt" src="'+armorImg(c.k,true)+'" alt="">':'<span class="cc-q">'+(seen?esc(c.n[0]):'?')+'</span>';
  return '<button class="ccard '+c.rank+(d?' done':'')+(seen?'':' unseen')+'" data-act="ccard:'+c.k+'" aria-label="'+esc(c.n)+'">'+img+'<b>'+esc(c.n)+'</b><small>'+(d?'✓ accomplie':seen?pct(p):'inconnue')+'</small><i class="cc-bar"><i style="width:'+Math.round(p*100)+'%"></i></i></button>';
 }
@@ -78,7 +79,7 @@ export function viewCollection(){
 }
 // Détail d'une carte (fenêtre).
 export function cardModal(k){return()=>{
- const c=CONS_BY[k],b=bearerOf(c),s=cardStats(b),d=isDone(k),e=epreuveOf(c),seen=seenCons().includes(k)||d||e.type==='defi';
+ const c=CONS_BY[k],b=bearerOf(c),s=cardStats(b),d=isDone(k),e=epreuveOf(c),seen=seenCons().includes(k)||d;
  let h='<div class="sheet-head">'+(b?ptImg(b,b.rank,true):'')+'<div class="main"><h2>'+esc(c.n)+'</h2><div class="hint">'+esc(armorName(c))+' · '+ELEM[c.el]+'</div></div></div>';
  if(!seen)return h+'<p class="hint">Cette armure n’a encore jamais eu de porteur au Sanctuaire.</p>';
  h+='<div class="sec-h"><h2>Épreuve</h2><span class="aside">'+(d?'✓ accomplie':pct(progressOf(c)))+'</span></div>';

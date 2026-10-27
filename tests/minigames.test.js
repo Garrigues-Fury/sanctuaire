@@ -108,6 +108,9 @@ describe('défis réels', () => {
     expect(g.km).toBeGreaterThan(29.5); expect(g.km).toBeLessThan(30.5);
     expect(g.dplus).toBe(50);
     const k = Object.keys(DEFI_OF_CONS).find(c => DEFI_OF_CONS[c] === 'velo');
+    S.knights.forEach(x => { if (x.cons === k) x.cons = 'pegase'; });
+    expect(validateGpx(k, g).why).toMatch(/porter/);
+    bear(k);
     expect(validateGpx(k, gpxSummary(gpx(20))).ok).toBe(false);
     expect(validateGpx(k, g).ok).toBe(true);
     // la même sortie ne compte pas deux fois, et il faut se reposer
@@ -117,6 +120,9 @@ describe('défis réels', () => {
   });
   it('les pompes se valident sur l’honneur, un palier par jour', () => {
     const k = Object.keys(DEFI_OF_CONS).find(c => DEFI_OF_CONS[c] === 'pompes'), now = Date.now(), pool = S.xpPool || 0;
+    S.knights.forEach(x => { if (x.cons === k) x.cons = 'pegase'; });
+    expect(validateHonor(k, now)).toBe(null);
+    bear(k);
     expect(validateHonor(k, now)).toBeTruthy();
     expect(S.xpPool).toBeGreaterThan(pool);
     expect(validateHonor(k, now + 3600e3)).toBe(null);

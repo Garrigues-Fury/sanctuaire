@@ -1,6 +1,6 @@
 /* Épreuves des chevaliers (demandées par Seba le 2026-10-27) : chaque constellation a la sienne.
    - Un mini-jeu de 20 niveaux (data/minigames.js), qui s'ouvre quand l'armure a un porteur ;
-   - ou un défi physique réel de 10 paliers (data/defis.js), ouvert à tout moment : c'est le joueur qui l'accomplit.
+   - ou un défi physique réel de 10 paliers (data/defis.js), accompli par le joueur ; ouvert lui aussi par le porteur de l'armure.
    (Les objectifs du début ont été remplacés par des jeux, à la demande de Seba. D'autres objectifs viendront avec
    les ennemis des autres panthéons.)
    Une épreuve finie à 100 % l'est pour toujours : bonus permanent au Sanctuaire (recomputeCB) et carte dorée. */
