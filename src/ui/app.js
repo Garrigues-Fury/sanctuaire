@@ -1,6 +1,6 @@
 /* Interface : onglets, fiches, fenêtres et actions du joueur. */
 import { looks } from '../core/appearance.js';
-import { SANCT_VIEWS, armorImg, goldArt } from '../core/data/art.js';
+import { SANCT_VIEWS, armorImg, goldArt, paintedVariants } from '../core/data/art.js';
 import { ARTEFACTS, ART_BY, CARD_BY, EFF_N, UNLOCK_N, effText } from '../core/data/cards.js';
 import { NATS } from '../core/data/countries.js';
 import { ARMOR_COST, ARMOR_FORGE, ARMOR_SMITH, ARMOR_WORK, BORDER, BUILD, IKEYS, ITEMS, RECIPES, REC_BY, RES, RKEYS, ROLES, STATN, TOOL_SITES, TRIAL_LV, WORK } from '../core/data/economy.js';
@@ -607,7 +607,8 @@ export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);
   return h+friendBlock(k);
  }
  // Profil : le personnage en pied, ses statistiques, son histoire
- h+='<figure class="fullbody"><img src="'+fullBody(k,k.rank)+'" alt="'+esc(k.name)+' en '+esc(armorLow(c))+'" width="300" height="675"><figcaption>'+esc(armorName(c))+'</figcaption></figure>';
+ const nv=paintedVariants(k).length;
+ h+='<figure class="fullbody"><img src="'+fullBody(k,k.rank)+'" alt="'+esc(k.name)+' en '+esc(armorLow(c))+'" width="300" height="675"><figcaption>'+esc(armorName(c))+'</figcaption>'+(nv>1?'<button class="btn ghost sm" data-act="artv:'+k.id+'">Autre illustration ('+((k.artV||0)%nv+1)+' / '+nv+')</button>':'')+'</figure>';
  h+=radarBox(k)+statsHtml(k,'k')+itemUse(k,'k');
  h+='<div class="hint">Techniques : '+(k.tech.length?k.tech.map(esc).join(' · '):'aucune')+'</div>';
  h+=persoBlock(k);
@@ -724,6 +725,7 @@ export function act(a){
  const [k,x,y,z,w]=a.split(':');
  switch(k){
  case'census':setCensus(x,y);render();return;
+ case'artv':{const kn=S.knights.find(q=>q.id===+x);if(kn)kn.artV=((kn.artV||0)+1)%Math.max(1,paintedVariants(kn).length);break;}
  case'defrm':{const kn=S.knights.find(q=>q.id===+x);if(kn)defAssign(kn,null);break;}
  case'raidnow':{if(S.speed!==60)return;const r=raid();log(r.msg);flash=r.msg;break;}
  case'mission':MP.cur={id:+x,team:[]};openModal(missionModal);return;

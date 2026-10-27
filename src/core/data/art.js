@@ -7,10 +7,16 @@ export const SIGN_KEY=['belier','taureau','gemeaux','cancer','lion','vierge','ba
 const armorKey=c=>c.rank==='or'?'or-'+SIGN_KEY[c.sign]:c.rank+'-'+c.el;
 // Chevalier illustré façon gacha (charte v3) : même armure (maison d'or, ou élément pour l'argent et le bronze)
 // et même sexe. Une image n'a qu'un porteur à la fois : le premier chevalier qui y a droit ; les autres gardent le générateur.
-// Une illustration propre à la constellation (perso-cons-coupe-F…) passe avant celle de l'élément : elle va à celui qui porte l'armure.
+// Illustrations propres à la constellation : perso-cons-fourneau-F, puis les variantes F2, F3… au choix du joueur (p.artV).
+export function paintedVariants(p){
+ if(!p||!p.cons||!p.sex)return[];const own='perso-cons-'+p.cons+'-'+p.sex,out=[];
+ for(let i=1;i<10;i++){const k=i===1?own:own+i;if(PAINTED.has(k))out.push(k);}
+ return out;
+}
+// Une illustration propre à la constellation passe avant celle de l'élément : elle va à celui qui porte l'armure.
 export function paintedOf(p){
  const c=p&&p.cons&&CONS_BY[p.cons];if(!c||!S||!S.knights)return null;
- const own='perso-cons-'+p.cons+'-'+p.sex;if(PAINTED.has(own))return{body:'img/gacha/'+own+'.webp',head:'img/gacha/'+own+'-tete.webp'};
+ const vs=paintedVariants(p);if(vs.length){const own=vs[(p.artV||0)%vs.length];return{body:'img/gacha/'+own+'.webp',head:'img/gacha/'+own+'-tete.webp'};}
  const key='perso-'+armorKey(c)+'-'+p.sex;if(!PAINTED.has(key))return null;
  const first=S.knights.filter(k=>k.sex===p.sex&&k.cons&&CONS_BY[k.cons]&&armorKey(CONS_BY[k.cons])===armorKey(c)).sort((a,b)=>a.id-b.id)[0];
  if(first&&first.id!==p.id)return null;
