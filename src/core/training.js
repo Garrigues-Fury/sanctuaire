@@ -6,6 +6,8 @@ import { guardRate, knightRate, levelUpAp, levelUpKnight, need, xpRate } from '.
 import { isMaster } from './schedule.js';
 import { learnFrom } from './skills.js';
 import { S } from './state.js';
+import { gainStat } from './scale.js';
+import { isAway, isKO } from './wounds.js';
 
 export const TRAININGS=[
  {k:'fo',n:'Combat au rocher',gain:'+1 force',e:25,st:{fo:1}},
@@ -35,6 +37,7 @@ export function trainHours(p,hours){
  else{p.xp+=guardRate(p)*hours;let g=0;while(p.xp>=need(p.lv)*1.5&&g++<50){p.xp-=need(p.lv)*1.5;p.lv++;p.sp=(p.sp||0)+2;}}
 }
 export function canTrain(p,t){
+ if(isKO(p)||isAway(p))return false;
  if(p.nrg<t.e)return false;
  if(t.item&&(S.items[t.item]||0)<1)return false;
  if(t.savoir&&S.res.savoir<t.savoir(p))return false;
@@ -52,6 +55,8 @@ export function pairPartners(p){
 }
 // Pourquoi le partenaire n'est pas disponible (ou null s'il l'est).
 export function unavailable(q){
+ if(isKO(q))return'à l’infirmerie';
+ if(isAway(q))return'en mission';
  if(q.nrg<PAIR_E)return'trop fatigué'+(q.sex==='F'?'e':'');
  if(q.cd&&q.cd>S.gt)return'au repos après une épreuve';
  if(q.job)return'en renfort sur un site';
@@ -68,6 +73,7 @@ export function acceptChance(p,q,compatV){
 export function refusedRecently(p,q){return S.refus&&S.refus[pk(p.id,q.id)]>S.gt;}
 // Propose une séance à deux. Renvoie {ok, msg}.
 export function trainTogether(p,q,compatV){
+ if(isKO(p)||isAway(p))return{ok:false,msg:p.name+' n’est pas disponible.'};
  if(p.nrg<PAIR_E)return{ok:false,msg:p.name+' est trop fatigué'+(p.sex==='F'?'e':'')+'.'};
  const why=unavailable(q);if(why)return{ok:false,msg:q.name+' n’est pas disponible : '+why+'.'};
  if(refusedRecently(p,q))return{ok:false,msg:q.name+' a déjà refusé tout à l’heure. Mieux vaut attendre un peu.'};
@@ -94,7 +100,7 @@ export function train(p,key){
  const t=TRAININGS.find(x=>x.k===key);if(!t||!canTrain(p,t))return null;
  p.nrg-=t.e;if(t.item)S.items[t.item]--;if(t.savoir)S.res.savoir-=t.savoir(p);
  if(Math.random()<.1*fl(p,'distrait'))return p.name+' a la tête ailleurs : la séance ne donne rien.';
- if(t.st)for(const s in t.st)p.st[s]+=t.st[s];
+ if(t.st)for(const s in t.st)gainStat(p,s,t.st[s]);
  if(t.hours)trainHours(p,t.hours);
  return t.n+' : '+t.gain+' pour '+p.name+'.';
 }

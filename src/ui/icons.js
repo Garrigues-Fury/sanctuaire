@@ -31,7 +31,8 @@ const P={
  coin:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7v10M9 9.5c0-1.4 1.3-2 3-2s3 .8 3 2-1.3 1.8-3 2-3 .8-3 2 1.3 2 3 2 3-.6 3-2',
  plus:'M12 5v14M5 12h14',
  map:'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2ZM9 4v14M15 6v14',
- save:'M5 3h11l3 3v15H5ZM8 3v6h8V3M8 21v-7h8v7'
+ save:'M5 3h11l3 3v15H5ZM8 3v6h8V3M8 21v-7h8v7',
+ chart:'M3 21h18M6 17V11M11 17V5M16 17v-8M21 17v-4'
 };
 export function icon(name,size=20,cls=''){
  return '<svg class="ico '+cls+'" viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(P[name]||P.star)+'"/></svg>';

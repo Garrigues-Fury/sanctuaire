@@ -7,7 +7,7 @@ import { newGame } from '../src/core/people.js';
 import { S, setS } from '../src/core/state.js';
 
 beforeEach(() => { setS(null); newGame(); recomputeCB(); });
-const P = (o) => Object.assign({ id: 1, name: 'X', nat: 'Grèce', sign: 0, qual: [], flaw: [], bio: [], st: { fo: 20, vi: 20, en: 20, co: 20, de: 20, ps: 20 }, lv: 10, rank: 'bronze', tech: ['Éclat'], origin: 'forme' }, o);
+const P = (o) => Object.assign({ id: 1, name: 'X', nat: 'Grèce', sign: 0, qual: [], flaw: [], bio: [], st: { fo: 20, vi: 20, en: 20, co: 20, de: 20, ps: 20 }, lv: 10, rank: 'bronze', scale: 1, tech: ['Éclat'], origin: 'forme' }, o); // scale 1 : statistiques lues telles quelles (échelle d'un apprenti)
 
 describe('six statistiques', () => {
   it('les nouveaux personnages ont dextérité et psychokinésie', () => {

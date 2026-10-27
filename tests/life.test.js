@@ -7,9 +7,10 @@ import { PAIR_E, TRAININGS, acceptChance, canTrain, pairPartners, train, trainTo
 import { newGame } from '../src/core/people.js';
 import { recomputeCB } from '../src/core/rules.js';
 import { S, setS } from '../src/core/state.js';
+import { coefOf } from '../src/core/scale.js';
 
 beforeEach(() => { setS(null); newGame(); recomputeCB(); });
-const P = (o) => Object.assign({ id: Math.random(), name: 'X', nat: 'Grèce', sign: 0, qual: [], flaw: [], bio: [], st: { fo: 20, vi: 20, en: 20, co: 20 }, lv: 10, rank: 'bronze', tech: ['Éclat'], origin: 'forme' }, o);
+const P = (o) => Object.assign({ id: Math.random(), name: 'X', nat: 'Grèce', sign: 0, qual: [], flaw: [], bio: [], st: { fo: 20, vi: 20, en: 20, co: 20 }, lv: 10, rank: 'bronze', scale: 1, tech: ['Éclat'], origin: 'forme' }, o);
 
 describe('qualités et défauts', () => {
   it('chaque trait décrit ses effets au Sanctuaire, en combat et avec les autres', () => {
@@ -60,7 +61,7 @@ describe('entraînements', () => {
   it('tout le monde peut s’entraîner, surtout à l’énergie', () => {
     const k = S.knights[0]; k.nrg = 100; k.flaw = []; const fo = k.st.fo;
     expect(train(k, 'fo')).toMatch(/force/);
-    expect(k.st.fo).toBe(fo + 1);
+    expect(k.st.fo).toBe(fo + coefOf(k)); // un point vaut le coefficient du rang
     expect(k.nrg).toBe(75);
     const energyOnly = TRAININGS.filter(t => !t.item && !t.savoir).length;
     expect(energyOnly).toBeGreaterThanOrEqual(5);

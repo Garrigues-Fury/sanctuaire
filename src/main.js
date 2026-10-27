@@ -5,7 +5,7 @@ import '@fontsource/alegreya-sans/500.css';
 import '@fontsource/alegreya-sans/700.css';
 import '@fontsource/alegreya-sans/800.css';
 import './styles/main.css';
-import { newGame } from './core/people.js';
+import { newGame, renameDuplicates } from './core/people.js';
 import { advance, newSum, recomputeCB } from './core/rules.js';
 import { load, save } from './core/save.js';
 import { ensureWorld } from './core/expeditions.js';
@@ -17,6 +17,7 @@ import { setMapTapHandler } from './map/map.js';
 import { installMapTips } from './ui/hub.js';
 import { keepUnreadable, snapshotOnUpdate } from './core/slots.js';
 import { ensureSchedules } from './core/program.js';
+import { migrateScale } from './core/scale.js';
 import { sfx, unlockAudio } from './audio/audio.js';
 import { absenceModal, diffModal, installClicks, liveUpdate, modalFn, onMapTap, openModal, render } from './ui/app.js';
 
@@ -38,8 +39,9 @@ function start(){
  setS(load());
  // une partie illisible n'est jamais écrasée : elle est mise de côté avant d'en commencer une nouvelle
  const fresh=!S;if(fresh){keepUnreadable();newGame();save();}
- recomputeCB();ensureWorld();ensureDuel();ensureSchedules();
+ // la sauvegarde automatique d'avant mise à jour garde la partie telle qu'elle était, avant toute conversion
  if(!fresh&&typeof __APP_VERSION__!=='undefined')snapshotOnUpdate(__APP_VERSION__);
+ recomputeCB();ensureWorld();ensureDuel();ensureSchedules();renameDuplicates();migrateScale();
  S.tab=S.tab||'sanctuaire';
  installClicks();installTips();setMapTapHandler(onMapTap);installMapTips();
  // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.

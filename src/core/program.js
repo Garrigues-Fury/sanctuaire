@@ -4,6 +4,7 @@
 import { ql } from './data/traits.js';
 import { apTrainF, plan, rebalance, selfF, timeMult } from './schedule.js';
 import { S } from './state.js';
+import { coefOf, gainStat } from './scale.js';
 
 export const STAT_KEYS=['fo','vi','de','en','ps','co'];
 // Les 6 parts du programme (revues par Seba le 2026-10-25) : chacune fait monter ses statistiques
@@ -50,10 +51,11 @@ export function trainStats(p,h,mult){
  const t=prog(p),r=statPerHour(p,mult)*h;if(r<=0)return;
  const acc=p.tacc||(p.tacc={});
  PROG.forEach(x=>{for(const k in x.st)acc[k]=(acc[k]||0)+r*(t[x.k]||0)/100*x.st[k];});
- STAT_KEYS.forEach(k=>{while(acc[k]>=1){acc[k]--;p.st[k]=(p.st[k]||0)+1;S._dirty=true;}});
+ // chaque point gagné vaut le coefficient du rang (×5 bronze, ×50 argent, ×750 or)
+ STAT_KEYS.forEach(k=>{while(acc[k]>=1){acc[k]--;gainStat(p,k,1);S._dirty=true;}});
 }
 // Gain par jour de chaque part, pour l'affichage.
-export function perDay(p,mult){const r=statPerHour(p,mult)*24,t=prog(p),o={};STAT_KEYS.forEach(k=>o[k]=0);PROG.forEach(x=>{for(const k in x.st)o[k]+=r*(t[x.k]||0)/100*x.st[k];});return o;}
+export function perDay(p,mult){const r=statPerHour(p,mult)*24*coefOf(p),t=prog(p),o={};STAT_KEYS.forEach(k=>o[k]=0);PROG.forEach(x=>{for(const k in x.st)o[k]+=r*(t[x.k]||0)/100*x.st[k];});return o;}
 // La méditation recharge l'énergie plus vite ; les études accélèrent la progression.
 export function medMult(p){return 1+.5*prog(p).med/100;}
 export function studyMult(p){return 1+.6*prog(p).etu/100*(1+.5*ql(p,'studieux'));}

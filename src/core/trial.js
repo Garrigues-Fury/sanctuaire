@@ -15,6 +15,7 @@ import { trialEval } from './rules.js';
 import { grantSkill } from './skills.js';
 import { S, log, uid } from './state.js';
 import { mulberry32 } from './util.js';
+import { norm, promoteStats } from './scale.js';
 
 // Armures disputées entre disciples, et armures où un chevalier évalue le candidat.
 export const DUEL_ARMORS=new Set(['pegase','licorne','loup','petit-lion','lynx','hydre','petit-chien','lievre','toucan','petite-ourse']);
@@ -26,7 +27,9 @@ const boostOf=(p,c)=>1+(armorAffinity(p,c).v-50)/250;
 // Le sempai retient ses coups mais encaisse beaucoup : le disciple perdra presque toujours.
 const SEMPAI_HOLD=.5,SEMPAI_HP=12;
 // Un combat simulé avec le même moteur que le combat joué en direct (choix automatiques d'un bon joueur prudent).
-function simulate(ap,c,o,seed){const k=trialKind(c),b=autoResolve(newDuelBattle(ap,o,{boostA:boostOf(ap,c),boostB:k==='sempai'?SEMPAI_HOLD:o.npc?1:boostOf(o,c),hpB:k==='sempai'?SEMPAI_HP:1,seed}));
+// Le sempai se met au niveau du disciple : il combat avec ses statistiques ramenées à l'échelle d'un apprenti.
+export function atDiscipleLevel(k){const st={};for(const x in k.st)st[x]=Math.round(norm(k,x));return Object.assign({},k,{st,scale:1});}
+function simulate(ap,c,o,seed){const k=trialKind(c);if(k==='sempai')o=atDiscipleLevel(o);const b=autoResolve(newDuelBattle(ap,o,{boostA:boostOf(ap,c),boostB:k==='sempai'?SEMPAI_HOLD:o.npc?1:boostOf(o,c),hpB:k==='sempai'?SEMPAI_HP:1,seed}));
  return{win:b.result==='win',st:duelStats(b),log:b.log.map(l=>l.m)};}
 const RI={bronze:1,argent:2,or:3};
 
@@ -69,6 +72,9 @@ export function duelChance(ap,c){
 // L'apprenti devient chevalier ; l'armure lui transmet par résonance les compétences qui lui manquaient.
 export function promoteApprentice(ap,c,resonance){
  (resonance||[]).forEach(id=>grantSkill(ap,id));
+ // ses statistiques prennent la mesure du rang : ×3 à ×10 pour le bronze, selon son profil et ses compétences
+ // (un apprenti qui gagne directement l'argent ou l'or franchit chaque marche)
+ for(const rk of ['bronze','argent','or']){promoteStats(ap,c,rk);if(rk===c.rank)break;}
  const i=S.aps.indexOf(ap);if(i>=0)S.aps.splice(i,1);S.armors[c.k]='portee';
  const kn={id:ap.id,seed:ap.seed,sex:ap.sex,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:c.rank,cons:c.k,lv:ap.lv,xp:0,st:Object.assign({},ap.st),role:null,
   tech:(ap.tech||[]).concat([SIG_WORDS[ap.seed%SIG_WORDS.length]+' '+(c.rank==='or'?'d’or':de(c.n))]),origin:'forme',pot:ap.pot,sp:ap.sp||0,nrg:ap.nrg,tr:ap.tr,tacc:ap.tacc,
@@ -109,4 +115,4 @@ export function runDuel(ap,c,e,cd){
  return settleDuel(ap,c,e,cd,o,simulate(ap,c,o,(Math.random()*2**31)|0));
 }
 // Pour un combat joué en direct : l'adversaire et les avantages de chacun.
-export function duelSetup(ap,c){const kind=trialKind(c),o=opponentFor(ap,c);return{o,kind,boostA:boostOf(ap,c),boostB:kind==='sempai'?SEMPAI_HOLD:o.npc?1:boostOf(o,c),hpB:kind==='sempai'?SEMPAI_HP:1};}
+export function duelSetup(ap,c){const kind=trialKind(c),o0=opponentFor(ap,c),o=kind==='sempai'&&o0?atDiscipleLevel(o0):o0;return{o,kind,boostA:boostOf(ap,c),boostB:kind==='sempai'?SEMPAI_HOLD:o.npc?1:boostOf(o,c),hpB:kind==='sempai'?SEMPAI_HP:1};}

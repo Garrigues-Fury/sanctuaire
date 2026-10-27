@@ -15,6 +15,7 @@ import { RES } from './data/economy.js';
 import { fkey, knightRate, levelUpAp, levelUpKnight, need, people, villageCap, xpRate, emax } from './rules.js';
 import { S, emit, log } from './state.js';
 import { G, clamp, mulberry32, pick } from './util.js';
+import { isAway, isKO } from './wounds.js';
 
 export const EXP_E=30,MAX_EVENTS=4,EVENT_LIFE=72;
 const r=()=>Math.random();
@@ -72,7 +73,7 @@ function varsFor(k,extra){
 }
 export function startExpedition(evId,kid){
  const W=ensureWorld(),ev=eventById(evId),k=S.knights.find(x=>x.id===kid);
- if(!ev||!k||W.active||k.nrg<EXP_E)return null;
+ if(!ev||!k||W.active||k.nrg<EXP_E||isKO(k)||isAway(k))return null;
  k.nrg-=EXP_E;
  const R=mulberry32(ev.seed),F=FOES[ev.foe];
  const cast={ancien:npc(ev.seed^1,ev.nat),parent:npc(ev.seed^2,ev.nat),enfant:npc(ev.seed^3,ev.nat,true),villageois:npc(ev.seed^4,ev.nat),chef:npc(ev.seed^5,randomNat()),rival:npc(ev.seed^6,randomNat())};

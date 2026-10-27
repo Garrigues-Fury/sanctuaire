@@ -17,12 +17,15 @@ import { WORK } from '../core/data/economy.js';
 import { setMapHoverHandler } from '../map/map.js';
 import { bar, costHtml, ptImg, viewApprentis, viewArmures, viewChevaliers, viewChronique, viewFormArmures, viewFormDisciples, viewPope, viewSanctuaire } from './app.js';
 import { viewMonde } from './world.js';
+import { viewCensus } from './census.js';
+import { ZONES, ZONE_N, ensureDefense, postOf } from '../core/defense.js';
+import { healHours, healPower, healers, isAway, isKO } from '../core/wounds.js';
 
 /* ---------- navigation : 5 onglets, des sous-onglets ---------- */
 export const TABS=[['sanctuaire','Sanctuaire','temple'],['personnages','Personnages','users'],['armures','Armures','armor'],['monde','Monde','globe'],['pope','Astres','star']];
 const SUBS={
  sanctuaire:[['apercu','Aperçu','eye'],['batir','Bâtir','hammer'],['defense','Défense','shield'],['chronique','Chronique','scroll']],
- personnages:[['chevaliers','Chevaliers','sword'],['apprentis','Apprentis','users'],['formation','Formation','cap'],['relations','Relations','heart']]
+ personnages:[['chevaliers','Chevaliers','sword'],['apprentis','Apprentis','users'],['formation','Formation','cap'],['relations','Relations','heart'],['recensement','Recensement','chart']]
 };
 // Anciennes adresses d'onglets (sauvegardes, boutons) vers la nouvelle organisation.
 const LEGACY={chevaliers:['personnages','chevaliers'],apprentis:['personnages','apprentis'],chronique:['sanctuaire','chronique']};
@@ -41,7 +44,7 @@ export function viewHub(){
  if(LEGACY[S.tab]||!TABS.some(x=>x[0]===S.tab))goTab(S.tab);
  const t=S.tab;
  if(t==='sanctuaire'){const s=subOf(t);return subnav(t)+(s==='batir'?builderPanel()+viewSanctuaire():s==='defense'?viewDefense():s==='chronique'?viewChronique():viewApercu());}
- if(t==='personnages'){const s=subOf(t);return subnav(t)+(s==='apprentis'?viewApprentis():s==='formation'?viewFormation():s==='relations'?viewRelations():viewChevaliers());}
+ if(t==='personnages'){const s=subOf(t);return subnav(t)+(s==='apprentis'?viewApprentis():s==='formation'?viewFormation():s==='relations'?viewRelations():s==='recensement'?viewCensus():viewChevaliers());}
  if(t==='armures')return viewArmures();
  if(t==='monde')return viewMonde();
  return viewPope();
@@ -111,8 +114,47 @@ function viewDefense(){
  h+='</div></section><section class="sec"><div class="sec-h"><h2>Zones du Sanctuaire</h2></div><div class="houses">';
  zones.forEach(z=>{h+='<div class="house-r"><span class="hs">'+icon(z.p==='village'?'users':'temple',20)+'</span><span class="main"><b>'+esc(z.n.replace(/^./,c=>c.toUpperCase()))+'</b><small>'+(z.guards?z.guards+' garde'+(z.guards>1?'s':''):'<span style="color:var(--marble-faint)">aucun garde</span>')+'</small>'+bar(z.d/mx*100)+'</span><b class="num dv">'+fmt(z.d)+'</b></div>';});
  h+='</div></section><section class="sec"><div class="sec-h"><h2>Menaces</h2><span class="aside">niveau des dieux</span></div><div class="houses">';
- GOD_KEYS.map(k=>({k,g:GODS[k],st:godState(k)})).sort((a,b)=>b.st.lv-a.st.lv).forEach(x=>{h+='<div class="house-r"><span class="hs">'+icon('flame',20)+'</span><span class="main"><b>'+esc(x.g.n)+'</b><small>'+x.st.wins+' victoire'+(x.st.wins>1?'s':'')+' contre vous · '+x.st.losses+' défaite'+(x.st.losses>1?'s':'')+'</small></span><b class="num dv">niv. '+x.st.lv+'</b></div>';});
- return h+'</div></section>';
+ const D=ensureDefense();
+ GOD_KEYS.map(k=>({k,g:GODS[k],st:godState(k),r:D.gods[k]||{w:0,l:0}})).sort((a,b)=>b.st.lv-a.st.lv).forEach(x=>{h+='<div class="house-r"><span class="hs">'+icon('flame',20)+'</span><span class="main"><b>'+esc(x.g.n)+'</b><small>Astres : '+x.st.wins+' victoire'+(x.st.wins>1?'s':'')+' contre vous, '+x.st.losses+' défaite'+(x.st.losses>1?'s':'')+' · Attaques : '+x.r.w+' repoussée'+(x.r.w>1?'s':'')+', '+x.r.l+' perdue'+(x.r.l>1?'s':'')+'</small></span><b class="num dv">niv. '+x.st.lv+'</b></div>';});
+ return h+'</div></section>'+defenseTeams()+infirmary()+honorBoard()+raidReports();
+}
+/* ---------- équipes de défense, infirmerie, tableau d'honneur (demandés par Seba le 2026-10-27) ---------- */
+const kName=p=>esc(p.name)+(p.rank&&RANKS[p.rank]?' <small>('+RANKS[p.rank].toLowerCase()+')</small>':'');
+function defenseTeams(){
+ const D=ensureDefense(),next=Math.max(0,D.raidAt-S.gt);
+ const opts=S.knights.filter(k=>k.role!=='pope').map(k=>'<option value="'+k.id+'">'+esc(k.name)+' · '+RANKS[k.rank]+' niv. '+k.lv+(postOf(k)?' (déjà : '+esc(placeN(postOf(k)))+')':'')+'</option>').join('');
+ const line=(z,label,defs)=>'<div class="team"><div class="team-h"><b>'+label+'</b><span class="aside">'+defs.length+' défenseur'+(defs.length>1?'s':'')+'</span></div><div class="mrow">'+(defs.length?defs.map(p=>'<span class="chip'+(isKO(p)?' warn':'')+'">'+kName(p)+(isKO(p)?' · blessé'+(p.sex==='F'?'e':''):isAway(p)?' · en mission':'')+(S.knights.includes(p)&&postOf(p)===z?' <button class="x" data-act="defrm:'+p.id+'" aria-label="Retirer '+esc(p.name)+'">✕</button>':'')+'</span>').join(''):'<span class="hint">personne</span>')+'</div><label class="auto-add"><span>Affecter un chevalier</span><select data-defassign="'+z+'"><option value="">Choisir…</option>'+opts+'</select></label></div>';
+ let h='<section class="sec"><div class="sec-h"><h2>Équipes de défense</h2><span class="aside">prochaine attaque possible dans '+dur(next)+' au plus tôt</span></div>';
+ h+='<p class="hint">Les attaques restent rares. Les ennemis attaquent une zone (jamais la bibliothèque, trop proche du palais du Pope) ou tentent de franchir les douze maisons dans l’ordre. On se bat loyalement, un contre un : le vainqueur affronte le suivant en gardant sa fatigue et ses blessures. Les chevaliers d’or gardent leur maison ; les bronzes et les argents sans affectation interviennent en renfort. Vaincre un ennemi vaut 12 h d’entraînement.</p>';
+ h+=ZONES.filter(z=>z==='village'||S.b[z]>0).map(z=>line(z,ZONE_N[z].replace(/^./,c=>c.toUpperCase()),defendersAll(z))).join('');
+ h+='<details class="dt"><summary>Les douze maisons</summary>'+SIGNS.map((s,i)=>line('h'+i,s.s+' Maison '+de(s.n),houseAll(i))).join('')+'</details>';
+ const res=S.knights.filter(k=>k.rank!=='or'&&k.role!=='pope'&&!postOf(k));
+ h+='<div class="team"><div class="team-h"><b>Renforts</b><span class="aside">'+res.length+'</span></div><div class="mrow">'+(res.length?res.map(p=>'<span class="chip'+(isKO(p)?' warn':'')+'">'+kName(p)+'</span>').join(''):'<span class="hint">aucun : tous les bronzes et argents sont affectés</span>')+'</div></div>';
+ if(S.speed===60)h+='<button class="btn sm ghost" data-act="raidnow">Mode test : provoquer une attaque</button>';
+ return h+'</section>';
+}
+// Tous ceux qui sont rattachés à une zone, disponibles ou non (pour l'affichage).
+function defendersAll(z){const D=ensureDefense();return(S.guards||[]).filter(g=>g.post===z).concat((D.zones[z]||[]).map(id=>S.knights.find(k=>k.id===id)).filter(Boolean));}
+function houseAll(i){const gold=S.knights.find(k=>k.rank==='or'&&k.sign===i&&(!postOf(k)||postOf(k)==='h'+i));return(gold?[gold]:[]).concat(defendersAll('h'+i).filter(p=>p!==gold));}
+const placeN=z=>/^h\d+$/.test(z)?'maison '+de(SIGNS[+z.slice(1)].n):ZONE_N[z]||z;
+function infirmary(){
+ const hurt=S.knights.concat(S.guards||[]).filter(isKO),hs=healers();
+ let h='<section class="sec"><div class="sec-h"><h2>Infirmerie</h2><span class="aside">soins ×'+(1+healPower()).toFixed(1).replace('.',',')+'</span></div>';
+ h+='<p class="hint">Un vaincu est soigné ici pendant environ '+healHours(1)+' h. Les médecins (métier d’un chevalier) et les gardes postés à l’infirmerie accélèrent les soins, deux fois plus s’ils maîtrisent les soins par le cosmos. Postez un garde depuis sa fiche.</p>';
+ h+='<div class="mrow">'+(hs.length?hs.map(g=>'<span class="chip ok">'+esc(g.name)+' · soigneur</span>').join(''):'<span class="hint">Aucun garde à l’infirmerie.</span>')+'</div>';
+ h+=hurt.length?'<div class="houses">'+hurt.map(p=>'<div class="house-r">'+ptImg(p,p.rank&&RANKS[p.rank]?p.rank:null)+'<span class="main"><b>'+esc(p.name)+'</b><small>de retour dans <b class="num" data-until="'+p.ko+'">'+dur(p.ko-S.gt)+'</b></small></span></div>').join('')+'</div>':'<p class="hint">Personne n’est blessé.</p>';
+ return h+'</section>';
+}
+function honorBoard(){
+ const D=ensureDefense(),P=S.knights.concat(S.guards||[]).filter(p=>p.rec&&(p.rec.w||p.rec.l||p.rec.mw||p.rec.ml)).sort((a,b)=>(b.rec.w||0)-(a.rec.w||0)||(a.rec.l||0)-(b.rec.l||0));
+ const M=S.mis||{done:0,wins:0};
+ let h='<section class="sec"><div class="sec-h"><h2>Tableau d’honneur</h2></div><div class="kpis">'+kpi('shield','Attaques repoussées',D.w,D.l+' perdue'+(D.l>1?'s':''))+kpi('globe','Missions réussies',M.wins||0,(M.done||0)-(M.wins||0)+' échec'+((M.done||0)-(M.wins||0)>1?'s':''))+'</div>';
+ h+=P.length?'<div class="houses">'+P.slice(0,15).map((p,i)=>'<div class="house-r"><b class="num cen-n">'+(i+1)+'</b>'+ptImg(p,p.rank&&RANKS[p.rank]?p.rank:null)+'<span class="main"><b>'+esc(p.name)+'</b><small>Combats : '+(p.rec.w||0)+' victoire'+((p.rec.w||0)>1?'s':'')+', '+(p.rec.l||0)+' défaite'+((p.rec.l||0)>1?'s':'')+' · Missions : '+(p.rec.mw||0)+' réussie'+((p.rec.mw||0)>1?'s':'')+', '+(p.rec.ml||0)+' échouée'+((p.rec.ml||0)>1?'s':'')+'</small></span></div>').join('')+'</div>':'<p class="hint">Aucun fait d’armes pour l’instant.</p>';
+ return h+'</section>';
+}
+function raidReports(){
+ const D=ensureDefense();if(!D.reports.length)return '';
+ return '<section class="sec"><div class="sec-h"><h2>Derniers combats</h2></div>'+D.reports.map(r=>'<details class="dt"><summary>'+(r.win?'Repoussés':'Défaite')+' · '+esc(GODS[r.god].n)+' · '+(r.houses?'les douze maisons':esc(ZONE_N[r.zone]))+' <span class="aside">jour '+(Math.floor(r.t/24)+1)+'</span></summary><p class="hint">Assaillants : '+r.foes.map(f=>esc(f.n)+' ('+f.rank+', niv. '+f.lv+')').join(', ')+'.</p>'+(r.steps&&r.steps.length?'<p class="hint">'+r.steps.map(esc).join(' · ')+'</p>':'')+'<ol class="duel-log">'+r.log.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ol>'+(r.loot&&r.loot.length?'<p class="hint">Pillé : '+esc(r.loot.join(', '))+'.</p>':'')+'</details>').join('')+'</section>';
 }
 
 /* ---------- formation et relations ---------- */

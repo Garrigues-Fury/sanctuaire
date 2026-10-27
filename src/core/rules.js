@@ -16,6 +16,11 @@ import { orientF } from './formation.js';
 import { buildCostMult, buildTimeMult, extraSlots, gainOnBuilt, gainWhileBuilding } from './builders.js';
 import { tickResearch } from './research.js';
 import { recoveryMult, tickMedicine } from './medicine.js';
+import { tickAuto } from './autotrain.js';
+import { gainStat, norm } from './scale.js';
+import { tickMissions } from './missions.js';
+import { tickRaids } from './defense.js';
+import { isKO, tickWounds } from './wounds.js';
 import { SKILLS } from './data/skills.js';
 import { HADES_H, POSEIDON_H, S, emit, log } from './state.js';
 import { G, ROMAN, clamp, fmt } from './util.js';
@@ -25,7 +30,7 @@ export function people(){return S.knights.concat(S.aps,S.guards||[]);}
 export function byId(id){return S.knights.find(k=>k.id===id)||S.aps.find(a=>a.id===id)||(S.guards||[]).find(g=>g.id===id)||null;}
 export function isKnight(p){return S.knights.indexOf(p)>=0;}
 export function pope(){return S.knights.find(k=>k.role==='pope');}
-export function popeBonus(){const p=pope();return p?(.1+p.st.co/1000)*jobF(p):0;}
+export function popeBonus(){const p=pope();return p?(.1+norm(p,'co')/1000)*jobF(p):0;}
 const jobSum=role=>knightsWith(role).reduce((s,k)=>s+jobF(k),0);
 export function prodBase(r,l){return l<=0?0:RES[r].k*l*Math.pow(1.08,l);}
 export function herbBase(l){return l<=0?0:.6*l*Math.pow(1.08,l);}
@@ -79,20 +84,20 @@ export function xpRate(ap){
 }
 export function knightRate(k){return 6*arena()*selfF(k)*studyMult(k)*(1+popeBonus())*(1+friendBonus(k))*(1+cb('XP')/100)*(S.starve?.5:1);}
 // Puissance : statistiques, rang, niveau, et cartes de compétences (vitesse surtout : le fossé entre les rangs).
-export function power(p,rank){const s=p.st,sp=skillPower(p);return((s.fo+s.vi+s.en+(s.de||0)+(s.ps||0))*.8+s.co*2)*(1+sp.fund*.03+sp.spec*.01)*[1,1.15,1.6,2.6][sp.speed]*(rank?RANK_MULT[rank]:.5)*(1+p.lv/20);}
+export function power(p,rank){const s=p.st,sp=skillPower(p);return((s.fo+s.vi+s.en+(s.de||0)+(s.ps||0))*.8+s.co*2)*(1+sp.fund*.03+sp.spec*.01)*[1,1.15,1.6,2.6][sp.speed]*(rank?1:.5)*(1+p.lv/20);}
 export function sanctPower(){let t=0;S.knights.forEach(k=>t+=power(k,k.rank));S.aps.forEach(a=>t+=power(a,null)*.5);S.houses.forEach(h=>t+=h*40);return t;}
 export const RANK_W={apprenti:.5,garde:1,bronze:2,argent:4,or:8};
-export function weightOf(p){return RANK_W[p.rank||'apprenti']*(p.role==='pope'?1.5:1)*(1+p.st.co/50);}
+export function weightOf(p){return RANK_W[p.rank||'apprenti']*(p.role==='pope'?1.5:1)*(1+norm(p,'co')/50);}
 export function elemScores(){const o={feu:0,eau:0,air:0,terre:0};people().forEach(p=>o[SIGNS[p.sign].el]+=weightOf(p));return o;}
 export function consScore(){let t=0;S.knights.forEach(k=>t+=weightOf(k)*(1+k.lv/40));return t;}
-export function recruitInterval(){const rs=knightsWith('recruteur'),n=jobSum('recruteur');if(!rs.length||n<=0)return Infinity;const co=Math.max(...rs.map(k=>k.st.co));return 10/(1+co/80)/(n>=1?1+.5*(n-1):n)/(1+cb('RECRUIT')/100);}
-export function cosmosLabel(co){return co<20?'Latent':co<50?'Éveillé':co<100?'Brûlant':co<200?'Ardent':'Aux portes du septième sens';}
+export function recruitInterval(){const rs=knightsWith('recruteur'),n=jobSum('recruteur');if(!rs.length||n<=0)return Infinity;const co=Math.max(...rs.map(k=>norm(k,'co')));return 10/(1+co/80)/(n>=1?1+.5*(n-1):n)/(1+cb('RECRUIT')/100);}
+export function cosmosLabel(co){return co<20?'Latent':co<60?'Éveillé':co<500?'Brûlant':co<8000?'Ardent':'Aux portes du septième sens';}
 export function forgeRate(){return .5*siteEff('forge')*(1+.1*S.b.forge)*(1+cb('FORGE')/100);}
 export function craftRate(ws){return S.b[ws]>0?.6*siteEff(ws)*(1+.1*S.b[ws])*(1+cb('CRAFT')/100):0;}
 export function bestSmith(){let b=0;workersAt('forge').forEach(w=>b=Math.max(b,w.skill));return b;}
 export function workerCost(){return{vivres:Math.ceil((60+25*Math.pow(S.workers.length,1.3))/5)*5};}
 
-export function bonusStats(p){[['courageux','fo'],['vif','vi'],['reveur','co']].forEach(([q,s])=>{const l=ql(p,q);if(l&&Math.random()<.33*l)p.st[s]++;});}
+export function bonusStats(p){[['courageux','fo'],['vif','vi'],['reveur','co']].forEach(([q,s])=>{const l=ql(p,q);if(l&&Math.random()<.33*l)gainStat(p,s,1);});}
 export function gainQuality(p,sum){
  if((p.qual||[]).length>=3||Math.random()>=.5)return;
  const opts=QKEYS.filter(k=>!ql(p,k));const k=opts[Math.floor(Math.random()*opts.length)];p.qual.push({k,lv:1});
@@ -119,7 +124,8 @@ export function step(h,sum){
   if(ap.job){ap.wacc=(ap.wacc||0)+h*apHelpF(ap);while(ap.wacc>=24){ap.wacc-=24;ap.st[WORK[ap.job].stat]++;}}});
  S.knights.forEach(k=>{k.xp+=knightRate(k)*h;let g=0;while(k.xp>=need(k.lv)*1.5&&g++<50)levelUpKnight(k);});
  (S.guards||[]).forEach(gd=>{gd.xp+=guardRate(gd)*h;let g=0;while(gd.xp>=need(gd.lv)*1.5&&g++<50){gd.xp-=need(gd.lv)*1.5;gd.lv++;gd.sp=(gd.sp||0)+2;bonusStats(gd);S._dirty=true;}});
- const am=arena();people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);trainStats(p,h,am);});
+ // un blessé récupère son énergie mais ne s'entraîne pas
+ const am=arena();people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);if(!isKO(p))trainStats(p,h,am);});
  // compétences : découvertes et niveaux
  // lien : affinité de signe ou d'élément avec le maître, et amitiés
  // le maître d'apprentissage oriente les apprentis : découvertes plus rapides
@@ -132,7 +138,7 @@ export function step(h,sum){
  ['herbo','atelier'].forEach(ws=>{const q=S.craft[ws];if(!q.length)return;let left=craftRate(ws)*h;while(left>0&&q.length){const j=q[0];const r=REC_BY[j.k];const need=r.work-j.prog;if(left>=need){left-=need;q.shift();S.items[j.k]=(S.items[j.k]||0)+1;S._dirty=true;if(sum)sum.made[j.k]=(sum.made[j.k]||0)+1;else emit('crafted',j.k);}else{j.prog+=left;left=0;}}});
  S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
  S.gt+=h;
- tickWorld(sum);tickSocial(h,sum);tickResearch(h,sum);tickMedicine(h,sum);
+ tickWorld(sum);tickSocial(h,sum);tickResearch(h,sum);tickMedicine(h,sum);tickAuto(sum);tickMissions(sum);tickRaids(sum);tickWounds(sum);
  gainWhileBuilding(h);
  for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;gainOnBuilt(/^h\d+$/.test(j.b),j.lvl);if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
  if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}
@@ -153,7 +159,7 @@ export function reqOk(r){
  switch(r.t){
  case'elem':return elemScores()[r.e]>=r.v;
  case'rank':return S.knights.some(k=>r.v==='argent'?(k.rank==='argent'||k.rank==='or'):k.rank===r.v);
- case'cosmos':return people().some(p=>p.st.co>=r.v);
+ case'cosmos':return people().some(p=>norm(p,'co')>=r.v);
  case'qual':return people().some(p=>ql(p,r.k)>=r.v);
  case'guards':return (S.guards||[]).length>=r.v;
  case'house':return S.houses.some(h=>h>=r.v);
@@ -174,8 +180,8 @@ export function reqText(r){
  }return '';
 }
 export function artReady(a){for(const e in a.need)if(bonusOf(e)<a.need[e])return false;return (a.req||[]).every(reqOk);}
-export const POSTS=['village','champs','carriere','mine','jardin','biblio','forge','herbo','atelier'];
-export function postName(p){if(!p)return 'sans poste';if(/^h\d+$/.test(p))return 'maison '+de(SIGNS[+p.slice(1)].n);if(p==='village')return 'village de Rodorio';return SITES[p]?SITES[p].n.toLowerCase():p;}
+export const POSTS=['village','champs','carriere','mine','jardin','biblio','forge','herbo','atelier','infirmerie'];
+export function postName(p){if(!p)return 'sans poste';if(p==='infirmerie')return 'infirmerie';if(/^h\d+$/.test(p))return 'maison '+de(SIGNS[+p.slice(1)].n);if(p==='village')return 'village de Rodorio';return SITES[p]?SITES[p].n.toLowerCase():p;}
 export function defenseOf(post){let d=0;(S.guards||[]).forEach(g=>{if(g.post===post)d+=power(g,'garde');});return d*(1+cb('DEF')/100);}
 export function guardRate(g){return 6*arena()*.6*timeMult(g)*studyMult(g)*(1+popeBonus())*(1+friendBonus(g))*(1+cb('XP')/100)*(S.starve?.5:1);}
 export const SESS=[
@@ -204,6 +210,6 @@ export function trialEval(a,c){
  if(ck.missF.length)return{ok:false,af,ck,why:'Compétences fondamentales à découvrir : '+ck.missF.map(id=>SKILLS[id].n).join(', ')};
  if(!ck.speed)return{ok:false,af,ck,why:'Il faut d’abord atteindre la vitesse requise : '+SKILLS[ck.speedId].n};
  if(!ck.resonance)return{ok:false,af,ck,why:'Compétences spécifiques manquantes : '+ck.missSpec.map(id=>SKILLS[id].n).join(', ')+(af.v<70?' (dès une affinité de 70, l’armure en transmet une par résonance)':'')};
- const ch=clamp(.32+.04*(a.lv-TRIAL_LV[c.rank])+af.v/250+a.st.co/300+tr+cb('TRIAL')/100,.1,.95);
+ const ch=clamp(.32+.04*(a.lv-TRIAL_LV[c.rank])+af.v/250+norm(a,'co')/300+tr+cb('TRIAL')/100,.1,.95);
  return{ok:true,ch,el,af,ck,resonance:ck.resonance};
 }

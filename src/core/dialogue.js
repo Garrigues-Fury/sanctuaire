@@ -3,6 +3,7 @@
    et soit une suite (next), soit des choix, soit un tirage (roll), soit un combat (fight), soit une fin (end). */
 import { QUAL, FLAW } from './data/traits.js';
 import { clamp } from './util.js';
+import { legacy } from './scale.js';
 
 // Texte selon le caractère : la première qualité ou le premier défaut qui a une réplique dédiée l'emporte.
 export function pickText(t,p){
@@ -17,7 +18,7 @@ export function reqOk(req,k,S){
  if(!req)return true;
  if(req.qual)return(k.qual||[]).some(q=>req.qual.split('|').includes(q.k));
  if(req.flaw)return(k.flaw||[]).some(f=>req.flaw.split('|').includes(f.k));
- if(req.stat)return k.st[req.stat[0]]>=req.stat[1];
+ if(req.stat)return legacy(k,req.stat[0])>=req.stat[1];
  if(req.res)return(S.res[req.res[0]]||0)>=req.res[1];
  if(req.survivor)return k.origin==='survivant';
  return true;
@@ -35,5 +36,5 @@ export function reqLabel(req){
 // Chance d'un tirage : selon une statistique du chevalier (de 20 % à 90 %), ou fixe.
 export function rollChance(roll,k){
  if(typeof roll.p==='number')return roll.p;
- const v=k.st[roll.stat]||0;return clamp(.2+v/(roll.scale||100),.2,.9);
+ const v=legacy(k,roll.stat);return clamp(.2+v/(roll.scale||100),.2,.9);
 }

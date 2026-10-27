@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { autoResolve, heroAction, newBattle, refHero, winChance } from '../src/core/combat.js';
 
 // Survivants typiques du début de partie (moyennes de makeKnight).
-const knight = (rank, lv, base, sign = 0) => ({ id: 1, name: 'Test', rank, lv, sign, origin: 'survivant', tech: ['Éclat test'], st: { fo: base + 7, vi: base + 7, en: base + 7, co: base + 7 } });
+// Statistiques à la nouvelle échelle des rangs (2026-10-27) : base d'avant ramenée à un apprenti, × coefficient du rang.
+const SC = { bronze: 5, argent: 50 / 1.8, or: 750 / 3.4 };
+const knight = (rank, lv, base, sign = 0) => { const v = Math.round((base + 7) * SC[rank]); return { id: 1, name: 'Test', rank, lv, sign, origin: 'survivant', tech: ['Éclat test'], st: { fo: v, vi: v, en: v, co: v } }; };
 const OR = knight('or', 38, 48), ARGENT = knight('argent', 21, 26), BRONZE = knight('bronze', 11, 14);
 const ev = (L, boss = false) => ({ foe: 'bandits', L, n: boss ? 3 : 2, boss });
 

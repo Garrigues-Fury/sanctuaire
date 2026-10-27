@@ -107,7 +107,7 @@ export function skillPower(p){
  if(!p.sk)return{fund:0,speed:0,spec:0};
  const fund=FUND.reduce((t,s)=>t+skillLevel(p,s.id),0)/FUND.length;
  const speed=hasSkill(p,'V3')?3:hasSkill(p,'V2')?2:hasSkill(p,'V1')?1:0;
- let spec=0;for(const id in p.sk)if(!/^[FV]d$/.test(id))spec+=skillLevel(p,id);
+ let spec=0;for(const id in p.sk)if(!/^[FV]\d$/.test(id))spec+=skillLevel(p,id);
  return{fund,speed,spec};
 }
 // Anciennes sauvegardes : les chevaliers savent déjà ce que leur rang et leur armure exigent.

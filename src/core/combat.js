@@ -6,6 +6,7 @@ import { TECH, fl, ql } from './data/traits.js';
 import { SIGNS } from './data/world.js';
 import { clamp } from './util.js';
 import { skillPower } from './skills.js';
+import { OLD, RANK_COEF, coefOf } from './scale.js';
 
 // Cartes de compétences en combat. Sans cartes (chevalier de référence, adversaire inventé) : valeurs types du rang et du niveau.
 const TIER={bronze:1,argent:2,or:3};
@@ -17,8 +18,15 @@ const ARMOR_DEF={bronze:3,argent:6,or:10,garde:2};
 export const COST={tech:4,sig:7};
 
 // Caractéristiques de combat d'un chevalier (ou d'un personnage fictif de référence).
+// Le calcul se fait à l'échelle d'un apprenti (statistiques ÷ coefficient du rang), puis la force, les PV,
+// la défense et la vitesse sont multipliées par ce coefficient : à rang égal rien ne change, d'un rang à l'autre
+// l'écart est immense (un or vaut quinze argents).
 export function heroStats(k){
- const rk=RK[k.rank]||1,lv=k.lv,s=k.st;
+ const rk=RK[k.rank]||1,lv=k.lv,c=coefOf(k),s={};for(const x in k.st)s[x]=(k.st[x]||0)/c;
+ const h=heroStats0(k,rk,lv,s);['max','atk','tec','def','spd','acc'].forEach(x=>h[x]=x==='max'?Math.round(h[x]*c):h[x]*c);
+ return h;
+}
+function heroStats0(k,rk,lv,s){
  const el=SIGNS[k.sign].el;
  const kt=k.tech||[],sigI=k.origin==='survivant'?0:kt.length-1;
  const sig=kt[sigI]||'Météores '+(['de feu','d’écume','de vent','de pierre'][['feu','eau','air','terre'].indexOf(el)]);
@@ -44,7 +52,8 @@ function dmgMult(b,f,kind){const h=b.hero;return T(h,'dmg',1)*(kind==='tech'?T(h
 // Chevalier de référence pour un niveau d'alerte L (1 à 5) : L1 = un bronze débutant, L5 = un chevalier d'or.
 // Chaque niveau d'alerte est calé sur un chevalier type : ★ bronze débutant … ★★★★★ chevalier d'or.
 const REF=[null,['bronze',8,15],['bronze',14,22],['argent',21,32],['argent',30,44],['or',38,55]];
-export function refHero(L){const [rank,lv,v]=REF[Math.max(1,Math.min(5,L))];return heroStats({id:0,name:'réf',rank,lv,st:{fo:v,vi:v,en:v,co:v,de:v,ps:v},sign:0,tech:[],origin:'forme'});}
+// (les valeurs de REF sont à l'ancienne échelle : ramenées à un apprenti, puis × coefficient du rang)
+export function refHero(L){const [rank,lv,v0]=REF[Math.max(1,Math.min(5,L))],v=v0/(OLD[rank]||1)*(RANK_COEF[rank]||1);return heroStats({id:0,name:'réf',rank,lv,st:{fo:v,vi:v,en:v,co:v,de:v,ps:v},sign:0,tech:[],origin:'forme'});}
 
 /* ev : {foe, L, n (nombre d'ennemis), boss} ; mods : {hard, easy, duel, first} */
 export function newBattle(k,ev,mods={},seed=1){
@@ -64,7 +73,9 @@ export function newBattle(k,ev,mods={},seed=1){
  return b;
 }
 const alive=b=>b.foes.filter(f=>f.hp>0);
-function dodge(b,attSpd,defSpd){return rnd(b)<clamp(.05+(defSpd-attSpd)/120,.02,.35);}
+// Esquive : selon l'écart de vitesse relatif (les vitesses vont de quelques dizaines à des dizaines de milliers).
+export function dodgeP(attSpd,defSpd){return clamp(.05+(defSpd-attSpd)/Math.max(1,defSpd+attSpd)*.67,.02,.35);}
+function dodge(b,attSpd,defSpd){return rnd(b)<dodgeP(attSpd,defSpd);}
 function hit(b,f,raw,label,kind){
  if(dodge(b,b.hero.spd+(b.hero.acc||0),f.spd)){b.log.push({t:'hero',m:f.n+' esquive '+label+'.',miss:true,target:f.i});return;}
  const crit=rnd(b)<(b.hero.crit||0);
@@ -133,7 +144,7 @@ export function duelSim(A,B,boostA=1,boostB=1,seed=1,hpB=1){
   for(const i of order){const me=F[i],op=F[1-i];if(me.hp<=0||op.hp<=0)continue;
    const tech=me.cos>=COST.tech,what=tech?'« '+me.h.tech+' »':'un coup';
    if(tech)me.cos-=COST.tech;else me.cos=Math.min(10,me.cos+2);
-   if(rnd(b)<clamp(.05+(op.h.spd-me.h.spd-(me.h.acc||0))/120,.02,.35)){op.st.dodges++;if(log.length<12)log.push(op.n+' esquive '+what+' de '+me.n+'.');continue;}
+   if(rnd(b)<dodgeP(me.h.spd+(me.h.acc||0),op.h.spd)){op.st.dodges++;if(log.length<12)log.push(op.n+' esquive '+what+' de '+me.n+'.');continue;}
    const crit=rnd(b)<(me.h.crit||0),raw=(tech?me.h.tec*1.5-op.h.def*.3:me.h.atk-op.h.def*.5)*me.boost;
    const d=Math.max(1,Math.round(raw*(crit?1.5:1)*(1-(op.h.shield||0))*(.75+rnd(b)*.5)));op.hp=Math.max(0,op.hp-d);
    me.st.hits++;if(tech)me.st.techs++;

@@ -573,14 +573,12 @@ nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:el
 .save-new .btn{display:flex;align-items:center;justify-content:center;gap:8px}
 .slot{display:grid;gap:8px;padding:10px;border-radius:11px;border:1px solid var(--line);background:var(--night-2)}
 .slot .main{display:grid;gap:2px}.slot small{font-size:.78rem;color:var(--marble-dim)}
-/* créateur de personnage 3D (essai) */
-#creator3d{position:fixed;inset:0;z-index:55;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:max(10px,env(safe-area-inset-top)) 16px 20px;background:radial-gradient(120% 70% at 50% 20%,#4a2a28,#16110f 70%)}
-#creator3d[hidden]{display:none}
-.c3-top{display:flex;align-items:center;gap:10px}.c3-top b{font-family:var(--f-display);color:var(--gold-hi);font-size:1.2rem;font-weight:400}.c3-top .sc-x{margin-left:auto}
-.c3-stage{position:relative;width:100%;max-width:440px;margin:0 auto;border-radius:16px;overflow:hidden;background:radial-gradient(70% 60% at 50% 45%,rgba(246,212,138,.16),transparent);min-height:300px}
-.c3-stage canvas{display:block;width:100%!important;height:auto!important}
-.c3-wait{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--marble-dim);gap:6px}
-.c3-sl{display:grid;gap:10px;max-width:440px;width:100%;margin:0 auto}
+/* équipes de défense, journal de combat */
+.team{display:grid;gap:6px;padding:10px;margin-bottom:8px;border-radius:11px;border:1px solid var(--line);background:var(--night-2)}
+.team-h{display:flex;justify-content:space-between;align-items:baseline}
+.team .chip .x{margin-left:6px;min-width:28px;min-height:28px;border:0;background:none;color:var(--marble-dim);cursor:pointer}
+.duel-log{margin:6px 0 0 18px;font-size:.85rem;color:var(--marble-dim);display:grid;gap:2px}
+.item.sel{border-color:var(--gold)}
 
 /* choix de la difficulté */
 .diffs{display:grid;gap:8px}
@@ -590,3 +588,23 @@ nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:el
 .diff b{font-family:'Marcellus SC',serif;font-size:1.1rem;color:var(--gold-hi)}
 .diff .ranks{font-size:.9rem}.diff small{font-size:.8rem;color:var(--marble-dim)}
 .diff .r-or{color:#f2c94c}.diff .r-argent{color:#cfd8e3}.diff .r-bronze{color:#d39a62}
+/* recensement */
+.cen-seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.cen-seg button{flex:1 1 30%}
+.cen-list{display:grid;gap:6px;margin-top:6px}
+.cen-row,.cen-gh{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:8px 10px;border-radius:11px;border:1px solid var(--line);background:var(--night-2);color:var(--marble);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
+.cen-row .pt{width:44px;height:44px}
+.cen-row .main,.cen-gh .main{display:grid;gap:2px;flex:1;min-width:0}
+.cen-row small,.cen-gh small{font-size:.78rem;color:var(--marble-dim)}
+.cen-v{color:var(--gold-hi);white-space:nowrap}
+.cen-rank{display:inline-block;min-width:22px;margin-right:6px;color:var(--marble-dim);font-weight:400}
+.cen-n{min-width:28px;text-align:center;font-size:1.1rem;color:var(--gold-hi)}
+.cen-g{margin-bottom:6px}
+.cen-g.open>.cen-gh{border-color:var(--gold)}
+.cen-g .cen-list{padding-left:10px}
+.cen-row:focus-visible,.cen-gh:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+/* entraînement de la nuit */
+.auto-row .num{width:22px;text-align:center;color:var(--gold-hi)}
+.auto-row .btns{display:flex;gap:6px}
+.auto-add{display:grid;gap:4px;margin-top:8px;font-size:.9rem;color:var(--marble-dim)}
+.auto-add select{min-height:44px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:var(--night);color:var(--marble);font:inherit}

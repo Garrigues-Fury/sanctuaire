@@ -6,6 +6,8 @@ import { EXP_E, ensureWorld, eventById } from '../core/expeditions.js';
 import { S } from '../core/state.js';
 import { dur, esc, mulberry32 } from '../core/util.js';
 import { ptImg } from './app.js';
+import { missionsSection } from './missions.js';
+import { isAway, isKO } from '../core/wounds.js';
 
 let LAND=null;
 const stars=L=>'★'.repeat(L)+'☆'.repeat(5-L);
@@ -38,7 +40,7 @@ export function viewMonde(){
  if(!W.events.length)h+='<div class="empty">Le monde est calme. De nouvelles alertes arrivent toutes les 6 à 10 heures.</div>';
  W.events.slice().sort((a,b)=>a.until-b.until).forEach(ev=>{
   h+='<div class="item tap" data-act="event:'+ev.id+'"><span class="evicon '+(ev.type==='attack'?'atk':'rec')+'">'+(ev.type==='attack'?'✕':'★')+'</span><div class="main"><div class="name">'+esc(evTitle(ev))+'</div><div class="sub">'+esc(ev.nat)+' · '+esc(REGIONS[ev.region].n)+'</div><div class="meta"><span class="danger">'+stars(ev.L)+'</span><span>disparaît dans <b data-until="'+ev.until+'">'+dur(ev.until-S.gt)+'</b></span></div></div><div class="right">›</div></div>';});
- return h+'</div></section>';
+ return h+'</div></section>'+missionsSection();
 }
 // Fenêtre d'une alerte : description, danger, chevaliers disponibles et chance estimée.
 export function eventModal(id){return()=>{
@@ -50,7 +52,7 @@ export function eventModal(id){return()=>{
  if(busy)h+='<div class="banner">Une autre scène est en cours. Terminez-la d’abord.</div>';
  h+='<div class="sec-h"><h2>Qui envoyer ?</h2><span class="aside">'+EXP_E+' énergie</span></div><div class="list">';
  S.knights.slice().sort((a,b)=>b.lv-a.lv).forEach(k=>{
-  const ch=Math.round(winChance(k,ev,{},40)*100),ok=k.nrg>=EXP_E&&!busy;
+  const ch=Math.round(winChance(k,ev,{},40)*100),ok=k.nrg>=EXP_E&&!busy&&!isKO(k)&&!isAway(k);
   const col=ch>=70?'ok':ch>=40?'warn':'bad';
   h+='<div class="item">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' <span class="chip '+k.rank+'">'+RANKS[k.rank]+'</span></div><div class="meta"><span>niv. '+k.lv+'</span><span>⚡&#xFE0E; '+Math.floor(k.nrg)+'</span><span class="ch-'+col+'">combat ≈ '+ch+' %</span></div></div><button class="btn sm" data-act="go:'+ev.id+':'+k.id+'"'+(ok?'':' disabled')+'>'+(k.nrg<EXP_E?'Épuisé'+(k.sex==='F'?'e':''):'Envoyer')+'</button></div>';});
  return h+'</div><p class="hint">La chance de combat est une estimation, pour un affrontement sans aide. Vos choix dans les dialogues peuvent l’améliorer… ou l’empirer.</p>';
