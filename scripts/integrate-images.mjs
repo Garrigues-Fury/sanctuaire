@@ -13,7 +13,7 @@ fs.mkdirSync(GACHA, { recursive: true }); fs.mkdirSync(ARM, { recursive: true })
 const NAME = /^((perso-(or-[a-z]+|(argent|bronze)-(feu|eau|air|terre)|cons-[a-z-]+)-[FM])|(armure-(or-[a-z]+|(argent|bronze)-(feu|eau|air|terre))))\.(png|jpe?g|webp)$/;
 
 // Visages mal trouvés par le recadrage automatique (bras levé…) : carré fixé à la main, en fractions de la largeur et de la hauteur.
-const HEAD_BOX = { 'perso-cons-oiseau-paradis-F': { x: .39, y: .11, w: .26 } };
+const HEAD_BOX = { 'perso-cons-oiseau-paradis-F': { x: .39, y: .11, w: .26 }, 'perso-cons-grue-F': { x: .31, y: .05, w: .31 } };
 const done = [];
 for (const f of fs.readdirSync(SRC)) {
   const m = NAME.exec(f); if (!m) continue;
