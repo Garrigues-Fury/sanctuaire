@@ -12,6 +12,8 @@ const GACHA = path.join(ROOT, 'public/img/gacha'), ARM = path.join(ROOT, 'public
 fs.mkdirSync(GACHA, { recursive: true }); fs.mkdirSync(ARM, { recursive: true });
 const NAME = /^((perso-(or-[a-z]+|(argent|bronze)-(feu|eau|air|terre)|cons-[a-z-]+)-[FM])|(armure-(or-[a-z]+|(argent|bronze)-(feu|eau|air|terre))))\.(png|jpe?g|webp)$/;
 
+// Visages mal trouvés par le recadrage automatique (bras levé…) : carré fixé à la main, en fractions de la largeur et de la hauteur.
+const HEAD_BOX = { 'perso-cons-oiseau-paradis-F': { x: .39, y: .11, w: .26 } };
 const done = [];
 for (const f of fs.readdirSync(SRC)) {
   const m = NAME.exec(f); if (!m) continue;
@@ -19,7 +21,10 @@ for (const f of fs.readdirSync(SRC)) {
   if (name.startsWith('perso-')) {
     await sharp(src).resize({ width: 600 }).webp({ quality: 82 }).toFile(path.join(GACHA, name + '.webp'));
     // Visage : le haut de l'image, recadré là où l'œil est attiré (le visage, en pratique).
-    const meta = await sharp(src).metadata();
+    const meta = await sharp(src).metadata(), box = HEAD_BOX[name];
+    if (box) { const s = Math.round(box.w * meta.width);
+      await sharp(src).extract({ left: Math.round(box.x * meta.width), top: Math.round(box.y * meta.height), width: s, height: s }).resize(256, 256).webp({ quality: 85 }).toFile(path.join(GACHA, name + '-tete.webp'));
+      done.push(name); continue; }
     const band = await sharp(src).extract({ left: 0, top: 0, width: meta.width, height: Math.round(meta.height * .27) }).toBuffer();
     await sharp(band).resize(256, 256, { fit: 'cover', position: sharp.strategy.attention }).webp({ quality: 85 }).toFile(path.join(GACHA, name + '-tete.webp'));
   } else {
