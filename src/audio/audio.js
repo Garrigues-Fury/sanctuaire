@@ -96,5 +96,7 @@ const SFX={
 // État du son, pour les vérifications.
 export function audioState(){return{ctx:ctx?ctx.state:'pas démarré',loaded:Object.keys(buffers).length,of:FILES.length};}
 export function sfx(name){const f=SFX[name];if(f)f();}
+// Une corde pincée (mini-jeu de la Lyre) : fréquence f en Hz, durée d en secondes.
+export function pluck(f,d=.7){if(!ctx||!prefs.on||!sfxBus)return;const t=ctx.currentTime,o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.32,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);o2.connect(g);g.connect(sfxBus);o.start(t);o2.start(t);o.stop(t+d+.05);o2.stop(t+d+.05);}
 onEvent(t=>sfx(t));
 if(import.meta.env.DEV)window.__audio={audioState,soundPrefs,sfx};

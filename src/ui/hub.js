@@ -19,6 +19,7 @@ import { setMapHoverHandler } from '../map/map.js';
 import { bar, costHtml, ptImg, viewApprentis, viewArmures, viewChevaliers, viewChronique, viewFormArmures, viewFormDisciples, viewPope, viewSanctuaire } from './app.js';
 import { viewMonde } from './world.js';
 import { viewCensus } from './census.js';
+import { viewCollection, viewEpreuves } from './collection.js';
 import { ZONES, ZONE_N, ensureDefense, postOf } from '../core/defense.js';
 import { healHours, healPower, healers, isAway, isKO } from '../core/wounds.js';
 
@@ -26,7 +27,7 @@ import { healHours, healPower, healers, isAway, isKO } from '../core/wounds.js';
 export const TABS=[['sanctuaire','Sanctuaire','temple'],['personnages','Personnages','users'],['armures','Armures','armor'],['monde','Monde','globe'],['pope','Astres','star']];
 const SUBS={
  sanctuaire:[['apercu','Aperçu','eye'],['batir','Bâtir','hammer'],['defense','Défense','shield'],['chronique','Chronique','scroll']],
- personnages:[['chevaliers','Chevaliers','sword'],['apprentis','Apprentis','users'],['formation','Formation','cap'],['relations','Relations','heart'],['recensement','Recensement','chart']]
+ personnages:[['chevaliers','Chevaliers','sword'],['apprentis','Apprentis','users'],['formation','Formation','cap'],['relations','Relations','heart'],['recensement','Recensement','chart'],['epreuves','Épreuves','star'],['collection','Collection','crown']]
 };
 // Anciennes adresses d'onglets (sauvegardes, boutons) vers la nouvelle organisation.
 const LEGACY={chevaliers:['personnages','chevaliers'],apprentis:['personnages','apprentis'],chronique:['sanctuaire','chronique']};
@@ -45,7 +46,7 @@ export function viewHub(){
  if(LEGACY[S.tab]||!TABS.some(x=>x[0]===S.tab))goTab(S.tab);
  const t=S.tab;
  if(t==='sanctuaire'){const s=subOf(t);return subnav(t)+(s==='batir'?builderPanel()+viewSanctuaire():s==='defense'?viewDefense():s==='chronique'?viewChronique():viewApercu());}
- if(t==='personnages'){const s=subOf(t);return subnav(t)+(s==='apprentis'?viewApprentis():s==='formation'?viewFormation():s==='relations'?viewRelations():s==='recensement'?viewCensus():viewChevaliers());}
+ if(t==='personnages'){const s=subOf(t);return subnav(t)+(s==='apprentis'?viewApprentis():s==='formation'?viewFormation():s==='relations'?viewRelations():s==='epreuves'?viewEpreuves():s==='collection'?viewCollection():s==='recensement'?viewCensus():viewChevaliers());}
  if(t==='armures')return viewArmures();
  if(t==='monde')return viewMonde();
  return viewPope();

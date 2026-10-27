@@ -9,6 +9,8 @@ import { makeApprentice } from './people.js';
 import { tickWorld } from './expeditions.js';
 import { tickSocial } from './social.js';
 import { complexMalus, ensureLife, tickConfidence } from './character.js';
+import { tickEpreuves } from './epreuves.js';
+import { epBonus } from './data/minigames.js';
 import { apHelpF, apTrainF, isMaster, jobF, selfF, teachF, timeMult } from './schedule.js';
 import { medMult, studyMult, trainStats } from './program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity } from './armor.js';
@@ -139,7 +141,7 @@ export function step(h,sum){
  ['herbo','atelier'].forEach(ws=>{const q=S.craft[ws];if(!q.length)return;let left=craftRate(ws)*h;while(left>0&&q.length){const j=q[0];const r=REC_BY[j.k];const need=r.work-j.prog;if(left>=need){left-=need;q.shift();S.items[j.k]=(S.items[j.k]||0)+1;S._dirty=true;if(sum)sum.made[j.k]=(sum.made[j.k]||0)+1;else emit('crafted',j.k);}else{j.prog+=left;left=0;}}});
  S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
  S.gt+=h;
- ensureLife();tickWorld(sum);tickSocial(h,sum);tickConfidence(h,sum);tickResearch(h,sum);tickMedicine(h,sum);tickAuto(sum);tickMissions(sum);tickRaids(sum);tickWounds(sum);
+ ensureLife();tickWorld(sum);tickSocial(h,sum);tickConfidence(h,sum);tickResearch(h,sum);tickMedicine(h,sum);tickAuto(sum);tickMissions(sum);tickRaids(sum);tickWounds(sum);if(tickEpreuves(sum))recomputeCB();
  gainWhileBuilding(h);
  for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;gainOnBuilt(/^h\d+$/.test(j.b),j.lvl);if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
  if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}
@@ -151,7 +153,7 @@ export function advance(dt,sum){if(dt<=0)return;const stepH=Math.max(1/60,dt/300
 export function newSum(){return{lv:{},ev:[],made:{}};}
 export let CB={};
 export function cb(k){return CB[k]||0;}
-export function recomputeCB(){CB={};const add=e=>{if(!e)return;for(const k in e)CB[k]=(CB[k]||0)+e[k];};(S.perm||[]).forEach(c=>{add(c.eff);if(c.unlock)CB['U_'+c.unlock]=1;});(S.artefacts||[]).forEach(id=>add(ART_BY[id].eff));}
+export function recomputeCB(){CB={};const add=e=>{if(!e)return;for(const k in e)CB[k]=(CB[k]||0)+e[k];};(S.perm||[]).forEach(c=>{add(c.eff);if(c.unlock)CB['U_'+c.unlock]=1;});(S.artefacts||[]).forEach(id=>add(ART_BY[id].eff));(S.epDone||[]).forEach(k=>{const b=epBonus(k);if(b)add({[b.key]:b.v});});}
 export function bonusOf(e){return(S.perm||[]).filter(c=>c.el===e).length;}
 export function faveur(){return S.faveur||0;}
 export function unitsDue(c){const o={};for(const e in c.cost)o[e]=Math.max(0,c.cost[e]-bonusOf(e));return o;}

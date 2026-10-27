@@ -32,6 +32,9 @@ import { setCensus } from './census.js';
 import { coefOf, gainStat, migrateScale, norm, promoteStats } from '../core/scale.js';
 import { COMPLEXES, TONS, ensureLife, heartLabel, heartText } from '../core/character.js';
 import { isCouple, loveOf, partnerOf, rivalOf } from '../core/romance.js';
+import { givePool } from '../core/minigames.js';
+import { openMinigame } from './minigames.js';
+import { cardModal } from './collection.js';
 import { assign as defAssign, raid } from '../core/defense.js';
 import { launchMission } from '../core/missions.js';
 import { MP, missionModal } from './missions.js';
@@ -734,7 +737,7 @@ export function getP(kind,id){return kind==='k'?S.knights.find(q=>q.id===id):kin
 // Un seul écouteur pour tous les boutons (attribut data-act), et un toucher hors de la fenêtre la ferme.
 export function installClicks(){
  document.addEventListener('input',e=>{const d=e.target.dataset||{};if(d.vol)setSound({[d.vol]:+e.target.value/100});if(d.plan)onPlanInput(e.target,false);if(d.prog)onProgInput(e.target,false);});
- document.addEventListener('change',e=>{const d=e.target.dataset||{};if(d.vol==='sfx')sfx('confirm');if(d.plan)onPlanInput(e.target,true);if(d.prog)onProgInput(e.target,true);if(d.autoadd||d.autosolo||d.autokeep)onAutoChange(e.target);if(d.census){setCensus(d.census,e.target.value);render();}if(d.defassign&&e.target.value){const kn=S.knights.find(q=>q.id===+e.target.value);if(kn){defAssign(kn,d.defassign);save();sfx('confirm');render();}}});
+ document.addEventListener('change',e=>{const d=e.target.dataset||{};if(d.vol==='sfx')sfx('confirm');if(d.plan)onPlanInput(e.target,true);if(d.prog)onProgInput(e.target,true);if(d.autoadd||d.autosolo||d.autokeep)onAutoChange(e.target);if(d.census){setCensus(d.census,e.target.value);render();}if(d.mglv&&e.target.value)openMinigame(d.mglv,+e.target.value);if(d.defassign&&e.target.value){const kn=S.knights.find(q=>q.id===+e.target.value);if(kn){defAssign(kn,d.defassign);save();sfx('confirm');render();}}});
  document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(t&&!t.disabled){actWithSound(t.dataset.act);return;}if(e.target.id==='sheet'){sfx('close');lastTrial=null;closeModal();render();}});}
 // Le bruitage qui accompagne chaque action du joueur.
 const ACT_SOUND={tab:'tap',close:'close',dclose:'close',site:'open',knight:'open',ap:'open',guard:'open',armor:'open',houses:'open',settings:'open',trialOpen:'open',
@@ -757,6 +760,9 @@ export function act(a){
  case'rename':renaming=x+':'+y;render();setTimeout(()=>{const i=$('#renameInput');if(i){i.focus();i.select();}},50);return;
  case'renameno':renaming=null;render();return;
  case'renameok':{const p=getP(x,+y);if(!p)return;const e=doRename(p);if(e){flash=e;render();return;}renaming=null;sfx('confirm');break;}
+ case'mg':closeModal();openMinigame(x,+y);return;
+ case'ccard':openModal(cardModal(x));return;
+ case'pool':{const p=people().find(q=>q.id===+(($('#poolWho')||{}).value));if(!p)return;const h=givePool(p,x==='all'?S.xpPool:+x);if(h){flash=p.name+' : '+h+' h d’entraînement.';log(p.name+' reçoit '+h+' h d’entraînement de la réserve.');sfx('confirm');}break;}
  case'artv':{const kn=S.knights.find(q=>q.id===+x);if(kn)kn.artV=((kn.artV||0)+1)%Math.max(1,paintedVariants(kn).length);break;}
  case'defrm':{const kn=S.knights.find(q=>q.id===+x);if(kn)defAssign(kn,null);break;}
  case'raidnow':{if(S.speed!==60)return;const r=raid();log(r.msg);flash=r.msg;break;}
