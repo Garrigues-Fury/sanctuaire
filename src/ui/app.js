@@ -30,7 +30,7 @@ import { autoCandidates, autoOf, soloKeys } from '../core/autotrain.js';
 import { ensureAuto } from '../core/autotrain.js';
 import { setCensus } from './census.js';
 import { coefOf, gainStat, migrateScale, norm, promoteStats } from '../core/scale.js';
-import { COMPLEXES, TONS, ensureLife, heartLabel, heartText } from '../core/character.js';
+import { COMPLEXES, TONS, ensureLife, heartLabel, heartText, serviceText } from '../core/character.js';
 import { isCouple, loveOf, partnerOf, rivalOf } from '../core/romance.js';
 import { givePool } from '../core/minigames.js';
 import { openMinigame } from './minigames.js';
@@ -485,6 +485,12 @@ export function persoBlock(p){
  h+=affinityBlock(p);
  return h;
 }
+// Depuis combien de temps il est chevalier, et ses armures d'avant, entre parenthèses (demande de Seba du 2026-10-27).
+function serviceLine(k){
+ const t=serviceText(k);if(!t)return'';
+ const prev=(k.prevCons||[]).map(x=>CONS_BY[x]).filter(Boolean).map(c=>armorLow(c));
+ return '<div class="hint service">Chevalier depuis '+t+(prev.length?' (auparavant : '+prev.join(', puis ')+')':'')+'</div>';
+}
 // Cœur (bonté ou haine), ton dans les conversations, complexe éventuel (core/character.js).
 function characterBlock(p){
  if(p.bon==null)return '';
@@ -620,7 +626,7 @@ export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';
  h+='<div class="sec-h"><h2>Maîtres qui peuvent guider</h2></div><div class="mrow">'+guideChips(c)+'</div>';
  return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
- let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+vetChip(k)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+vetChip(k)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div>'+serviceLine(k)+'</div></div>';
  h+=statusLine(k);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance <b style="color:var(--gold-hi)">'+fmt(power(k,k.rank))+'</b></div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+sheetTabs();
  if(sheetTab==='temps'){
@@ -852,7 +858,7 @@ export function act(a){
  case'trialOpen':lastTrial=null;trialPick=null;openModal(trialModal(+x));return;
  case'trial':{const kp=S.knights.find(q=>q.id===+x),c0=CONS_BY[y];
   if(kp&&c0){const e=trialEval(kp,c0);if(!e.ok)return;const win=Math.random()<e.ch;const cd=restHours(kp);
-   if(win){(e.resonance||[]).forEach(id=>grantSkill(kp,id));promoteStats(kp,c0,c0.rank);const old=CONS_BY[kp.cons];S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
+   if(win){(e.resonance||[]).forEach(id=>grantSkill(kp,id));promoteStats(kp,c0,c0.rank);const old=CONS_BY[kp.cons];kp.prevCons=(kp.prevCons||[]).concat([old.k]);S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
     if(c0.rank==='or'&&!S.houses[c0.sign])S.houses[c0.sign]=1;log('★ '+kp.name+' est promu'+G(kp,'e')+' : '+armorLow(c0)+' ! L’'+armorLow(old)+' attend un nouveau porteur.');}
    else{kp.cd=S.gt+cd;log(kp.name+' échoue à l’épreuve de l’'+armorLow(c0)+'.');}
    lastTrial={id:kp.id,win,name:kp.name,rank:c0.rank,cons:c0.n,sex:kp.sex,cd};save();render();return;}

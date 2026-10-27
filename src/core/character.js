@@ -7,7 +7,7 @@
      dépassent le niveau 20 en compétences. */
 import { FUND, SKILLS, SPEED, specReq } from './data/skills.js';
 import { fl, ql } from './data/traits.js';
-import { CONS_BY } from './data/world.js';
+import { CONS, CONS_BY } from './data/world.js';
 import { aptitude, ensureSkills, hasSkill, xpForLevel } from './skills.js';
 import { S, log } from './state.js';
 import { clamp, mulberry32 } from './util.js';
@@ -80,11 +80,34 @@ export function makeVeteran(p){
   p.skx[id]=Math.max(p.skx[id]||0,xpForLevel(L)*(1+r()*.15));}
 }
 
+/* ---------- ancienneté (demandée par Seba le 2026-10-27) ---------- */
+// k.since : l'heure de jeu où il est devenu chevalier (négative pour les vétérans, chevaliers bien avant la partie) ;
+// k.prevCons : les armures qu'il a portées avant la sienne.
+const SERVICE={bronze:[2,6],argent:[5,12],or:[10,22]};
+export function ensureService(k){
+ if(k.since!=null)return;
+ if(k.origin!=='survivant'){k.since=S.gt;k.sinceEst=true;return;}
+ const r=mulberry32(((k.seed||k.id||5)^0x3a9d1)>>>0),[a,b]=SERVICE[k.rank]||[2,6],years=a+Math.floor(r()*(b-a+1));
+ k.since=-(years*365+Math.floor(r()*300))*24;
+ // certains vétérans ont porté une armure de rang inférieur avant d'être promus
+ const prev=[],free=rk=>CONS.filter(c=>c.rank===rk&&S.armors[c.k]!=='portee'&&!prev.includes(c.k));
+ const pickFree=rk=>{const L=free(rk);return L.length?L[Math.floor(r()*L.length)].k:null;};
+ if(k.rank==='or'&&r()<.5){if(r()<.4){const x=pickFree('bronze');if(x)prev.push(x);}const y=pickFree('argent');if(y)prev.push(y);}
+ if(k.rank==='argent'&&r()<.4){const x=pickFree('bronze');if(x)prev.push(x);}
+ if(prev.length)k.prevCons=prev;
+}
+// « 9 ans », « 12 jours »…
+export function serviceText(k){
+ if(k.since==null)return'';const d=(S.gt-k.since)/24;
+ const t=d>=365?Math.floor(d/365)+' an'+(d>=730?'s':''):d>=1?Math.floor(d)+' jour'+(d>=2?'s':''):'moins d’un jour';
+ return(k.sinceEst?'au moins ':'')+t;
+}
+
 /* ---------- au chargement et chaque jour ---------- */
 export function ensureLife(){
  if(!S)return;
  [].concat(S.knights||[],S.aps||[],S.guards||[],S.pending||[]).forEach(ensureCharacter);
- (S.knights||[]).forEach(makeVeteran);
+ (S.knights||[]).forEach(k=>{makeVeteran(k);ensureService(k);});
 }
 // Chaque jour, les amis bienveillants rendent confiance à ceux qui ont un complexe.
 export function tickConfidence(h,sum){

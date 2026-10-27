@@ -4,7 +4,7 @@ import { newGame } from '../src/core/people.js';
 import { recomputeCB } from '../src/core/rules.js';
 import { S, setS } from '../src/core/state.js';
 import { SKILL_MAX, levelOfX, skillLevel, xpForLevel } from '../src/core/skills.js';
-import { ensureCharacter, ensureLife, strongSkills, tickConfidence } from '../src/core/character.js';
+import { ensureCharacter, ensureLife, serviceText, strongSkills, tickConfidence } from '../src/core/character.js';
 import { armorAffinity, heartBlock } from '../src/core/armor.js';
 import { CONS } from '../src/core/data/world.js';
 import { compat } from '../src/core/social.js';
@@ -32,6 +32,22 @@ describe('vétérans', () => {
   it('un chevalier formé au Sanctuaire n’est pas vétéran', () => {
     const k = S.knights[0]; k.vet = false; k.origin = 'forme'; ensureLife();
     expect(k.vet).toBe(false);
+  });
+});
+
+describe('ancienneté', () => {
+  it('les vétérans sont chevaliers depuis des années, l’or plus longtemps', () => {
+    S.knights.forEach(k => { expect(k.since).toBeLessThan(0); expect(serviceText(k)).toMatch(/an/); });
+    const yrs = r => Math.max(...S.knights.filter(k => k.rank === r).map(k => -k.since / 24 / 365));
+    expect(yrs('or')).toBeGreaterThan(yrs('bronze'));
+  });
+  it('certains vétérans d’argent ou d’or ont porté une armure de rang inférieur, jamais celle d’un autre', () => {
+    const worn = new Set(S.knights.map(k => k.cons));
+    S.knights.forEach(k => (k.prevCons || []).forEach(x => { expect(worn.has(x)).toBe(false); expect(k.rank).not.toBe('bronze'); }));
+  });
+  it('un nouveau chevalier compte ses jours depuis son épreuve', () => {
+    const k = S.knights[0]; k.since = S.gt - 50; k.sinceEst = false;
+    expect(serviceText(k)).toBe('2 jours');
   });
 });
 
