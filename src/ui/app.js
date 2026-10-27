@@ -37,7 +37,7 @@ import { isAway, isKO } from '../core/wounds.js';
 import { deleteSlot, listSlots, saveSlot, slotCode, slotGame } from '../core/slots.js';
 import { LORE, loreLevel, loreMult, loreNeed, researchRate } from '../core/research.js';
 import { careF, restHours, survivalChance, survivalOf, vieLevel } from '../core/medicine.js';
-import { DIFFS, makeGuardFrom, makeWorker, newGame, renameDuplicates } from '../core/people.js';
+import { DIFFS, makeGuardFrom, makeWorker, newGame, renameDuplicates, takenNames } from '../core/people.js';
 import { CB, DUO_E, HOUSE_MAX, POSTS, SESS, SESS_E, affinity, afford, apsAt, arena, artReady, bestSmith, bonusOf, byId, cap, capacity, cardPrice, cb, consScore, cosmosLabel, costOf, craftRate, defenseOf, elemScores, emax, fkey, forgeRate, friendBonus, friendLv, friendsOf, guardRate, have, houseCost, houseTime, knightRate, knightsWith, levelUpAp, masterOf, need, pay, people, pope, postName, power, rates, recomputeCB, recruitInterval, reqOk, research, reqText, sanctPower, siteProd, siteSlots, slotsFor, timeOf, trialEval, usedSlots, villageCap, workerCost, workersAt, xpRate } from '../core/rules.js';
 import { exportCode, importCode, save } from '../core/save.js';
 import { HADES_H, KEY, POSEIDON_H, S, log, setS } from '../core/state.js';
@@ -111,6 +111,19 @@ export function viewGuards(){
 }
 /* ---------- fiches en rubriques (refonte UX, phase 2) ---------- */
 let sheetTab='profil';
+// Nom en tête de fiche, avec « Renommer » (kind : 'k' chevalier, 'a' apprenti, 'g' garde). Les prénoms restent uniques.
+let renaming=null;
+function nameH(p,kind){
+ if(renaming!==kind+':'+p.id)return '<h2>'+esc(p.name)+' <button class="btn ghost sm" data-act="rename:'+kind+':'+p.id+'" aria-label="Renommer '+esc(p.name)+'">Renommer</button></h2>';
+ return '<div class="rename"><label for="renameInput" class="hint">Nouveau nom</label><input id="renameInput" type="text" maxlength="24" value="'+esc(p.name)+'" autocomplete="off"><div class="btns"><button class="btn sm" data-act="renameok:'+kind+':'+p.id+'">Valider</button><button class="btn ghost sm" data-act="renameno">Annuler</button></div></div>';
+}
+function doRename(p){
+ const n=(($('#renameInput')||{}).value||'').trim().replace(/\s+/g,' ');
+ if(n.length<2)return 'Le nom doit faire au moins 2 lettres.';
+ if(n!==p.name&&takenNames().has(n))return 'Quelqu’un s’appelle déjà '+n+' au Sanctuaire.';
+ if(n!==p.name){log(p.name+' se fait désormais appeler '+n+'.');p.name=n;}
+ return null;
+}
 const SHEET_TABS=[['profil','Profil','eye'],['temps','Emploi du temps','clock'],['competences','Compétences','star'],['liens','Liens','heart']];
 function sheetTabs(){return '<nav class="subnav sheet-tabs" aria-label="Rubriques de la fiche">'+SHEET_TABS.map(([k,n,ic])=>'<button data-act="stab:'+k+'"'+(sheetTab===k?' aria-current="true"':'')+'>'+icon(ic,18)+'<span>'+n+'</span></button>').join('')+'</nav>';}
 // Radar des 6 statistiques : l'échelle s'adapte au personnage.
@@ -128,7 +141,7 @@ export function statsRadar(p){
 }
 const radarBox=p=>'<div class="radar-box">'+statsRadar(p)+'</div>';
 export function guardModal(id){return()=>{const g=(S.guards||[]).find(x=>x.id===id);if(!g)return '<p>Ce garde n’est plus là.</p>';
- let h=flashHtml()+'<div class="sheet-head">'+ptImg(g,'garde',true)+'<div class="main"><h2>'+esc(g.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="chip garde">Garde</span>'+signChip(g.sign)+sexChip(g)+'</div><div class="hint">'+(g.post?'En poste : '+esc(postName(g.post)):'Sans poste')+'</div></div></div>';
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(g,'garde',true)+'<div class="main">'+nameH(g,'g')+'<div style="display:flex;flex-wrap:wrap;gap:6px"><span class="chip garde">Garde</span>'+signChip(g.sign)+sexChip(g)+'</div><div class="hint">'+(g.post?'En poste : '+esc(postName(g.post)):'Sans poste')+'</div></div></div>';
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+g.lv+'</b> · défense '+fmt(power(g,'garde'))+'</div>'+bar(g.xp/(need(g.lv)*1.5)*100)+nrgBar(g)+'</div>'+sheetTabs();
  if(sheetTab==='temps')return h+progBlock(g,'g')+autoBlock(g,'g')+trainingBlock(g,'g')+selfWork(g,'g');
  if(sheetTab==='competences')return h+skillsBlock(g,'g');
@@ -582,7 +595,7 @@ export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';
  h+='<div class="sec-h"><h2>Maîtres qui peuvent guider</h2></div><div class="mrow">'+guideChips(c)+'</div>';
  return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
- let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main"><h2>'+esc(k.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
  h+=statusLine(k);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance <b style="color:var(--gold-hi)">'+fmt(power(k,k.rank))+'</b></div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+sheetTabs();
  if(sheetTab==='temps'){
@@ -614,7 +627,7 @@ export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);
  h+=persoBlock(k);
  return h;};}
 export function apModal(id){return()=>{const a=S.aps.find(x=>x.id===id);if(!a)return '<p>Cet apprenti n’est plus là.</p>';const rate=xpRate(a);
- let h=flashHtml()+'<div class="sheet-head">'+ptImg(a,null,true)+'<div class="main"><h2>'+esc(a.name)+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+signChip(a.sign)+sexChip(a)+'<span class="chip">'+a.age+' ans</span><span class="chip '+(a.imp==='Exceptionnel'?'or':a.imp==='Prometteur'?'argent':'')+'">'+a.imp+(cb('REVEAL')?' · potentiel '+a.pot:'')+'</span></div><div class="hint">Cosmos '+cosmosLabel(a.st.co).toLowerCase()+(a.awk?'':' · pas encore éveillé (niv. 5)')+'</div></div></div>';
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(a,null,true)+'<div class="main">'+nameH(a,'a')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+signChip(a.sign)+sexChip(a)+'<span class="chip">'+a.age+' ans</span><span class="chip '+(a.imp==='Exceptionnel'?'or':a.imp==='Prometteur'?'argent':'')+'">'+a.imp+(cb('REVEAL')?' · potentiel '+a.pot:'')+'</span></div><div class="hint">Cosmos '+cosmosLabel(a.st.co).toLowerCase()+(a.awk?'':' · pas encore éveillé (niv. 5)')+'</div></div></div>';
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)" data-aplv="'+a.id+'">'+a.lv+'</b> · '+fmt(rate)+' XP / h'+(friendBonus(a)?' · amitiés +'+Math.round(friendBonus(a)*100)+' %':'')+(S.houses[a.sign]?' · maison +'+10*S.houses[a.sign]+' %':'')+'</div>'+bar(a.xp/need(a.lv)*100,'data-apbar="'+a.id+'"')+nrgBar(a)+'</div>'+sheetTabs();
  if(sheetTab==='temps'){
   if(a.job)h+='<div class="banner info">En renfort à : '+SITES[a.job].n.toLowerCase()+'. Réglez son temps ci-dessous. <button class="btn sm ghost" data-act="ajob:'+a.id+':none" style="margin-left:6px">Rappeler</button></div>';
@@ -725,6 +738,9 @@ export function act(a){
  const [k,x,y,z,w]=a.split(':');
  switch(k){
  case'census':setCensus(x,y);render();return;
+ case'rename':renaming=x+':'+y;render();setTimeout(()=>{const i=$('#renameInput');if(i){i.focus();i.select();}},50);return;
+ case'renameno':renaming=null;render();return;
+ case'renameok':{const p=getP(x,+y);if(!p)return;const e=doRename(p);if(e){flash=e;render();return;}renaming=null;sfx('confirm');break;}
  case'artv':{const kn=S.knights.find(q=>q.id===+x);if(kn)kn.artV=((kn.artV||0)+1)%Math.max(1,paintedVariants(kn).length);break;}
  case'defrm':{const kn=S.knights.find(q=>q.id===+x);if(kn)defAssign(kn,null);break;}
  case'raidnow':{if(S.speed!==60)return;const r=raid();log(r.msg);flash=r.msg;break;}

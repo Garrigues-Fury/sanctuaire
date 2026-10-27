@@ -568,8 +568,10 @@ nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:el
 
 /* sauvegardes nommées */
 .save-new{display:grid;gap:8px;padding:12px;border-radius:12px;border:1px solid rgba(246,212,138,.3);background:var(--night-2)}
-.save-new input{min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--night);color:var(--marble);font:inherit}
-.save-new input:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.save-new input,.rename input{min-height:44px;padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--night);color:var(--marble);font:inherit}
+.save-new input:focus-visible,.rename input:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.rename{display:grid;gap:6px;margin-bottom:6px}
+.sheet-head h2 .btn.sm{vertical-align:middle;margin-left:6px;padding:4px 9px;font-size:.75rem;font-family:inherit}
 .save-new .btn{display:flex;align-items:center;justify-content:center;gap:8px}
 .slot{display:grid;gap:8px;padding:10px;border-radius:11px;border:1px solid var(--line);background:var(--night-2)}
 .slot .main{display:grid;gap:2px}.slot small{font-size:.78rem;color:var(--marble-dim)}
