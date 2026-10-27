@@ -5,6 +5,11 @@ import { QUAL, FLAW } from './data/traits.js';
 import { clamp } from './util.js';
 import { legacy } from './scale.js';
 import { TONS } from './character.js';
+import { arcById, arcCond } from './arcs.js';
+// Conditions propres aux feuilletons : un choix qui ne les remplit pas est caché (pas grisé).
+export const ARC_KEYS=['flag','noflag','aff','affMax','clues','romance','cx2'];
+export const isArcReq=req=>!!req&&ARC_KEYS.some(x=>req[x]!=null);
+function arcOk(req,k,S){const a=S.world&&S.world.active;if(!a||!isArcReq(req))return true;const P=S.knights.concat(S.guards||[],S.aps);return arcCond(req,a.arcId!=null?arcById(a.arcId):{flags:[],clues:[],aff:0},{k,k2:P.find(p=>p.id===a.k2)});}
 
 // Texte selon le caractère : la première qualité ou le premier défaut qui a une réplique dédiée l'emporte.
 export function pickText(t,p){
@@ -19,6 +24,7 @@ export function fill(s,vars){return s.replace(/\{(\w+)\}/g,(m,k)=>vars[k]!=null?
 // Condition d'un choix : qualité, défaut, statistique minimale ou ressource à payer.
 export function reqOk(req,k,S){
  if(!req)return true;
+ if(!arcOk(req,k,S))return false;
  if(req.qual)return(k.qual||[]).some(q=>req.qual.split('|').includes(q.k));
  if(req.flaw)return(k.flaw||[]).some(f=>req.flaw.split('|').includes(f.k));
  if(req.stat)return legacy(k,req.stat[0])>=req.stat[1];

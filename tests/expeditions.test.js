@@ -37,7 +37,7 @@ describe('expéditions', () => {
   });
   it('partir coûte de l’énergie, et chaque scène se joue jusqu’au bout', () => {
     ensureWorld();
-    for (const key of Object.keys(SCENES).filter(k => SCENES[k].kind !== 'home')) {
+    for (const key of Object.keys(SCENES).filter(k => SCENES[k].kind !== 'home' && SCENES[k].kind !== 'arc')) {
       S.world.events = []; S.world.active = null;
       const ev = spawn(SCENES[key].kind === 'attack' ? 'attack' : 'recruit'); ev.scene = key;
       const k = S.knights[0]; k.nrg = 100;
@@ -64,7 +64,7 @@ describe('expéditions', () => {
   });
   it('chaque nœud mène quelque part', () => {
     for (const [key, sc] of Object.entries(SCENES)) for (const [id, n] of Object.entries(sc.nodes)) {
-      const targets = [n.next, n.roll && n.roll.ok, n.roll && n.roll.ko, n.fight && n.fight.win, n.fight && n.fight.lose, ...(n.choices || []).map(c => c.go)].filter(Boolean);
+      const targets = [n.next, n.roll && n.roll.ok, n.roll && n.roll.ko, n.fight && n.fight.win, n.fight && n.fight.lose, ...(n.choices || []).map(c => c.go), ...(n.branch || []).map(b => b.go)].filter(Boolean);
       targets.forEach(t => expect(sc.nodes[t], key + '.' + id + ' → ' + t).toBeTruthy());
       expect(!!(n.end || targets.length), key + '.' + id).toBe(true);
     }

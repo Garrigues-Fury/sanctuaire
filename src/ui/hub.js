@@ -7,6 +7,8 @@ import { duelAvailable, godState } from '../core/duel.js';
 import { POSTS, afford, cap, capacity, defenseOf, elemScores, masterOf, siteProd, siteSlots, usedSlots, people, pope, postName, power, rates, sanctPower, slotsFor, trialEval, villageCap } from '../core/rules.js';
 import { compat, compatLabel } from '../core/social.js';
 import { ensureLove } from '../core/romance.js';
+import { ensureArcs, episodeTitle, readyArcs } from '../core/arcs.js';
+import { ARCS } from '../core/data/arcs.js';
 import { HADES_H, POSEIDON_H, S } from '../core/state.js';
 import { dur, esc, fmt } from '../core/util.js';
 import { RES_ICON, icon } from './icons.js';
@@ -73,6 +75,8 @@ export function todo(){
  if(!S.forgeJob&&S.b.forge>0)add({ic:'armor',t:'L’atelier des armures attend',d:'Restaurez une armure pressentie pour vos apprentis.',act:'tab:armures'});
  const idle=S.workers.filter(w=>!w.job).length;if(idle)add({ic:'users',t:idle+' villageois sans affectation',d:'Envoyez-les sur un site.',act:'sub:sanctuaire:batir'});
  const full=RKEYS.filter(r=>S.res[r]>=cap(r)-.5);if(full.length)add({ic:'block',t:'Réserves pleines : '+full.map(r=>RES[r].n.toLowerCase()).join(', '),d:'La production est perdue. Dépensez ou agrandissez les réserves.',act:'sub:sanctuaire:batir'});
+ readyArcs().forEach(A=>add({ic:'heart',t:'Feuilleton : « '+ARCS[A.key].n+' »',d:'Épisode '+(A.ep+1)+' : '+episodeTitle(A)+'.',act:'arc:'+A.id,urgent:true}));
+ if(S.world&&S.world.home)add({ic:'users',t:'Il se passe quelque chose au Sanctuaire',d:'Une scène entre vos personnages vous attend.',act:'home:start'});
  if(S.fp>0)add({ic:'heart',t:S.fp+' point'+(S.fp>1?'s':'')+' d’amitié à offrir',d:'Renforcez les liens entre vos personnages.',act:'sub:personnages:relations'});
  return L;
 }
@@ -167,11 +171,23 @@ function viewRelations(){
  const P=people();
  const links=Object.entries(S.friend||{}).filter(([,v])=>v>0).map(([k,v])=>{const [a,b]=k.split('-').map(Number);return{a:P.find(p=>p.id===a),b:P.find(p=>p.id===b),v};}).filter(x=>x.a&&x.b).sort((x,y)=>y.v-x.v);
  let h='<section class="sec"><div class="kpis">'+kpi('heart','Points d’amitié',S.fp,'+1 toutes les 6 h')+kpi('users','Liens noués',links.length,'')+'</div><p class="hint">Les amitiés accélèrent la formation et les découvertes. Ouvrez une fiche pour offrir un point d’amitié.</p></section>';
+ h+=arcSection();
  h+=loveSection(P);
  h+='<section class="sec"><div class="sec-h"><h2>Liens les plus forts</h2></div>';
  h+=links.length?'<div class="houses">'+links.slice(0,20).map(x=>{const c=compat(x.a,x.b);return '<div class="house-r rel"><span class="duo">'+ptImg(x.a,x.a.rank)+ptImg(x.b,x.b.rank)+'</span><span class="main"><b>'+esc(x.a.name)+' & '+esc(x.b.name)+'</b><small>'+compatLabel(c.v)+(c.why[0]?' · '+esc(c.why[0].replace(/^[+−] /,'')):'')+'</small>'+bar(x.v*10,'','rose')+'</span><b class="num dv">'+x.v+'/10</b></div>';}).join('')+'</div>':'<div class="empty">Aucun lien pour l’instant : les amitiés se nouent avec le temps et les entraînements à deux.</div>';
  const T=[];for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const c=compat(P[i],P[j]);if(c.v<=-2)T.push({a:P[i],b:P[j],c});}
  if(T.length)h+='<div class="sec-h" style="margin-top:12px"><h2>Tensions</h2></div><div class="houses">'+T.sort((x,y)=>x.c.v-y.c.v).slice(0,10).map(x=>'<div class="house-r rel"><span class="duo">'+ptImg(x.a,x.a.rank)+ptImg(x.b,x.b.rank)+'</span><span class="main"><b>'+esc(x.a.name)+' & '+esc(x.b.name)+'</b><small>'+compatLabel(x.c.v)+(x.c.why[0]?' · '+esc(x.c.why[0].replace(/^[+−] /,'')):'')+'</small></span></div>').join('')+'</div>';
+ return h+'</section>';
+}
+
+// Les feuilletons en cours et terminés (core/arcs.js).
+function arcSection(){
+ ensureArcs();const P=people(),L=S.arcs.slice().sort((a,b)=>(a.done-b.done)||b.id-a.id);
+ let h='<section class="sec"><div class="sec-h"><h2>Feuilletons</h2><span class="aside">'+L.filter(a=>!a.done).length+' en cours</span></div>';
+ if(!L.length)return h+'<div class="empty">Aucun pour l’instant. De longues histoires en épisodes naîtront entre vos chevaliers : amours lentes, enquêtes, rivalités. Un épisode à la fois, quelques heures entre chacun.</div></section>';
+ h+='<div class="houses">'+L.slice(0,8).map(A=>{const D=ARCS[A.key],a=P.find(p=>p.id===A.k),b=P.find(p=>p.id===A.k2);if(!a||!b)return '';
+  const st=A.done?'Terminé':S.gt>=A.at?'Épisode '+(A.ep+1)+' disponible : '+episodeTitle(A):'Épisode '+(A.ep+1)+' dans '+dur(A.at-S.gt);
+  return '<div class="house-r rel'+(A.done?'':' tap')+'"'+(!A.done&&S.gt>=A.at?' data-act="arc:'+A.id+'"':'')+'><span class="duo">'+ptImg(a,a.rank)+ptImg(b,b.rank)+'</span><span class="main"><b>« '+esc(D.n)+' »</b><small>'+esc(a.name)+' & '+esc(b.name)+' · '+esc(st)+'</small>'+bar(A.ep/D.eps.length*100,'','rose')+'</span><b class="num dv">'+A.ep+'/'+D.eps.length+'</b></div>';}).join('')+'</div>';
  return h+'</section>';
 }
 

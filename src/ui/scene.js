@@ -3,7 +3,9 @@ import { REGIONS } from '../core/data/worldmap.js';
 import { SCENES } from '../core/data/scenes.js';
 import { ELEM } from '../core/data/world.js';
 import { COST, autoPick, canUse, heroAction } from '../core/combat.js';
-import { fill, pickText, reqLabel, reqOk, rollChance } from '../core/dialogue.js';
+import { fill, isArcReq, pickText, reqLabel, reqOk, rollChance } from '../core/dialogue.js';
+import { ARCS } from '../core/data/arcs.js';
+import { arcById } from '../core/arcs.js';
 import { activeKnight, beginFight, choose, currentNode, doRoll, endFight, finishScene, goTo } from '../core/expeditions.js';
 import { save } from '../core/save.js';
 import { byId } from '../core/rules.js';
@@ -51,7 +53,8 @@ function draw(){
  if(!a){close();return;}
  const R=regionOf(a);
  root.style.setProperty('--bg1',R.bg[0]);root.style.setProperty('--bg2',R.bg[1]);
- const place=a.ev?a.vars.v+' · '+a.ev.nat:'Le Sanctuaire';
+ const A=a.kind==='arc'?arcById(a.arcId):null;
+ const place=a.ev?a.vars.v+' · '+a.ev.nat:A?'« '+ARCS[A.key].n+' » · épisode '+(A.ep+1)+' : '+ARCS[A.key].eps[A.ep]:'Le Sanctuaire';
  const top='<div class="sc-top"><span>'+esc(place)+'</span><button class="sc-x" data-sc="close" aria-label="Fermer (la scène reste en attente)">✕</button></div>';
  if(a.battle){
   // Le canevas du combat reste en place : on ne redessine que les barres et les boutons.
@@ -78,7 +81,7 @@ function dialogueHtml(a){
 }
 function lastOther(a){const ns=SCENES[a.scene].nodes;const w=Object.values(ns).map(n=>n.who).find(w=>w!=='k'&&w!=='narr');return w?speaker(w):null;}
 function controls(node,k){
- if(node.choices)return node.choices.map((c,i)=>{const ok=reqOk(c.req,k,S),lab=reqLabel(c.req);return '<button class="sc-choice" data-sc="ch:'+i+'"'+(ok?'':' disabled')+'>'+(lab?'<span class="req">['+esc(lab)+']</span> ':'')+esc(fill(c.t,S.world.active.vars))+'</button>';}).join('');
+ if(node.choices)return node.choices.map((c,i)=>{const ok=reqOk(c.req,k,S),lab=reqLabel(c.req);if(!ok&&isArcReq(c.req))return '';return '<button class="sc-choice" data-sc="ch:'+i+'"'+(ok?'':' disabled')+'>'+(lab?'<span class="req">['+esc(lab)+']</span> ':'')+esc(fill(c.t,S.world.active.vars))+'</button>';}).join('');
  if(node.roll){const p=Math.round(rollChance(node.roll,k,S.world.active.vars)*100);return '<button class="btn" data-sc="roll">Tenter ('+p+' %)</button>';}
  if(node.fight)return '<button class="btn" data-sc="fight">Combattre</button><button class="btn ghost" data-sc="fightauto">Combat automatique</button>';
  if(node.end)return '<button class="btn" data-sc="end">Terminer</button>';
@@ -126,7 +129,7 @@ async function playTurn(act,tgt){
 /* ---------- fin ---------- */
 function resultsHtml(){
  const {end,out}=results;
- const T={win:['Victoire','Le village est sauvé.'],peace:['Paix conclue','Parfois, les mots suffisent.'],recruit:['Une recrue !','Le Sanctuaire compte un enfant de plus.'],lose:['Défaite','On se relève. On revient.'],leave:['Retour bredouille','Il y aura d’autres occasions.'],home:['Une journée au Sanctuaire','']}[end]||['Fin',''];
+ const T={win:['Victoire','Le village est sauvé.'],peace:['Paix conclue','Parfois, les mots suffisent.'],recruit:['Une recrue !','Le Sanctuaire compte un enfant de plus.'],lose:['Défaite','On se relève. On revient.'],leave:['Retour bredouille','Il y aura d’autres occasions.'],home:['Une journée au Sanctuaire',''],arc:['Fin de l’épisode','']}[end]||['Fin',''];
  return '<div class="sc-results '+end+'"><h2>'+T[0]+'</h2>'+(T[1]?'<p class="hint">'+T[1]+'</p>':'')+'<ul>'+out.map(o=>'<li>'+esc(o)+'</li>').join('')+'</ul><button class="btn" data-sc="close">Retour</button></div>';
 }
 

@@ -19,7 +19,8 @@ import { G, clamp, mulberry32, pick } from './util.js';
 import { isAway, isKO } from './wounds.js';
 import { LIFE_NEEDS, acceptChance, applyLifeFx, castFor } from './romance.js';
 import { CX_LINES } from './data/lifescenes.js';
-import { fill } from './dialogue.js';
+import { fill, reqOk } from './dialogue.js';
+import { arcById, arcVars, endEpisode, episodeKey } from './arcs.js';
 
 export const EXP_E=30,MAX_EVENTS=4,EVENT_LIFE=72;
 const r=()=>Math.random();
@@ -115,7 +116,20 @@ export function goTo(id){
  const a=S.world.active,node=SCENES[a.scene].nodes[id];a.node=id;
  (node.fx||[]).forEach(f=>a.fx.push(f));
  if(node.fx&&node.fx.some(f=>f.startsWith('nrg:'))){const k=activeKnight();if(k)k.nrg=Math.min(emax(k),k.nrg+30);}
+ // aiguillage invisible (feuilletons) : on suit la première branche dont la condition est remplie
+ if(node.branch){const k=activeKnight(),b=node.branch.find(x=>!x.if||reqOk(x.if,k,S));return goTo(b.go);}
  return node;
+}
+// Un épisode de feuilleton (core/arcs.js) : mêmes personnages et mêmes seconds rôles d'un épisode à l'autre.
+export function startArcEpisode(id){
+ const W=ensureWorld(),A=arcById(id);if(W.active||!A||A.done||S.gt<A.at)return null;
+ const P=people(),k=P.find(p=>p.id===A.k),k2=P.find(p=>p.id===A.k2),k3=A.k3?P.find(p=>p.id===A.k3):null;if(!k||!k2)return null;
+ const vars=arcVars(A,k,k2,k3),key=episodeKey(A);if(!SCENES[key])return null;
+ const role=(seed,sex,name,title)=>{const p=makePerson(seed>>>0,'Grèce',sex);return{seed:p.seed,nat:'Grèce',sex,name:name+', '+title,sign:p.sign,child:false};};
+ const cast={archiviste:role(A.seed^7,'M',vars.archiviste,'l’archiviste'),servante:role(A.seed^9,'F',vars.servante,'servante de la bibliothèque')};
+ W.active={kind:'arc',arcId:A.id,scene:key,node:SCENES[key].start,kid:k.id,k2:k2.id,k3:k3&&k3.id,battle:null,mods:{},fx:[],vars,cast,log:[]};
+ goTo(SCENES[key].start);
+ return W.active;
 }
 export function choose(i){const a=S.world.active,node=currentNode(),c=node.choices[i];if(!c)return;(c.fx||[]).forEach(f=>{a.fx.push(f);if(f.startsWith('pay:')){const [,res,q]=f.split(':');S.res[res]=Math.max(0,S.res[res]-(+q));}});goTo(c.go);}
 export function doRoll(chance){const node=currentNode();const ok=Math.random()<chance;S.world.active.log.push(ok?'réussite':'échec');goTo(ok?node.roll.ok:node.roll.ko);return ok;}
@@ -139,6 +153,13 @@ export function finishScene(){
   if(end!=='lose'){W.events=W.events.filter(e=>e.id!==ev.id);}
   if(end==='win'||end==='peace')W.wins++;
   log(k.name+' revient de '+ev.v+' : '+({win:'victoire',peace:'paix conclue',recruit:'une recrue',lose:'défaite',leave:'retour bredouille'})[end]+'.');
+ }else if(a.kind==='arc'){
+  const A=arcById(a.arcId),k2=people().find(x=>x.id===a.k2),k3=a.k3?people().find(x=>x.id===a.k3):null;
+  fx.forEach(f=>{
+   if(/^(love|couple|breakup|rival|rival3|friend|friend3|friend23|bon|conf)(:|$)/.test(f))applyLifeFx(f,{k,k2,k3},out);
+   if(f==='kk_xp'&&k&&k2){[k,k2].forEach(q=>trainHours(q,6));out.push(k.name+' et '+k2.name+' : l’équivalent de 6 h d’entraînement');}
+  });
+  if(A)endEpisode(A,fx,out);
  }else{
   const ap=S.aps.find(x=>x.id===a.apId),k2=people().find(x=>x.id===a.k2);
   fx.forEach(f=>{

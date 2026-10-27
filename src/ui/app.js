@@ -50,7 +50,9 @@ import { G, ROMAN, clamp, dur, esc, fmt, fmt1 } from '../core/util.js';
 import { syncAgents } from '../map/agents.js';
 import { mountMap } from '../map/map.js';
 import { setSound, sfx, soundPrefs, unlockAudio } from '../audio/audio.js';
-import { ensureWorld, startExpedition, startHomeScene } from '../core/expeditions.js';
+import { ensureWorld, startArcEpisode, startExpedition, startHomeScene } from '../core/expeditions.js';
+import { episodeTitle, readyArcs } from '../core/arcs.js';
+import { ARCS } from '../core/data/arcs.js';
 import { eventModal, viewMonde } from './world.js';
 import { openScene } from './scene.js';
 import { fullBody, portrait } from './portraits.js';
@@ -183,6 +185,7 @@ export function viewSanctuaire(){
  if(S.starve)h+='<div class="banner bad">Les vivres sont épuisés. L’entraînement tourne au ralenti (−50 %). Envoyez du monde aux oliveraies ou agrandissez-les.</div>';
  if(!pope())h+='<div class="banner info">Personne ne guide le Sanctuaire. Ouvrez l’onglet Chevaliers et nommez un Grand Pope.</div>';
  const idle=S.workers.filter(w=>!w.job).length;
+ readyArcs().slice(0,2).forEach(A=>{h+='<div class="banner home">Feuilleton « '+esc(ARCS[A.key].n)+' » : un nouvel épisode vous attend. <button class="btn sm" data-act="arc:'+A.id+'" style="margin-left:6px">Épisode '+(A.ep+1)+' : '+esc(episodeTitle(A))+'</button></div>';});
  if(S.world&&S.world.home)h+='<div class="banner home">Il se passe quelque chose au Sanctuaire… <button class="btn sm" data-act="home:start" style="margin-left:6px">Voir la scène</button></div>';
  if(S.world&&S.world.active)h+='<div class="banner info">Une scène attend votre retour. <button class="btn sm" data-act="scene:resume" style="margin-left:6px">Reprendre</button></div>';
  if(idle)h+='<div class="banner info">'+idle+' villageois attend'+(idle>1?'ent':'')+' une affectation : voyez la section « Villageois » plus bas.</div>';
@@ -794,6 +797,7 @@ export function act(a){
  case'go':{if(!startExpedition(+x,+y))return;closeModal();save();render();openScene();return;}
  case'scene':closeModal();openScene();return;
  case'home':{if(!startHomeScene())return;save();render();openScene();return;}
+ case'arc':{if(!startArcEpisode(+x))return;closeModal();save();render();openScene();return;}
  case'armor':openModal(armorModal(x));return;
  case'guard':sheetTab='profil';openModal(guardModal(+x));return;
  case'dstart':{if(!pope())return;if(!startDuel(S.duel.loadout))return;save();render();openDuel();return;}
