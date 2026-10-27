@@ -9,7 +9,7 @@ C'est la même consigne que celle du script `scripts/generate-images.mjs`, qui a
 3. Coller la consigne ci-dessous, après avoir rempli les passages entre crochets.
 4. Si le personnage est coupé (pieds ou tête hors du cadre), redemander : « Refais-la en montrant le personnage entier, des cheveux jusqu'aux pieds, avec de l'espace autour. »
 5. Enregistrer l'image dans `art/a-integrer/`, sous le nom `perso-cons-<constellation>-<F ou M>.png`, par exemple `perso-cons-lyre-F.png` ou `perso-cons-petit-cheval-M.png`. Le nom de la constellation s'écrit en minuscules, sans accent, avec des tirets.
-   Pour proposer plusieurs illustrations d'une même armure, ajouter un chiffre : `perso-cons-fourneau-F2.png`, `perso-cons-fourneau-F3.png`… Sur la fiche du chevalier, un bouton « Autre illustration » permet alors de choisir.
+   Pour proposer plusieurs illustrations d'une même armure, ajouter un chiffre : `perso-cons-fourneau-F1.png` ou `perso-cons-fourneau-F2.png`, `perso-cons-fourneau-F3.png`… Sur la fiche du chevalier, un bouton « Autre illustration » permet alors de choisir.
 6. Dire à Claude « intègre les nouvelles images » : il les réduit, recadre le portrait et les met en ligne.
 
 ## La consigne à copier

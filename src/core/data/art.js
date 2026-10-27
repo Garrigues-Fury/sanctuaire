@@ -10,7 +10,9 @@ const armorKey=c=>c.rank==='or'?'or-'+SIGN_KEY[c.sign]:c.rank+'-'+c.el;
 // Illustrations propres à la constellation : perso-cons-fourneau-F, puis les variantes F2, F3… au choix du joueur (p.artV).
 export function paintedVariants(p){
  if(!p||!p.cons||!p.sex)return[];const own='perso-cons-'+p.cons+'-'+p.sex,out=[];
- for(let i=1;i<10;i++){const k=i===1?own:own+i;if(PAINTED.has(k))out.push(k);}
+ // « -M », puis « -M1 », « -M2 »… (le 1 est accepté aussi)
+ if(PAINTED.has(own))out.push(own);
+ for(let i=1;i<10;i++)if(PAINTED.has(own+i))out.push(own+i);
  return out;
 }
 // Une illustration propre à la constellation passe avant celle de l'élément : elle va à celui qui porte l'armure.
