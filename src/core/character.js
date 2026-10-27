@@ -96,6 +96,23 @@ export function ensureService(k){
  if(k.rank==='argent'&&r()<.4){const x=pickFree('bronze');if(x)prev.push(x);}
  if(prev.length)k.prevCons=prev;
 }
+// Potentiel des vétérans (2026-10-27) : jusqu'ici tous à 90 ; chacun reçoit le sien, une fois.
+// Bronze : 30 % peuvent viser l'argent, 6 % l'or. Argent : 15 % peuvent viser l'or.
+export function ensurePotential(k){
+ if(k.potV||k.origin!=='survivant')return;k.potV=1;
+ const r=mulberry32(((k.seed||k.id||9)^0x7f4a3)>>>0),u=r();
+ if(k.rank==='bronze')k.pot=Math.round(u<.06?93+r()*6:u<.36?65+r()*27:35+r()*29);
+ if(k.rank==='argent')k.pot=Math.round(u<.15?93+r()*6:66+r()*26);
+ if(k.rank==='or')k.pot=95;
+}
+// Ce qu'un chevalier peut encore espérer : null, ou {n:'Prometteur'|'Exceptionnel', to:'argent'|'or'}.
+export function promiseOf(k){
+ if(!k||!k.rank||k.rank==='or'||k.rank==='garde')return null;
+ const p=k.pot||0;
+ if(p>=93)return{n:k.rank==='bronze'?'Exceptionnel':'Prometteur',to:'or'};
+ if(k.rank==='bronze'&&p>=65)return{n:'Prometteur',to:'argent'};
+ return null;
+}
 // « 9 ans », « 12 jours »…
 export function serviceText(k){
  if(k.since==null)return'';const d=(S.gt-k.since)/24;
@@ -107,7 +124,7 @@ export function serviceText(k){
 export function ensureLife(){
  if(!S)return;
  [].concat(S.knights||[],S.aps||[],S.guards||[],S.pending||[]).forEach(ensureCharacter);
- (S.knights||[]).forEach(k=>{makeVeteran(k);ensureService(k);});
+ (S.knights||[]).forEach(k=>{makeVeteran(k);ensureService(k);ensurePotential(k);});
 }
 // Chaque jour, les amis bienveillants rendent confiance à ceux qui ont un complexe.
 export function tickConfidence(h,sum){

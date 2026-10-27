@@ -4,7 +4,7 @@ import { newGame } from '../src/core/people.js';
 import { recomputeCB } from '../src/core/rules.js';
 import { S, setS } from '../src/core/state.js';
 import { SKILL_MAX, levelOfX, skillLevel, xpForLevel } from '../src/core/skills.js';
-import { ensureCharacter, ensureLife, serviceText, strongSkills, tickConfidence } from '../src/core/character.js';
+import { ensureCharacter, ensureLife, promiseOf, serviceText, strongSkills, tickConfidence } from '../src/core/character.js';
 import { armorAffinity, heartBlock } from '../src/core/armor.js';
 import { CONS } from '../src/core/data/world.js';
 import { compat } from '../src/core/social.js';
@@ -48,6 +48,20 @@ describe('ancienneté', () => {
   it('un nouveau chevalier compte ses jours depuis son épreuve', () => {
     const k = S.knights[0]; k.since = S.gt - 50; k.sinceEst = false;
     expect(serviceText(k)).toBe('2 jours');
+  });
+});
+
+describe('chevaliers prometteurs', () => {
+  it('chaque vétéran a son propre potentiel ; seuls certains peuvent viser plus haut', () => {
+    S.knights.forEach(k => expect(k.potV).toBe(1));
+    expect(promiseOf({ rank: 'bronze', pot: 70 }).to).toBe('argent');
+    expect(promiseOf({ rank: 'bronze', pot: 95 }).n).toBe('Exceptionnel');
+    expect(promiseOf({ rank: 'argent', pot: 80 })).toBeNull();
+    expect(promiseOf({ rank: 'or', pot: 99 })).toBeNull();
+    // sur beaucoup de parties, environ un bronze sur trois est prometteur
+    let n = 0, p = 0;
+    for (let i = 0; i < 30; i++) { setS(null); newGame('facile'); ensureLife(); S.knights.filter(k => k.rank === 'bronze').forEach(k => { n++; if (promiseOf(k)) p++; }); }
+    expect(p / n).toBeGreaterThan(.2); expect(p / n).toBeLessThan(.5);
   });
 });
 

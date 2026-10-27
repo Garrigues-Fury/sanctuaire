@@ -30,7 +30,7 @@ import { autoCandidates, autoOf, soloKeys } from '../core/autotrain.js';
 import { ensureAuto } from '../core/autotrain.js';
 import { setCensus } from './census.js';
 import { coefOf, gainStat, migrateScale, norm, promoteStats } from '../core/scale.js';
-import { COMPLEXES, TONS, ensureLife, heartLabel, heartText, serviceText } from '../core/character.js';
+import { COMPLEXES, TONS, ensureLife, heartLabel, heartText, promiseOf, serviceText } from '../core/character.js';
 import { isCouple, loveOf, partnerOf, rivalOf } from '../core/romance.js';
 import { givePool } from '../core/minigames.js';
 import { openMinigame } from './minigames.js';
@@ -64,6 +64,8 @@ export function $(s){return document.querySelector(s);}
 export function ptImg(p,rank,lg){return '<img class="pt'+(lg?' lg':'')+(rank?' '+rank:'')+'" src="'+portrait(p,rank)+'" alt="Portrait de '+esc(p.name)+'" width="'+(lg?132:58)+'" height="'+(lg?132:58)+'">';}
 export function signChip(i){const s=SIGNS[i];return '<span class="chip el-'+s.el+'"'+tip('Signe : '+s.n+', élément '+ELEM[s.el].toLowerCase()+'. Avec un maître du même signe, la formation va 1,5 fois plus vite ; du même élément, 1,25 fois. Chaque niveau de la maison du signe ajoute 10 %.')+'><span class="sign">'+s.s+'</span> '+s.n+'</span>';}
 export function rankChip(r){return '<span class="chip '+r+'"'+tip(r)+'>'+RANKS[r]+'</span>';}
+// Chevalier prometteur : assez doué pour viser le rang suivant (son potentiel caché le permet).
+export function promChip(k){const p=promiseOf(k);return p?'<span class="chip prom"'+tip('Assez doué pour viser un jour l’armure '+(p.to==='or'?'d’or de sa maison':'d’argent')+'.')+'>'+p.n+'</span>':'';}
 // Marque des vétérans de la guerre sainte précédente, accolée après le grade (demande de Seba du 2026-10-27).
 export function vetChip(p){return p&&p.vet?'<span class="chip vet"'+tip('vet')+'><svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.3l-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="currentColor"/></svg>Vétéran</span>':'';}
 export const nrgIcon=p=>'<span'+tip('nrg')+'>⚡&#xFE0E; '+Math.floor(p.nrg)+'</span>';
@@ -327,7 +329,7 @@ export function viewChevaliers(){
  let h='<section class="sec"><div class="sec-h"><h2>Chevaliers d’Athéna</h2><span class="aside">'+S.knights.length+'</span></div><p class="hint">Touchez un chevalier pour lire son histoire, répartir ses points et lui confier un rôle.</p>';
  h+='<div class="fp-box"><b>'+S.fp+'</b> point'+(S.fp>1?'s':'')+' d’amitié à offrir · +1 toutes les 6 h (veillées autour du feu). Ouvrez une fiche pour renforcer un lien.</div><div class="list">';
  S.knights.slice().sort((a,b)=>RANK_MULT[b.rank]-RANK_MULT[a.rank]||b.lv-a.lv).forEach(k=>{const c=CONS_BY[k.cons];const nAp=S.aps.filter(a=>a.master===k.id).length;
-  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+vetChip(k)+spChip(k)+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(isMaster(k)||nAp?'<span>'+nAp+' / 3 apprentis</span>':'')+''+nrgIcon(k)+'</div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+k.lv+'</div></div></div>';});
+  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+vetChip(k)+promChip(k)+spChip(k)+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(isMaster(k)||nAp?'<span>'+nAp+' / 3 apprentis</span>':'')+''+nrgIcon(k)+'</div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+k.lv+'</div></div></div>';});
  return h+'</div></section>'+viewGuards();
 }
 /* ---------- formation des apprentis (vue par disciple, vue par armure) ---------- */
@@ -626,7 +628,7 @@ export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';
  h+='<div class="sec-h"><h2>Maîtres qui peuvent guider</h2></div><div class="mrow">'+guideChips(c)+'</div>';
  return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
- let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+vetChip(k)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div>'+serviceLine(k)+'</div></div>';
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+vetChip(k)+promChip(k)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div>'+serviceLine(k)+'</div></div>';
  h+=statusLine(k);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance <b style="color:var(--gold-hi)">'+fmt(power(k,k.rank))+'</b></div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+sheetTabs();
  if(sheetTab==='temps'){
