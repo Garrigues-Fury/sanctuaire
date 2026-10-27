@@ -133,6 +133,13 @@ Le prototype jouable actuel (v0.6) est `prototype/sanctuaire.html` : un seul fic
 12. **Entraînement de la nuit (demandé par Seba le 2026-10-27, `src/core/autotrain.js`)** : chaque nuit à 2 h (heure du téléphone ; toutes les 24 h de jeu en mode test), l'énergie restante de chacun sert à s'entraîner, d'abord avec ses partenaires dans l'ordre choisi (par défaut : le maître pour un apprenti, les disciples pour un chevalier), puis seul ; réserve d'énergie réglable. Réglage dans la fiche, rubrique Emploi du temps.
 13. **Noms uniques (2026-10-27)** : listes de prénoms allongées, jamais deux personnes du même prénom au Sanctuaire ; les doublons des anciennes parties sont renommés au chargement.
 14. **Recensement (2026-10-27, `src/ui/census.js`, Personnages › Recensement)** : vue générale, éléments, signes, nationalités (par région du monde puis par pays), classements par compétence et par statistique.
+14 bis. **Caractère et vétérans (demandés par Seba le 2026-10-27, `src/core/character.js`)** :
+    - **Compétences de niveau 1 à 30** (plafond monté de 10 à 30) : courbe d'origine jusqu'à 10, puis +25 % d'XP par niveau.
+    - **Vétérans** : les survivants de la guerre sainte précédente portent la marque « Vétéran » après leur grade ; leurs points forts (compétences de leur armure, 4 meilleures fondamentales, vitesse) sont au niveau 20 à 24 (22 à 26 pour l'or), le reste au moins 10 à 14.
+    - **Cœur** (−100 haine à +100 bonté) : ±10 d'affinité avec toutes les armures ; une armure d'or refuse un cœur rancunier (sous −40 ; sous −70 pour les Gémeaux et le Cancer, qui connaissent la part d'ombre). Compte aussi dans les affinités entre personnages.
+    - **Ton** (subtil, déconneur, taquin, franc, réservé, solennel, tendre) : façon de parler dans les scènes, et affinités.
+    - **Complexes** (apparence, taille, origines, force, échec, parole) : −3 points aux épreuves par niveau tant que la confiance n'est pas revenue ; chaque jour, les amis bienveillants la font remonter.
+    - Romances prévues (étape 2) : **entre un homme et une femme adultes seulement** (choix de Seba), jamais avec un apprenti. Mini-jeux (étape 3) : gains limités par jour.
 15. **Gardes** : un apprenti qui a raté son épreuve ou qui est surpassé devient garde. Il est affecté à une maison, au village ou à un site, et sa valeur de défense comptera lors des attaques.
 12. **Lecture des astres**, le duel quotidien du Pope contre un dieu :
     - **Fréquence** : une partie par jour réel, toutes les 24 minutes en mode test. Il faut un Grand Pope en poste.

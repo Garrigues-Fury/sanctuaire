@@ -40,6 +40,17 @@ export function compat(a,b){
  const ta=tags(a),tb=tags(b);BIO_TAGS.forEach(([k,,r])=>{if(ta.includes(k)&&tb.includes(k)){v+=1;why.push('+ '+r);}});
  if(a.origin==='survivant'&&b.origin==='survivant'){v+=1;why.push('+ survivants de la même guerre');}
  if(a.sign===b.sign){v+=1;why.push('+ même signe ('+SIGNS[a.sign].n+')');}
+ // le cœur et le ton (character.js)
+ const ba=a.bon||0,bb=b.bon||0;
+ if(ba>=50&&bb>=50){v+=1;why.push('+ deux grands cœurs');}
+ else if((ba>=50&&bb<=-40)||(bb>=50&&ba<=-40)){v-=1;why.push('− la rancune de l’un heurte la bonté de l’autre');}
+ else if(ba<=-40&&bb<=-40){v-=1;why.push('− deux rancunes qui s’attisent');}
+ const T=[a.ton,b.ton].sort().join('+');
+ if(T==='deconneur+deconneur'){v+=1;why.push('+ deux déconneurs : le réfectoire ne s’en remet pas');}
+ else if(T==='deconneur+solennel'){v-=1;why.push('− l’un rit de tout, l’autre de rien');}
+ else if(T==='subtil+subtil'){v+=1;why.push('+ ils se comprennent à demi-mot');}
+ else if(T==='reserve+taquin'){v-=1;why.push('− les taquineries de l’un blessent la réserve de l’autre');}
+ if((a.cx&&b.ton==='tendre')||(b.cx&&a.ton==='tendre')){v+=1;why.push('+ la douceur de l’un rassure les doutes de l’autre');}
  return{v:clamp(v,-4,4),why};
 }
 export function compatLabel(v){return v>=3?'Complicité':v>=1?'Bonne entente':v<=-3?'Rivalité':v<=-1?'Frictions':'Neutre';}

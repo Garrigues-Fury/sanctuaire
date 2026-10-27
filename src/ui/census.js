@@ -19,7 +19,7 @@ export function setCensus(v,p){if(v==='view'){view=p;pick=null;}else if(v==='pic
 // Grade d'un personnage, et ce qu'on affiche sur sa ligne.
 const kindOf=p=>S.knights.includes(p)?'k':(S.guards||[]).includes(p)?'g':'a';
 const rankOf=p=>kindOf(p)==='k'?p.rank:kindOf(p)==='g'?'garde':null;
-const gradeN=p=>kindOf(p)==='k'?'Chevalier '+(p.rank==='or'?'d’or':p.rank==='argent'?'d’argent':'de bronze'):kindOf(p)==='g'?'Garde':'Apprenti'+(p.sex==='F'?'e':'');
+const gradeN=p=>kindOf(p)==='k'?'Chevalier '+(p.rank==='or'?'d’or':p.rank==='argent'?'d’argent':'de bronze')+(p.vet?' vétéran':''):kindOf(p)==='g'?'Garde':'Apprenti'+(p.sex==='F'?'e':'');
 const powOf=p=>power(p,rankOf(p))*(kindOf(p)==='a'?.5:1);
 const ORDER={or:0,argent:1,bronze:2,garde:3};
 const byRank=(a,b)=>(ORDER[rankOf(a)]??4)-(ORDER[rankOf(b)]??4)||b.lv-a.lv;

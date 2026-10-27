@@ -8,6 +8,7 @@ import { CONS_BY, ELEM, RANK_MULT, SIGNS, armorName, de } from './data/world.js'
 import { makeApprentice } from './people.js';
 import { tickWorld } from './expeditions.js';
 import { tickSocial } from './social.js';
+import { complexMalus, ensureLife, tickConfidence } from './character.js';
 import { apHelpF, apTrainF, isMaster, jobF, selfF, teachF, timeMult } from './schedule.js';
 import { medMult, studyMult, trainStats } from './program.js';
 import { AFF_MIN, NEXT_RANK, affLabel, armorAffinity } from './armor.js';
@@ -138,7 +139,7 @@ export function step(h,sum){
  ['herbo','atelier'].forEach(ws=>{const q=S.craft[ws];if(!q.length)return;let left=craftRate(ws)*h;while(left>0&&q.length){const j=q[0];const r=REC_BY[j.k];const need=r.work-j.prog;if(left>=need){left-=need;q.shift();S.items[j.k]=(S.items[j.k]||0)+1;S._dirty=true;if(sum)sum.made[j.k]=(sum.made[j.k]||0)+1;else emit('crafted',j.k);}else{j.prog+=left;left=0;}}});
  S.fpAcc=(S.fpAcc||0)+h;const fpT=6/(1+cb('FP')/100);while(S.fpAcc>=fpT){S.fpAcc-=fpT;if(S.fp<30){S.fp++;S._dirty=true;}}
  S.gt+=h;
- tickWorld(sum);tickSocial(h,sum);tickResearch(h,sum);tickMedicine(h,sum);tickAuto(sum);tickMissions(sum);tickRaids(sum);tickWounds(sum);
+ ensureLife();tickWorld(sum);tickSocial(h,sum);tickConfidence(h,sum);tickResearch(h,sum);tickMedicine(h,sum);tickAuto(sum);tickMissions(sum);tickRaids(sum);tickWounds(sum);
  gainWhileBuilding(h);
  for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;gainOnBuilt(/^h\d+$/.test(j.b),j.lvl);if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
  if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}
@@ -202,9 +203,10 @@ export function trialEval(a,c){
  if(c.rank==='or'&&!knight&&!a.awk)return{ok:false,why:'Cosmos non éveillé'};
  if(a.pot<TRIAL_POT[c.rank])return{ok:false,why:'Pas assez doué pour une armure '+(c.rank==='or'?'d’or':'d’argent')};
  const af=armorAffinity(a,c);
- if(af.v<AFF_MIN[c.rank])return{ok:false,af,why:'Affinité '+affLabel(af.v).toLowerCase()+' ('+af.v+'/100, il faut '+AFF_MIN[c.rank]+') : l’armure reste muette'};
+ if(af.block)return{ok:false,af,why:af.block};
+ if(af.v<AFF_MIN[c.rank])return{ok:false,af,why:'Affinité'+affLabel(af.v).toLowerCase()+' ('+af.v+'/100, il faut '+AFF_MIN[c.rank]+') : l’armure reste muette'};
  const el=c.el===SIGNS[a.sign].el;
- const tr=-.04*ql(a,'fougueux')+.04*ql(a,'patient')+.03*ql(a,'orgueilleux')-.05*fl(a,'impulsif')-(c.rank!=='bronze'?.06*fl(a,'peureux'):0);
+ const tr=-.04*ql(a,'fougueux')+.04*ql(a,'patient')+.03*ql(a,'orgueilleux')-.05*fl(a,'impulsif')-(c.rank!=='bronze'?.06*fl(a,'peureux'):0)-complexMalus(a);
  // compétences : fondamentales et vitesse obligatoires ; une forte affinité fait transmettre les spécifiques manquantes
  ensureSkills(a,knight?'k':'a');const ck=skillCheck(a,c,af.v);
  if(ck.missF.length)return{ok:false,af,ck,why:'Compétences fondamentales à découvrir : '+ck.missF.map(id=>SKILLS[id].n).join(', ')};

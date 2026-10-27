@@ -33,7 +33,7 @@ function profileScore(p,c,k,r){
  const mean=STATS6.reduce((t,x)=>t+(p.st[x]||0),0)/6||1;
  const master=c&&profileOf(c).includes(k)?1:0;
  const strong=clamp(((p.st[k]||0)/mean-.7)/.8,0,1);
- const fund=FUND.reduce((t,s)=>t+skillLevel(p,s.id),0)/FUND.length/10;
+ const fund=Math.min(1,FUND.reduce((t,s)=>t+skillLevel(p,s.id),0)/FUND.length/10);
  return clamp(.4*master+.3*strong+.25*fund+.1*(r()-.5),0,1);
 }
 // Une promotion vers le rang `to` : chaque statistique est multipliée selon le profil. Renvoie les multiplicateurs.

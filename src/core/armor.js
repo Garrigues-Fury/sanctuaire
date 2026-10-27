@@ -29,6 +29,15 @@ const OPP={feu:'eau',eau:'feu',air:'terre',terre:'air'};
 export const AFF_MIN={bronze:25,argent:45,or:55};
 export const NEXT_RANK={bronze:'argent',argent:'or'};
 
+// Le cœur (character.js) : de −10 à +10 d'affinité. Les armures d'or refusent un cœur haineux ;
+// les Gémeaux et le Cancer, qui connaissent la part d'ombre, sont plus tolérants.
+export function heartAff(p){return Math.round((p.bon||0)/10);}
+const DARK_OK=new Set([2,3]);
+export function heartBlock(p,c){
+ if(!c||c.rank!=='or'||p.bon==null)return null;
+ const dark=DARK_OK.has(c.sign),min=dark?-70:-40;
+ return p.bon<min?'L’armure d’or '+(dark?'elle-même, qui connaît pourtant la part d’ombre, ':'')+'refuse un cœur '+(p.bon<-60?'haineux':'rancunier')+'.':null;
+}
 // Maîtres qui ont formé le personnage (son maître actuel et les précédents).
 export function mentorsOf(p){const ids=new Set((p.mentors||[]).concat(p.master!=null?[p.master]:[]));return S.knights.filter(k=>ids.has(k.id)&&k.id!==p.id);}
 export function armorAffinity(p,c){
@@ -39,7 +48,8 @@ export function armorAffinity(p,c){
  const pel=SIGNS[p.sign].el;parts.elem=pel===c.el?35:OPP[pel]===c.el?-10:0;
  mentorsOf(p).forEach(m=>{const mc=CONS_BY[m.cons];if(!mc)return;const mp=profileOf(mc);
   const b=(mc.el===c.el?8:0)+(mp.includes(k1)||mp.includes(k2)?6:0)+(mc.k===c.k?6:0);parts.maitre=Math.max(parts.maitre,b);});
- return{v:clamp(parts.comp+parts.elem+parts.maitre,0,100),parts,keys:[k1,k2]};
+ parts.coeur=heartAff(p);const block=heartBlock(p,c);
+ return{v:block?0:clamp(parts.comp+parts.elem+parts.maitre+parts.coeur,0,100),parts,keys:[k1,k2],block};
 }
 export function affLabel(v){return v>=70?'Forte':v>=45?'Bonne':v>=25?'Faible':'Aucune';}
 // Les armures pour lesquelles le personnage a le plus d'affinité (toutes, brisées comprises).

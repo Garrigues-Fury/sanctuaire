@@ -30,6 +30,7 @@ import { autoCandidates, autoOf, soloKeys } from '../core/autotrain.js';
 import { ensureAuto } from '../core/autotrain.js';
 import { setCensus } from './census.js';
 import { coefOf, gainStat, migrateScale, norm, promoteStats } from '../core/scale.js';
+import { COMPLEXES, TONS, ensureLife, heartLabel, heartText } from '../core/character.js';
 import { assign as defAssign, raid } from '../core/defense.js';
 import { launchMission } from '../core/missions.js';
 import { MP, missionModal } from './missions.js';
@@ -54,6 +55,8 @@ export function $(s){return document.querySelector(s);}
 export function ptImg(p,rank,lg){return '<img class="pt'+(lg?' lg':'')+(rank?' '+rank:'')+'" src="'+portrait(p,rank)+'" alt="Portrait de '+esc(p.name)+'" width="'+(lg?132:58)+'" height="'+(lg?132:58)+'">';}
 export function signChip(i){const s=SIGNS[i];return '<span class="chip el-'+s.el+'"'+tip('Signe : '+s.n+', élément '+ELEM[s.el].toLowerCase()+'. Avec un maître du même signe, la formation va 1,5 fois plus vite ; du même élément, 1,25 fois. Chaque niveau de la maison du signe ajoute 10 %.')+'><span class="sign">'+s.s+'</span> '+s.n+'</span>';}
 export function rankChip(r){return '<span class="chip '+r+'"'+tip(r)+'>'+RANKS[r]+'</span>';}
+// Marque des vétérans de la guerre sainte précédente, accolée après le grade (demande de Seba du 2026-10-27).
+export function vetChip(p){return p&&p.vet?'<span class="chip vet"'+tip('vet')+'><svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.3l-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="currentColor"/></svg>Vétéran</span>':'';}
 export const nrgIcon=p=>'<span'+tip('nrg')+'>⚡&#xFE0E; '+Math.floor(p.nrg)+'</span>';
 export const spChip=p=>p.sp>0?'<span class="chip sp"'+tip('sp')+'>+'+p.sp+' pts</span>':'';
 export function colorOf(k){return RES[k]?RES[k].c:ITEMS[k].c;}
@@ -314,7 +317,7 @@ export function viewChevaliers(){
  let h='<section class="sec"><div class="sec-h"><h2>Chevaliers d’Athéna</h2><span class="aside">'+S.knights.length+'</span></div><p class="hint">Touchez un chevalier pour lire son histoire, répartir ses points et lui confier un rôle.</p>';
  h+='<div class="fp-box"><b>'+S.fp+'</b> point'+(S.fp>1?'s':'')+' d’amitié à offrir · +1 toutes les 6 h (veillées autour du feu). Ouvrez une fiche pour renforcer un lien.</div><div class="list">';
  S.knights.slice().sort((a,b)=>RANK_MULT[b.rank]-RANK_MULT[a.rank]||b.lv-a.lv).forEach(k=>{const c=CONS_BY[k.cons];const nAp=S.aps.filter(a=>a.master===k.id).length;
-  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+spChip(k)+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(isMaster(k)||nAp?'<span>'+nAp+' / 3 apprentis</span>':'')+''+nrgIcon(k)+'</div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+k.lv+'</div></div></div>';});
+  h+='<div class="item tap" data-act="knight:'+k.id+'">'+ptImg(k,k.rank)+'<div class="main"><div class="name">'+esc(k.name)+' '+rankChip(k.rank)+vetChip(k)+spChip(k)+'</div><div class="sub">'+armorName(c)+' · '+NATS[k.nat].n+'</div><div class="meta">'+roleChip(k)+(isMaster(k)||nAp?'<span>'+nAp+' / 3 apprentis</span>':'')+''+nrgIcon(k)+'</div></div><div class="right"><div class="lvl"'+tip('lv')+'><small>niv.</small>'+k.lv+'</div></div></div>';});
  return h+'</div></section>'+viewGuards();
 }
 /* ---------- formation des apprentis (vue par disciple, vue par armure) ---------- */
@@ -467,9 +470,19 @@ export function statsHtml(p,kind){
 export function persoBlock(p){
  let h='<div class="bio"><div class="bio-h"><span class="chip">'+esc(NATS[p.nat].n)+'</span>'+traitChips(p)+'</div><p>'+p.bio.map(esc).join('<br>')+'</p></div>';
  const line=(T,t,cls)=>'<div class="trait"><b class="'+cls+'">'+T[t.k].n+' '+ROMAN[t.lv]+'</b><span><i>Au Sanctuaire</i> '+T[t.k].d(t.lv)+'</span><span><i>En combat</i> '+T[t.k].c(t.lv)+'</span><span><i>Avec les autres</i> '+T[t.k].s+'</span></div>';
+ h+=characterBlock(p);
  h+='<details class="dt"><summary>Qualités et défauts</summary><div class="tlist">'+(p.qual||[]).map(t=>line(QUAL,t,'q')).join('')+(p.flaw||[]).map(t=>line(FLAW,t,'f')).join('')+'</div></details>';
  h+=affinityBlock(p);
  return h;
+}
+// Cœur (bonté ou haine), ton dans les conversations, complexe éventuel (core/character.js).
+function characterBlock(p){
+ if(p.bon==null)return '';
+ const b=p.bon,pct=Math.round((b+100)/2),cls=b>=20?'pos':b<=-20?'neg':'mid';
+ let h='<div class="charac"><div class="heart '+cls+'"'+tip(heartText(b))+'><span>Cœur</span><b>'+heartLabel(b)+'</b><i class="hbar"><i style="left:'+pct+'%"></i></i><small>'+esc(heartText(b))+'</small></div>';
+ const T=TONS[p.ton];if(T)h+='<div class="ton"><span>Ton</span><b>'+T.n+'</b><small>'+esc(T.d)+'</small></div>';
+ if(p.cx){const C=COMPLEXES[p.cx.k];h+='<div class="cx"><span>Complexe</span><b>'+C.n+(p.cx.lv>1?' (fort)':'')+'</b><small>'+esc(C.d)+' Confiance '+Math.round(p.cx.conf)+' / 100 : ses amis bienveillants l’aident à la retrouver. D’ici là, −'+3*p.cx.lv+' points aux épreuves.</small><i class="cbar"><i style="width:'+Math.round(p.cx.conf)+'%"></i></i></div>';}
+ return h+'</div>';
 }
 // Avec qui ce personnage s'entend, et pourquoi (caractère, racines, histoire).
 export function affinityBlock(p){
@@ -492,7 +505,7 @@ export function pairBlock(p,kind){
  let h='<details class="dt" open><summary>S’entraîner avec… <span class="aside">'+PAIR_E+' énergie chacun</span></summary><p class="hint">Proposez une séance à deux. Le partenaire doit être disponible, et il peut refuser : ses chances d’accepter dépendent de votre affinité et de son caractère. Un maître accepte toujours avec son propre apprenti. Les deux gagnent de l’entraînement (l’élève un peu plus), et leur amitié grandit.</p><div class="list">';
  list.forEach(q=>{const c=compat(p,q),why=unavailable(q),ch=Math.round(acceptChance(p,q,c.v)*100),ref=refusedRecently(p,q);
   const ok=!why&&!ref&&p.nrg>=PAIR_E;
-  h+='<div class="item fr">'+ptImg(q,q.rank||null)+'<div class="main"><div class="name">'+esc(q.name)+' '+(q.rank?rankChip(q.rank):'<span class="chip">Apprenti</span>')+(c.v?' <span class="chip '+(c.v>0?'ok':'f')+'"'+tip(c.why.join('\n'))+'>'+compatLabel(c.v)+'</span>':'')+'</div><div class="meta">'+nrgIcon(q)+'<span class="'+(why||ref?'warn':'ok')+'">'+(why?esc(why):ref?'a refusé tout à l’heure':'disponible · accepte à '+ch+' %')+'</span></div></div><button class="btn sm" data-act="pair:'+kind+':'+p.id+':'+q.id+'"'+(ok?'':' disabled')+'>Proposer</button></div>';});
+  h+='<div class="item fr">'+ptImg(q,q.rank||null)+'<div class="main"><div class="name">'+esc(q.name)+' '+(q.rank?rankChip(q.rank)+vetChip(q):'<span class="chip">Apprenti</span>')+(c.v?' <span class="chip '+(c.v>0?'ok':'f')+'"'+tip(c.why.join('\n'))+'>'+compatLabel(c.v)+'</span>':'')+'</div><div class="meta">'+nrgIcon(q)+'<span class="'+(why||ref?'warn':'ok')+'">'+(why?esc(why):ref?'a refusé tout à l’heure':'disponible · accepte à '+ch+' %')+'</span></div></div><button class="btn sm" data-act="pair:'+kind+':'+p.id+':'+q.id+'"'+(ok?'':' disabled')+'>Proposer</button></div>';});
  return h+'</div></details>';
 }
 export function selfWork(p,kind){
@@ -585,7 +598,7 @@ export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';
  const intro={or:'Seul un natif '+de(SIGNS[c.sign||0].n)+' peut prétendre à cette armure.',argent:'Une armure d’argent, pour un apprenti de niveau '+TRIAL_LV.argent+' au moins, et très doué.',bronze:'Une armure de bronze, la première marche des chevaliers.'}[c.rank];
  let h='<div class="arm-head">'+(img?'<img class="arm-big'+(s==='brisee'?' broken':'')+'" src="'+img+'" alt="" width="400" height="600">':'')+'<div class="main"><h2 class="mh">'+esc(armorName(c))+'</h2><div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(c.rank)+'<span class="chip el-'+c.el+'">'+ELEM[c.el]+'</span>'+armorState(c)+'</div>';
  h+='<div class="hint">'+intro+'</div><div class="hint">Qualités maîtresses : <b>'+profileOf(c).map(k=>STATN[k]).join(' et ')+'</b></div><div class="hint">'+KIND_N[trialKind(c)].replace(/^./,x=>x.toUpperCase())+'</div></div></div>';
- if(wearer)h+='<div class="sec-h"><h2>Porteur</h2></div><div class="item tap" data-act="knight:'+wearer.id+'">'+ptImg(wearer,wearer.rank)+'<div class="main"><div class="name">'+esc(wearer.name)+' '+rankChip(wearer.rank)+'</div><div class="sub">Niveau '+wearer.lv+' · puissance '+fmt(power(wearer,wearer.rank))+'</div></div><div></div></div>';
+ if(wearer)h+='<div class="sec-h"><h2>Porteur</h2></div><div class="item tap" data-act="knight:'+wearer.id+'">'+ptImg(wearer,wearer.rank)+'<div class="main"><div class="name">'+esc(wearer.name)+' '+rankChip(wearer.rank)+vetChip(wearer)+'</div><div class="sub">Niveau '+wearer.lv+' · puissance '+fmt(power(wearer,wearer.rank))+'</div></div><div></div></div>';
  else if(s==='brisee'){const rk=c.rank,cost=ARMOR_COST[rk],restoring=S.forgeJob&&S.forgeJob.cons===c.k;
   const why=restoring?'Restauration en cours':S.b.forge<ARMOR_FORGE[rk]?'Il faut l’atelier des armures niveau '+ARMOR_FORGE[rk]:bestSmith()<ARMOR_SMITH[rk]?'Il faut un forgeron de niveau '+ARMOR_SMITH[rk]:S.forgeJob?'L’atelier restaure déjà une autre armure':'';
   h+='<div class="sec-h"><h2>Restauration</h2></div>'+costHtml(cost)+'<div class="btns"><button class="btn" data-act="restore:'+c.k+'"'+(!why&&afford(cost)?'':' disabled')+'>Restaurer</button>'+(why?'<span class="hint">'+why+'</span>':'')+'</div>';}
@@ -595,7 +608,7 @@ export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';
  h+='<div class="sec-h"><h2>Maîtres qui peuvent guider</h2></div><div class="mrow">'+guideChips(c)+'</div>';
  return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
- let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+vetChip(k)+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div></div></div>';
  h+=statusLine(k);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance <b style="color:var(--gold-hi)">'+fmt(power(k,k.rank))+'</b></div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+sheetTabs();
  if(sheetTab==='temps'){
@@ -841,13 +854,13 @@ export function act(a){
  case'slotarm':slotArm=x+':'+y;slotMsg='';render();return;
  case'slotcancel':slotArm=null;render();return;
  case'slotdel':deleteSlot(+x);slotArm=null;slotMsg='Sauvegarde supprimée.';render();return;
- case'slotload':{const o=slotGame(+x);slotArm=null;if(!o){slotMsg='Cette sauvegarde ne peut pas être lue.';render();return;}setS(o);recomputeCB();ensureSchedules();renameDuplicates();migrateScale();S.lastReal=Date.now();save();closeModal();flash='';render();window.scrollTo(0,0);return;}
+ case'slotload':{const o=slotGame(+x);slotArm=null;if(!o){slotMsg='Cette sauvegarde ne peut pas être lue.';render();return;}setS(o);recomputeCB();ensureSchedules();renameDuplicates();migrateScale();ensureLife();S.lastReal=Date.now();save();closeModal();flash='';render();window.scrollTo(0,0);return;}
  case'slotcopy':{const code=slotCode(+x);if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{slotMsg='Code copié : collez-le sur l’autre appareil (Réglages › Sauvegarde).';render();},()=>{slotMsg='Copie impossible ici.';render();});return;}
  case'speed':S.speed=+x;ensureAuto(true);break;
  case'sound':unlockAudio();setSound({on:x==='toggle'?!soundPrefs().on:x==='on'});if(soundPrefs().on)sfx('confirm');break;
  case'exportSave':{save();const code=exportCode(S);const ta=$('#saveIo');ta.value=code;ta.select();
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(()=>{ioMsg='Code copié dans le presse-papiers.';$('#sheetBody').innerHTML=settingsModal();$('#saveIo').value=code;},()=>{ioMsg='Copie automatique impossible : le code est sélectionné, copiez-le à la main.';});}else ioMsg='Le code est sélectionné, copiez-le à la main.';return;}
- case'importSave':{const v=$('#saveIo').value.trim();const o=importCode(v);if(o){setS(o);recomputeCB();ensureSchedules();renameDuplicates();migrateScale();S.lastReal=Date.now();save();ioMsg='Partie chargée.';}else{ioMsg='Ce code n’est pas reconnu. Vérifiez qu’il a été collé en entier.';}break;}
+ case'importSave':{const v=$('#saveIo').value.trim();const o=importCode(v);if(o){setS(o);recomputeCB();ensureSchedules();renameDuplicates();migrateScale();ensureLife();S.lastReal=Date.now();save();ioMsg='Partie chargée.';}else{ioMsg='Ce code n’est pas reconnu. Vérifiez qu’il a été collé en entier.';}break;}
  case'resetArm':resetArmed=true;break;
  case'resetCancel':resetArmed=false;break;
  case'newgame':newGame(x);recomputeCB();ensureWorld();ensureDuel();ensureSchedules();resetArmed=false;save();closeModal();flash='';goTab('sanctuaire');render();window.scrollTo(0,0);return;

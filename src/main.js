@@ -18,6 +18,7 @@ import { installMapTips } from './ui/hub.js';
 import { keepUnreadable, snapshotOnUpdate } from './core/slots.js';
 import { ensureSchedules } from './core/program.js';
 import { migrateScale } from './core/scale.js';
+import { ensureLife } from './core/character.js';
 import { sfx, unlockAudio } from './audio/audio.js';
 import { absenceModal, diffModal, installClicks, liveUpdate, modalFn, onMapTap, openModal, render } from './ui/app.js';
 
@@ -41,7 +42,7 @@ function start(){
  const fresh=!S;if(fresh){keepUnreadable();newGame();save();}
  // la sauvegarde automatique d'avant mise à jour garde la partie telle qu'elle était, avant toute conversion
  if(!fresh&&typeof __APP_VERSION__!=='undefined')snapshotOnUpdate(__APP_VERSION__);
- recomputeCB();ensureWorld();ensureDuel();ensureSchedules();renameDuplicates();migrateScale();
+ recomputeCB();ensureWorld();ensureDuel();ensureSchedules();renameDuplicates();migrateScale();ensureLife();
  S.tab=S.tab||'sanctuaire';
  installClicks();installTips();setMapTapHandler(onMapTap);installMapTips();
  // Écran titre : un toucher pour entrer ; le résumé d'absence attend dessous.

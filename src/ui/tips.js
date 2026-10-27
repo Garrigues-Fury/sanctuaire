@@ -20,6 +20,7 @@ export const TIP={
  danger:'Danger, de ★ (bronze débutant) à ★★★★★ (chevalier d’or).',
  faveur:'Faveur d’Athéna : les ✦ gagnés dans la lecture des astres et en expédition.',
  or:'Chevalier d’or : les douze gardiens des maisons du zodiaque, au sommet de la hiérarchie.',
+ vet:'Vétéran : survivant de la guerre sainte précédente. Ses points forts dépassent le niveau 20 en compétences (sur 30).',
  argent:'Chevalier d’argent : l’élite intermédiaire, 24 armures.',
  bronze:'Chevalier de bronze : la première marche des chevaliers, 52 armures.',
  garde:'Garde : un apprenti qui défend une maison, le village ou un site. Il continue de s’entraîner.',

@@ -3,7 +3,7 @@
      d'entraînement, son aptitude naturelle (ses statistiques, parfois ses qualités) et son maître.
    - Un maître plus gradé et plus expérimenté fait découvrir plus vite ; s'il possède lui-même
      la compétence spécifique visée, encore plus vite. Les vitesses exigent un maître du rang voulu.
-   - Une fois découverte, la compétence monte de niveau (1 à 10) avec l'XP du personnage.
+   - Une fois découverte, la compétence monte de niveau (1 à 30) avec l'XP du personnage.
    - Les compétences spécifiques visées sont celles de l'armure pressentie la plus proche. */
 import { FUND, SKILLS, SPEED, SPEED_OF, specReq } from './data/skills.js';
 import { ql } from './data/traits.js';
@@ -27,8 +27,13 @@ const thr=s=>s.fam==='fond'?THRESH.fond:s.fam==='vit'?THRESH[s.id]:THRESH.spec;
 
 export function skillsOf(p){if(!p.sk)p.sk={};if(!p.skp)p.skp={};if(!p.skx)p.skx={};return p;}
 export function hasSkill(p,id){return !!(p.sk&&p.sk[id]);}
-// Niveau 1 à 10, selon l'XP accumulée depuis la découverte.
-export function skillLevel(p,id){if(!hasSkill(p,id))return 0;if(id==='vie')return vieLevel(p);const x=(p.skx&&p.skx[id])||0;return Math.min(10,1+Math.floor(Math.log(1+x/200)/Math.log(1.5)));}
+// Niveau 1 à 30 (plafond monté de 10 à 30 par Seba le 2026-10-27), selon l'XP accumulée depuis la découverte.
+// Jusqu'au niveau 10, la courbe d'origine ; au-delà, chaque niveau demande 25 % d'XP de plus que le précédent.
+export const SKILL_MAX=30;
+const X10=200*(1.5**9-1);
+export function levelOfX(x){return x<X10?1+Math.floor(Math.log(1+x/200)/Math.log(1.5)):Math.min(SKILL_MAX,10+Math.floor(Math.log(x/X10)/Math.log(1.25)));}
+export function xpForLevel(L){return L<=10?200*(1.5**(L-1)-1):X10*1.25**(L-10);}
+export function skillLevel(p,id){if(!hasSkill(p,id))return 0;if(id==='vie')return vieLevel(p);return levelOfX((p.skx&&p.skx[id])||0);}
 export function progressOf(p,id){const s=SKILLS[id];return hasSkill(p,id)?1:clamp(((p.skp&&p.skp[id])||0)/thr(s),0,1);}
 // Aptitude naturelle : ses statistiques liées, comparées à sa moyenne (et quelques qualités).
 export function aptitude(p,s){
