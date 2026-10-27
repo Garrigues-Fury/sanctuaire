@@ -10,7 +10,7 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace
 const SRC = path.join(ROOT, 'art/a-integrer');
 const GACHA = path.join(ROOT, 'public/img/gacha'), ARM = path.join(ROOT, 'public/img/armures');
 fs.mkdirSync(GACHA, { recursive: true }); fs.mkdirSync(ARM, { recursive: true });
-const NAME = /^((perso-(or-[a-z]+|(argent|bronze)-(feu|eau|air|terre))-[FM])|(armure-(or-[a-z]+|(argent|bronze)-(feu|eau|air|terre))))\.(png|jpe?g|webp)$/;
+const NAME = /^((perso-(or-[a-z]+|(argent|bronze)-(feu|eau|air|terre)|cons-[a-z-]+)-[FM])|(armure-(or-[a-z]+|(argent|bronze)-(feu|eau|air|terre))))\.(png|jpe?g|webp)$/;
 
 const done = [];
 for (const f of fs.readdirSync(SRC)) {

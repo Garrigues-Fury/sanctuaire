@@ -82,6 +82,9 @@ for (const n in EXTRA) { if (!JOBS[n]) continue; const [nat, look, txt] = EXTRA[
   if (nat) JOBS[n] = JOBS[n].replace(/Originaire de [^:]+:/, 'Originaire de ' + nat + ' :');
   if (look) JOBS[n] = JOBS[n].replace(/jeu gacha : [^.]*./, 'jeu gacha : ' + look + '.');
   JOBS[n] = JOBS[n].replace(' ' + HEAD, txt + ' ' + HEAD); }
+// Illustrations propres à une constellation (perso-cons-<clé>-<sexe>), demandées une à une par Seba.
+JOBS['perso-cons-coupe-F'] = 'Une femme adulte d’environ 25 ans, d’une beauté élégante et envoûtante d’héroïne de jeu gacha : silhouette fine et élancée, courbes gracieuses, poitrine bien proportionnée, port de tête distingué. Européenne, peau blanche, longs cheveux châtains soyeux et légèrement ondulés, magnifiques yeux vert émeraude au regard envoûtant. Armure ajustée qui laisse voir le ventre, les épaules et le haut des cuisses, tenue séduisante et raffinée mais jamais vulgaire, aucune nudité. '
+  + RANK.bronze + ' Thème de la constellation de la Coupe : une coupe antique (cratère grec) ciselée au centre du plastron, épaulières évasées comme le bord d’une coupe, volutes d’eau gravées qui semblent s’en écouler, voiles bleu profond, petites pierres bleues. Petite coupe stylisée en bronze comme ornement de cheveux. ' + HEAD + ' ' + FRAME;
 GOLD.forEach(([k, theme]) => { JOBS['armure-or-' + k] = RANK.or + ' ' + theme + ' ' + EMPTY; });
 Object.entries(EL).forEach(([e, [theme]]) => ['argent', 'bronze'].forEach(rk => { JOBS['armure-' + rk + '-' + e] = RANK[rk] + ' ' + theme + ' ' + EMPTY; }));
 
