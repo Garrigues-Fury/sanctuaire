@@ -9,6 +9,7 @@ import { MG_LEVELS, bonusText, epBonus, gameOf } from './data/minigames.js';
 import { DEFI_OF_CONS, DEFI_TYPES } from './data/defis.js';
 import { defiProgress } from './defis.js';
 import { S, emit, log } from './state.js';
+import { gloryNote } from './glory.js';
 
 export function epreuveOf(c){const t=DEFI_OF_CONS[c.k];return t?{type:'defi',defi:t,T:DEFI_TYPES[t]}:{type:'jeu',game:gameOf(c.k)};}
 export function bearerOf(c){return S.knights.find(k=>k.cons===c.k)||null;}
@@ -27,7 +28,7 @@ export function tickEpreuves(sum){
 export function checkEpreuves(sum){
  if(!S.epDone)S.epDone=[];let any=false;
  CONS.forEach(c=>{if(isDone(c.k))return;if(progressOf(c)>=1){S.epDone.push(c.k);any=true;
-  const p=bearerOf(c),m='Épreuve de '+c.n+' accomplie'+(p?' ('+p.name+')':'')+' : '+bonusText(epBonus(c.k))+' pour tout le Sanctuaire.';
+  const p=bearerOf(c);if(p)gloryNote(p,'ep',c.k);const m='Épreuve de '+c.n+' accomplie'+(p?' ('+p.name+')':'')+' : '+bonusText(epBonus(c.k))+' pour tout le Sanctuaire.';
   log(m);sum?sum.ev.push(m):emit('milestone');}});
  if(any)S._dirty=true;return any;
 }

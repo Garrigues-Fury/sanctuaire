@@ -78,6 +78,7 @@ export function todo(){
  const idle=S.workers.filter(w=>!w.job).length;if(idle)add({ic:'users',t:idle+' villageois sans affectation',d:'Envoyez-les sur un site.',act:'sub:sanctuaire:batir'});
  const full=RKEYS.filter(r=>S.res[r]>=cap(r)-.5);if(full.length)add({ic:'block',t:'Réserves pleines : '+full.map(r=>RES[r].n.toLowerCase()).join(', '),d:'La production est perdue. Dépensez ou agrandissez les réserves.',act:'sub:sanctuaire:batir'});
  {const rd=Object.keys(DEFI_OF_CONS).filter(k=>{const st=nextStep(k);return defiOpen(k)&&st&&st.ready;});if(rd.length)add({ic:'bolt',t:rd.length+' défi'+(rd.length>1?'s':'')+' réel'+(rd.length>1?'s':'')+' à relever aujourd’hui',d:[...new Map(rd.map(k=>[DEFI_OF_CONS[k],k])).values()].map(k=>DEFI_TYPES[DEFI_OF_CONS[k]].n+' : '+nextStep(k).text).join(' · ')+'.',act:'sub:personnages:epreuves'});}
+ if(S.glory&&S.glory.length)add({ic:'crown',t:S.glory.length+' exploit'+(S.glory.length>1?'s':'')+' à célébrer',d:'Niveaux, découvertes, bâtiments : venez féliciter vos personnages.',act:'glory',urgent:true});
  readyArcs().forEach(A=>add({ic:'heart',t:'Feuilleton : « '+ARCS[A.key].n+' »',d:'Épisode '+(A.ep+1)+' : '+episodeTitle(A)+'.',act:'arc:'+A.id,urgent:true}));
  if(S.world&&S.world.home)add({ic:'users',t:'Il se passe quelque chose au Sanctuaire',d:'Une scène entre vos personnages vous attend.',act:'home:start'});
  if(S.fp>0)add({ic:'heart',t:S.fp+' point'+(S.fp>1?'s':'')+' d’amitié à offrir',d:'Renforcez les liens entre vos personnages.',act:'sub:personnages:relations'});

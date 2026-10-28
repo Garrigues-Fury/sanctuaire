@@ -736,3 +736,29 @@ nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:el
 .defi-next{margin:2px 0;font-size:.92rem}.defi-next b{color:var(--gold-hi)}
 .btn.gpx{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .res-list{padding-left:18px;line-height:1.6}
+
+/* ---------- Moments de gloire (ui/glory.js) ---------- */
+#glory{position:fixed;inset:0;z-index:70;cursor:pointer;color:var(--marble);user-select:none;-webkit-user-select:none}
+#glory[hidden]{display:none}
+.gl-card{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:max(14px,env(safe-area-inset-top)) 16px calc(70px + env(safe-area-inset-bottom));
+ background:radial-gradient(90% 60% at 50% 38%,rgba(255,214,120,.35),rgba(120,70,30,.25) 45%,#120c0a 80%),linear-gradient(#2a1a12,#0d0907);animation:glIn .45s ease-out}
+.gl-card.build{background:linear-gradient(rgba(13,9,7,.55),rgba(13,9,7,.92)),var(--bg) center/cover}
+.gl-img{position:absolute;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);height:66vh;max-width:96vw;object-fit:contain;animation:glRise .6s ease-out;
+ -webkit-mask-image:radial-gradient(ellipse 62% 70% at 50% 46%,#000 58%,transparent 100%);mask-image:radial-gradient(ellipse 62% 70% at 50% 46%,#000 58%,transparent 100%)}
+.gl-text{position:relative;width:min(560px,100%);text-align:center;padding:14px 14px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(18,12,10,.55),rgba(18,12,10,.9));border:1px solid rgba(217,171,79,.45)}
+.gl-card h2{margin:0;font-family:var(--f-display);font-size:1.9rem;color:var(--gold-hi);text-shadow:0 0 14px rgba(255,200,90,.5)}
+.gl-sub{margin:2px 0 6px;color:var(--marble-dim);font-size:.9rem}
+.gl-cheer{margin:4px 0 10px;font-size:1.08rem;font-style:italic;line-height:1.4}
+.gl-feats{display:grid;gap:6px;text-align:left}
+.gl-feats>div{padding:7px 10px;border-radius:9px;background:rgba(217,171,79,.14);border-left:3px solid var(--gold-hi);font-size:.95rem}
+.gl-feats .was{background:rgba(255,255,255,.05);border-left-color:var(--marble-faint);color:var(--marble-dim);font-size:.85rem}
+.gl-card.build .gl-ico{color:var(--gold-hi);margin-bottom:auto;margin-top:12vh;filter:drop-shadow(0 0 18px rgba(255,200,90,.6))}
+.gl-card.build h2,.gl-card.build .gl-sub,.gl-card.build .gl-cheer{text-align:center}.gl-card.build .gl-feats{width:min(560px,100%)}
+.gl-foot{position:absolute;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));padding:0 14px;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--marble-dim)}
+.laurels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.laurel{position:absolute;top:-60px;display:block;animation:glFall linear infinite;opacity:.95}
+.laurel svg{width:100%;height:auto;display:block}
+@keyframes glFall{0%{transform:translateY(-10vh) rotate(var(--r))}100%{transform:translateY(115vh) rotate(calc(var(--r) + 300deg))}}
+@keyframes glIn{from{opacity:0}to{opacity:1}}
+@keyframes glRise{from{opacity:0;transform:translate(-50%,24px) scale(.96)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+@media (prefers-reduced-motion:reduce){.laurel{display:none}.gl-card,.gl-img{animation:none}}

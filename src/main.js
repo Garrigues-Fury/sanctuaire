@@ -21,12 +21,17 @@ import { migrateScale } from './core/scale.js';
 import { ensureLife } from './core/character.js';
 import { sfx, unlockAudio } from './audio/audio.js';
 import { absenceModal, diffModal, installClicks, liveUpdate, modalFn, onMapTap, openModal, render } from './ui/app.js';
+import { hasGlory, openGlory } from './ui/glory.js';
 
-// Rattrape un écart de temps réel dtReal (en heures) et montre le résumé d'absence s'il dépasse 6 minutes de jeu.
-function catchUp(dtReal){
+// Rattrape un écart de temps réel dtReal (en heures). Au retour, d'abord les moments de gloire en plein écran
+// (ui/glory.js), puis le résumé d'absence s'il dépasse 6 minutes de jeu. Tant que l'écran titre est là, on attend qu'il s'efface.
+let titleUp=true,pending=null;
+function catchUp(dtReal,launch){
  const before=Object.assign({},S.res),sum=newSum(),dt=dtReal*S.speed;
  advance(dt,sum);save();render();
- if(dt>=.1)openModal(absenceModal(dt,before,sum));
+ const summary=()=>{if(dt>=.1)openModal(absenceModal(dt,before,sum));};
+ const show=()=>{if(hasGlory()&&(launch||dt>=.1))openGlory(summary);else summary();};
+ if(titleUp)pending=show;else show();
 }
 let saveTick=0;
 function tick(){
@@ -50,12 +55,12 @@ function start(){
  const ver=document.getElementById('appVersion');if(ver)ver.textContent=typeof __APP_VERSION__!=='undefined'?__APP_VERSION__:'développement';
  // Le premier toucher (écran titre ou ailleurs) autorise le son.
  document.addEventListener('pointerdown',unlockAudio,true);
- const enter=()=>{unlockAudio();sfx('open');title.classList.add('out');setTimeout(()=>{title.hidden=true;},600);};
+ const enter=()=>{unlockAudio();sfx('open');title.classList.add('out');setTimeout(()=>{title.hidden=true;titleUp=false;if(pending){const f=pending;pending=null;f();}},600);};
  title.addEventListener('click',enter);title.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')enter();});
  render();
  // première partie : on choisit la difficulté (la partie a été créée en Moyen en attendant)
  if(fresh)openModal(diffModal);
- if(!fresh){const dt=(Date.now()-S.lastReal)/36e5;S.lastReal=Date.now();if(dt>.01)catchUp(dt);}
+ if(!fresh){const dt=(Date.now()-S.lastReal)/36e5;S.lastReal=Date.now();catchUp(Math.max(0,dt),true);}
  setInterval(tick,1000);
  // Au retour sur l'appli, on rattrape tout de suite au lieu d'attendre la seconde suivante.
  document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else tick();});

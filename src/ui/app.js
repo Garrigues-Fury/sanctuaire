@@ -33,6 +33,8 @@ import { coefOf, gainStat, migrateScale, norm, promoteStats } from '../core/scal
 import { COMPLEXES, TONS, ensureLife, heartLabel, heartText, promiseOf, serviceText } from '../core/character.js';
 import { isCouple, loveOf, partnerOf, rivalOf } from '../core/romance.js';
 import { givePool } from '../core/minigames.js';
+import { gloryNote } from '../core/glory.js';
+import { openGlory } from './glory.js';
 import { openMinigame } from './minigames.js';
 import { armDefi, cardModal } from './collection.js';
 import { gpxSummary, validateGpx, validateHonor } from '../core/defis.js';
@@ -775,6 +777,7 @@ export function act(a){
  case'renameno':renaming=null;render();return;
  case'renameok':{const p=getP(x,+y);if(!p)return;const e=doRename(p);if(e){flash=e;render();return;}renaming=null;sfx('confirm');break;}
  case'mg':closeModal();openMinigame(x,+y);return;
+ case'glory':closeModal();openGlory(null);return;
  case'defarm':armDefi(x);render();if(modalFn)openModal(modalFn);return;
  case'defyes':{armDefi(null);const out=validateHonor(x);if(!out)return;sfx('milestone');save();render();defiResult('Palier réussi !',out);return;}
  case'ccard':openModal(cardModal(x));return;
@@ -860,7 +863,7 @@ export function act(a){
  case'trialOpen':lastTrial=null;trialPick=null;openModal(trialModal(+x));return;
  case'trial':{const kp=S.knights.find(q=>q.id===+x),c0=CONS_BY[y];
   if(kp&&c0){const e=trialEval(kp,c0);if(!e.ok)return;const win=Math.random()<e.ch;const cd=restHours(kp);
-   if(win){(e.resonance||[]).forEach(id=>grantSkill(kp,id));promoteStats(kp,c0,c0.rank);const old=CONS_BY[kp.cons];kp.prevCons=(kp.prevCons||[]).concat([old.k]);S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
+   if(win){(e.resonance||[]).forEach(id=>grantSkill(kp,id));promoteStats(kp,c0,c0.rank);const old=CONS_BY[kp.cons];gloryNote(kp,'armor',c0.k);kp.prevCons=(kp.prevCons||[]).concat([old.k]);S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
     if(c0.rank==='or'&&!S.houses[c0.sign])S.houses[c0.sign]=1;log('★ '+kp.name+' est promu'+G(kp,'e')+' : '+armorLow(c0)+' ! L’'+armorLow(old)+' attend un nouveau porteur.');}
    else{kp.cd=S.gt+cd;log(kp.name+' échoue à l’épreuve de l’'+armorLow(c0)+'.');}
    lastTrial={id:kp.id,win,name:kp.name,rank:c0.rank,cons:c0.n,sex:kp.sex,cd};save();render();return;}

@@ -11,6 +11,7 @@ import { tickSocial } from './social.js';
 import { complexMalus, ensureLife, tickConfidence } from './character.js';
 import { tickEpreuves } from './epreuves.js';
 import { tickArcs } from './arcs.js';
+import { gloryBuild, gloryNote } from './glory.js';
 import { epBonus } from './data/minigames.js';
 import { apHelpF, apTrainF, isMaster, jobF, selfF, teachF, timeMult } from './schedule.js';
 import { medMult, studyMult, trainStats } from './program.js';
@@ -108,17 +109,17 @@ export function gainQuality(p,sum){
  const m=p.name+' se découvre une nouvelle qualité : '+QUAL[k].n.toLowerCase()+'.';log(m);sum&&sum.ev.push(m);
 }
 export function levelUpAp(ap,sum){
- ap.xp-=need(ap.lv);ap.lv++;
+ ap.xp-=need(ap.lv);ap.lv++;gloryNote(ap,'lv');
  ap.sp=(ap.sp||0)+2+Math.floor(ap.pot/30);bonusStats(ap);if(ap.awk)ap.st.co++;
  let msg='';
- if(ap.lv===5&&!ap.awk){ap.awk=true;ap.st.co+=5;grantSkill(ap,'F1');msg=ap.name+' a senti brûler son cosmos pour la première fois.';}
+ if(ap.lv===5&&!ap.awk){ap.awk=true;ap.st.co+=5;grantSkill(ap,'F1');msg=ap.name+' a senti brûler son cosmos pour la première fois.';gloryNote(ap,'awk');}
  const ti=[10,20,30].indexOf(ap.lv);
- if(ti>=0){const tn=TECH[SIGNS[ap.sign].el][ti];ap.tech.push(tn);msg=ap.name+' découvre une technique : '+tn+'.';gainQuality(ap,sum);}
+ if(ti>=0){const tn=TECH[SIGNS[ap.sign].el][ti];ap.tech.push(tn);msg=ap.name+' découvre une technique : '+tn+'.';gloryNote(ap,'tech',tn);gainQuality(ap,sum);}
  if(msg){log(msg);sum&&sum.ev.push(msg);}
  if(sum)sum.lv[ap.id]=(sum.lv[ap.id]||0)+1;else emit(msg?'milestone':'levelup',ap.id);
  S._dirty=true;
 }
-export function levelUpKnight(k){k.xp-=need(k.lv)*1.5;k.lv++;k.sp=(k.sp||0)+{bronze:2,argent:3,or:5}[k.rank];bonusStats(k);S._dirty=true;}
+export function levelUpKnight(k){k.xp-=need(k.lv)*1.5;k.lv++;gloryNote(k,'lv');k.sp=(k.sp||0)+{bronze:2,argent:3,or:5}[k.rank];bonusStats(k);S._dirty=true;}
 export function step(h,sum){
  const R=rates();
  RKEYS.forEach(r=>{const v=S.res[r]+R[r]*h;S.res[r]=clamp(v,0,Math.max(cap(r),S.res[r]));});
@@ -127,14 +128,14 @@ export function step(h,sum){
  S.aps.forEach(ap=>{ap.xp+=xpRate(ap)*h;let g=0;while(ap.xp>=need(ap.lv)&&g++<50)levelUpAp(ap,sum);
   if(ap.job){ap.wacc=(ap.wacc||0)+h*apHelpF(ap);while(ap.wacc>=24){ap.wacc-=24;ap.st[WORK[ap.job].stat]++;}}});
  S.knights.forEach(k=>{k.xp+=knightRate(k)*h;let g=0;while(k.xp>=need(k.lv)*1.5&&g++<50)levelUpKnight(k);});
- (S.guards||[]).forEach(gd=>{gd.xp+=guardRate(gd)*h;let g=0;while(gd.xp>=need(gd.lv)*1.5&&g++<50){gd.xp-=need(gd.lv)*1.5;gd.lv++;gd.sp=(gd.sp||0)+2;bonusStats(gd);S._dirty=true;}});
+ (S.guards||[]).forEach(gd=>{gd.xp+=guardRate(gd)*h;let g=0;while(gd.xp>=need(gd.lv)*1.5&&g++<50){gd.xp-=need(gd.lv)*1.5;gd.lv++;gloryNote(gd,'lv');gd.sp=(gd.sp||0)+2;bonusStats(gd);S._dirty=true;}});
  // un blessé récupère son énergie mais ne s'entraîne pas
  const am=arena();people().forEach(p=>{p.nrg=Math.min(emax(p),(p.nrg||0)+eregen(p)*h);if(!isKO(p))trainStats(p,h,am);});
  // compétences : découvertes et niveaux
  // lien : affinité de signe ou d'élément avec le maître, et amitiés
  // le maître d'apprentissage oriente les apprentis : découvertes plus rapides
  const orient=1+.15*orientF();
- const skf=(p,kind,rate,m)=>{ensureSkills(p,kind);const bond=(m?affinity(p,m).x:1)*(1+friendBonus(p))*(kind==='a'?orient:1);tickSkills(p,h,rate,m,bond).forEach(sk=>{const msg=p.name+' découvre une compétence : '+sk.n+'.';log(msg);sum?sum.ev.push(msg):emit('milestone',p.id);S._dirty=true;});};
+ const skf=(p,kind,rate,m)=>{ensureSkills(p,kind);const bond=(m?affinity(p,m).x:1)*(1+friendBonus(p))*(kind==='a'?orient:1);tickSkills(p,h,rate,m,bond).forEach(sk=>{gloryNote(p,'skill',sk.n);const msg=p.name+' découvre une compétence : '+sk.n+'.';log(msg);sum?sum.ev.push(msg):emit('milestone',p.id);S._dirty=true;});};
  S.aps.forEach(ap=>skf(ap,'a',xpRate(ap),masterOf(ap)));S.knights.forEach(k=>skf(k,'k',knightRate(k),null));(S.guards||[]).forEach(g=>skf(g,'g',guardRate(g),null));
  S.workers.forEach(w=>{if(!w.job)return;if(w.job==='forge'&&!S.forgeJob)return;if((w.job==='herbo'||w.job==='atelier')&&!S.craft[w.job].length)return;
   w.sxp+=h;while(w.skill<10&&w.sxp>=24*w.skill){w.sxp-=24*w.skill;w.skill++;if(w.skill===5&&w.job==='forge'){const m=w.name+' est désormais maître forgeron. Les armures d’or ne lui résistent plus.';log(m);sum&&sum.ev.push(m);}S._dirty=true;}});
@@ -144,7 +145,7 @@ export function step(h,sum){
  S.gt+=h;
  ensureLife();tickWorld(sum);tickSocial(h,sum);tickConfidence(h,sum);tickResearch(h,sum);tickMedicine(h,sum);tickAuto(sum);tickMissions(sum);tickRaids(sum);tickWounds(sum);tickArcs(sum);if(tickEpreuves(sum))recomputeCB();
  gainWhileBuilding(h);
- for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;gainOnBuilt(/^h\d+$/.test(j.b),j.lvl);if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
+ for(let i=S.jobs.length-1;i>=0;i--){const j=S.jobs[i];if(S.gt>=j.end){let m;gainOnBuilt(/^h\d+$/.test(j.b),j.lvl);gloryBuild(j.b,j.lvl);if(/^h\d+$/.test(j.b)){const hi=+j.b.slice(1);S.houses[hi]=j.lvl;m='La maison '+de(SIGNS[hi].n)+' est restaurée au niveau '+j.lvl+'.';}else{S.b[j.b]=j.lvl;m=BUILD[j.b].n+' atteint le niveau '+j.lvl+'.';}S.jobs.splice(i,1);log(m);sum?sum.ev.push(m):emit('built',j.b);S._dirty=true;}}
  if(S.forgeJob&&S.forgeJob.prog>=S.forgeJob.work){const c=CONS_BY[S.forgeJob.cons];S.armors[c.k]='restauree';S.forgeJob=null;const m=armorName(c)+' est restaurée et attend un porteur.';log(m);sum?sum.ev.push(m):emit('armor',c.k);S._dirty=true;}
  const iv=recruitInterval();
  if(iv<Infinity){S.recruitAcc+=h;if(S.recruitAcc>=iv){S.recruitAcc-=iv;if(S.pending.length<3){const a=makeApprentice();S.pending.push(a);const m='Un recruteur ramène '+a.name+', '+a.age+' ans, venu'+G(a,'e')+' '+NATS[a.nat].d+'.';log(m);sum?sum.ev.push(m):emit('recruit');S._dirty=true;}else S.recruitAcc=Math.min(S.recruitAcc,iv);}}
