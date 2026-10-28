@@ -18,7 +18,7 @@ const HEAD_BOX = { 'perso-cons-oiseau-paradis-F': { x: .39, y: .11, w: .26 }, 'p
   'perso-cons-ophiuchus-F2': { x: .23, y: .01, w: .32 }, 'perso-cons-loup-M': { x: .4, y: .04, w: .3 },
   'perso-cons-lynx-F': { x: .47, y: .11, w: .3 }, 'perso-cons-lynx-F2': { x: .47, y: .11, w: .3 }, 'perso-cons-lynx-F3': { x: .36, y: .07, w: .3 },
   'perso-cons-sculpteur-M': { x: .33, y: .06, w: .3 }, 'perso-cons-sculpteur-M1': { x: .35, y: .05, w: .3 }, 'perso-cons-sculpteur-M3': { x: .37, y: .02, w: .22 },
-  'perso-cons-couronne-boreale-F1': { x: .33, y: .03, w: .3 } };
+  'perso-cons-couronne-australe-F1': { x: .33, y: .03, w: .3 } };
 // Image pas au format vertical 2:3 (carré de Gemini…) : on retire le fond uni autour du personnage,
 // puis on le complète avec le même gris jusqu'au format 2:3. Rien n'est rogné.
 async function vertical(src) {
