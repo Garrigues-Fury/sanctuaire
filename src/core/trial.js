@@ -72,13 +72,15 @@ export function duelChance(ap,c){
  return{o,ch:w/24,kind};
 }
 // L'apprenti devient chevalier ; l'armure lui transmet par résonance les compétences qui lui manquaient.
+export function knightAge(p){return Math.max(p.age||0,18+((p.seed||p.id||0)>>>0)%3);}
 export function promoteApprentice(ap,c,resonance){
  (resonance||[]).forEach(id=>grantSkill(ap,id));
  // ses statistiques prennent la mesure du rang : ×3 à ×10 pour le bronze, selon son profil et ses compétences
  // (un apprenti qui gagne directement l'argent ou l'or franchit chaque marche)
  for(const rk of ['bronze','argent','or']){promoteStats(ap,c,rk);if(rk===c.rank)break;}
  const i=S.aps.indexOf(ap);if(i>=0)S.aps.splice(i,1);S.armors[c.k]='portee';
- const kn={id:ap.id,seed:ap.seed,sex:ap.sex,age:ap.age,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:c.rank,cons:c.k,lv:ap.lv,xp:0,st:Object.assign({},ap.st),role:null,
+ // Choix de Seba (2026-10-28) : les années de formation ont passé, le nouveau chevalier est un jeune adulte (18 à 20 ans).
+ const kn={id:ap.id,seed:ap.seed,sex:ap.sex,age:knightAge(ap),name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:c.rank,cons:c.k,lv:ap.lv,xp:0,st:Object.assign({},ap.st),role:null,
   tech:(ap.tech||[]).concat([SIG_WORDS[ap.seed%SIG_WORDS.length]+' '+(c.rank==='or'?'d’or':de(c.n))]),origin:'forme',pot:ap.pot,sp:ap.sp||0,nrg:ap.nrg,tr:ap.tr,tacc:ap.tacc,
   sk:ap.sk,skp:ap.skp,skx:ap.skx,mentors:(ap.mentors||[]).concat(ap.master!=null?[ap.master]:[])};
  kn.since=S.gt;S.knights.push(kn);gloryNote(kn,'armor',c.k);queueCeremony({kid:kn.id,cons:c.k,master:ap.master!=null?ap.master:null});if(c.rank==='or'&&!S.houses[c.sign])S.houses[c.sign]=1;

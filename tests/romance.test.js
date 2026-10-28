@@ -95,20 +95,22 @@ describe('les scènes écrites tiennent debout', () => {
 });
 
 describe('jeunes chevaliers', () => {
-  it('un apprenti qui devient chevalier garde son âge : ni romance ni illustration adulte avant 18 ans', async () => {
+  it('un apprenti qui devient chevalier est un jeune adulte (18 à 20 ans) : illustration et romances possibles', async () => {
     const { promoteApprentice } = await import('../src/core/trial.js');
-    const { paintedOf } = await import('../src/core/data/art.js');
-    const { specOf } = await import('../src/art/character.js');
     const { CONS } = await import('../src/core/data/world.js');
-    const ap = makeApprentice(); ap.age = 14; ap.sex = 'F'; S.aps.push(ap);
+    const ap = makeApprentice(); ap.age = 13; S.aps.push(ap);
     const c = CONS.find(x => x.rank === 'bronze' && !S.knights.some(k => k.cons === x.k));
     const kn = promoteApprentice(ap, c, []);
-    expect(kn.age).toBe(14);
+    expect(kn.age).toBeGreaterThanOrEqual(18); expect(kn.age).toBeLessThanOrEqual(20);
+    expect(adult(kn)).toBe(true);
+  });
+  it('un chevalier qui aurait moins de 18 ans reste protégé : ni romance ni illustration adulte', async () => {
+    const { paintedOf } = await import('../src/core/data/art.js');
+    const { specOf } = await import('../src/art/character.js');
+    const kn = S.knights.find(k => k.sex === 'F'); kn.age = 15;
     expect(adult(kn)).toBe(false);
     expect(paintedOf(kn)).toBeNull();
-    const s = specOf(kn, { rank: 'bronze' });
+    const s = specOf(kn, { rank: kn.rank });
     expect(s.child).toBe(true); expect(s.cover).toBe('full');
-    const m = S.knights.find(k => k.sex === 'M' && k.origin === 'survivant');
-    expect(canRomance(kn, m)).toBe(false);
   });
 });

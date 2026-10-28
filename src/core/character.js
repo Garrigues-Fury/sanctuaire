@@ -125,8 +125,10 @@ export function ensureLife(){
  if(!S)return;
  [].concat(S.knights||[],S.aps||[],S.guards||[],S.pending||[]).forEach(ensureCharacter);
  (S.knights||[]).forEach(k=>{makeVeteran(k);ensureService(k);ensurePotential(k);});
- // anciens apprentis devenus chevaliers ou gardes avant que l'âge soit gardé : 16 ans par prudence (jamais sexualisés)
- [].concat(S.knights||[],S.guards||[]).forEach(p=>{if(p.age==null&&p.origin!=='survivant'&&!p.npc){p.age=16;p.ageEst=true;}});
+ // gardes venus des apprentis sans âge connu : 16 ans par prudence (jamais sexualisés) ;
+ // chevaliers : toujours de jeunes adultes, les années de formation ont passé (choix de Seba du 2026-10-28)
+ (S.guards||[]).forEach(p=>{if(p.age==null&&p.origin!=='survivant'&&!p.npc){p.age=16;p.ageEst=true;}});
+ (S.knights||[]).forEach(k=>{if(k.origin!=='survivant'&&!k.npc&&(k.age==null||k.age<18)){k.age=Math.max(k.age||0,18+((k.seed||k.id||0)>>>0)%3);delete k.ageEst;}});
 }
 // Chaque jour, les amis bienveillants rendent confiance à ceux qui ont un complexe.
 export function tickConfidence(h,sum){
