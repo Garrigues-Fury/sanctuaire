@@ -220,7 +220,7 @@ export function viewSanctuaire(){
 }
 export function sexChip(p){return '<span class="chip" title="'+(p.sex==='F'?'Femme':'Homme')+'">'+(p.sex==='F'?'♀ F':'♂ M')+'</span>';}
 // Affinité avec une armure, en clair.
-export function affHtml(af){const p=af.parts,bits=[];if(p.elem)bits.push('élément '+(p.elem>0?'+':'')+p.elem);bits.push('compétences +'+p.comp+' ('+af.keys.map(k=>STATN[k]).join(', ')+')');if(p.maitre)bits.push('maître +'+p.maitre);
+export function affHtml(af){const p=af.parts,bits=[];if(p.elem)bits.push('élément '+(p.elem>0?'+':'')+p.elem);bits.push('compétences +'+p.comp+' ('+af.keys.map(k=>STATN[k]).join(', ')+')');if(p.maitre)bits.push('maître +'+p.maitre);if(p.coeur)bits.push('cœur '+(p.coeur>0?'+':'')+p.coeur);
  return '<b style="color:var(--'+(af.v>=70?'gold-hi':af.v>=45?'ok':af.v>=25?'marble':'bad')+')">'+affLabel(af.v)+' '+af.v+'</b> · '+bits.join(' · ');}
 // Les armures pressenties pour un personnage, avec leur état.
 export function foreseen(p,rank){const L=bestArmors(p,3,rank);return '<div class="list">'+L.map(({c,a})=>'<div class="item" style="grid-template-columns:minmax(0,1fr)"><div class="main"><div class="name">'+esc(armorName(c))+' '+armorState(c)+'</div><div class="sub">'+affHtml(a)+'</div><div class="sub">Exige : '+reqHtml(p,c)+'</div></div></div>').join('')+'</div>';}
@@ -493,6 +493,8 @@ export function persoBlock(p){
  return h;
 }
 // Depuis combien de temps il est chevalier, et ses armures d'avant, entre parenthèses (demande de Seba du 2026-10-27).
+// Le lien entre un chevalier et l'armure qu'il porte (demande de Seba du 2026-10-28), comme pour les apprentis.
+function bondLine(k){const c=k.cons&&CONS_BY[k.cons];return c?'<div class="hint">Lien avec son armure : '+affHtml(armorAffinity(k,c))+'</div>':'';}
 function serviceLine(k){
  const t=serviceText(k);if(!t)return'';
  const prev=(k.prevCons||[]).map(x=>CONS_BY[x]).filter(Boolean).map(c=>armorLow(c));
@@ -633,7 +635,7 @@ export function armorModal(key){return()=>{const c=CONS_BY[key];if(!c)return '';
  h+='<div class="sec-h"><h2>Maîtres qui peuvent guider</h2></div><div class="mrow">'+guideChips(c)+'</div>';
  return h;};}
 export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);if(!k)return '<p>Ce chevalier n’est plus là.</p>';const c=CONS_BY[k.cons];const aps=S.aps.filter(a=>a.master===k.id);
- let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+vetChip(k)+promChip(k)+(k.age!=null&&k.age<18?'<span class="chip">'+k.age+' ans</span>':'')+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div>'+serviceLine(k)+'</div></div>';
+ let h=flashHtml()+'<div class="sheet-head">'+ptImg(k,k.rank,true)+'<div class="main">'+nameH(k,'k')+'<div style="display:flex;flex-wrap:wrap;gap:6px">'+rankChip(k.rank)+vetChip(k)+promChip(k)+(k.age!=null&&k.age<18?'<span class="chip">'+k.age+' ans</span>':'')+signChip(k.sign)+sexChip(k)+'</div><div class="hint">'+armorName(c)+' · '+(k.origin==='survivant'?'survivant'+G(k,'e')+' de la guerre sainte':'formé'+G(k,'e')+' au Sanctuaire')+'</div>'+serviceLine(k)+bondLine(k)+'</div></div>';
  h+=statusLine(k);
  h+='<div style="display:grid;gap:6px"><div class="hint">Niveau <b style="color:var(--marble)">'+k.lv+'</b> · cosmos '+cosmosLabel(k.st.co).toLowerCase()+' · puissance <b style="color:var(--gold-hi)">'+fmt(power(k,k.rank))+'</b></div>'+bar(k.xp/(need(k.lv)*1.5)*100,'data-kbar="'+k.id+'"')+nrgBar(k)+'</div>'+sheetTabs();
  if(sheetTab==='temps'){
