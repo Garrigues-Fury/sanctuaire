@@ -7,6 +7,7 @@
 
 import { LIFE_SCENES } from './lifescenes.js';
 import { ARC_SCENES } from './arcs.js';
+import { CEREMONY_SCENES } from './ceremony.js';
 
 export const SCENES={
 
@@ -198,5 +199,5 @@ racines:{kind:'home',need:'pairRoots',start:'a',nodes:{
  song:{who:'narr',text:'La chanson est maladroite, à deux voix qui ne s’accordent pas tout à fait. Les villageois sortent sur le pas de leur porte pour écouter.',end:'home'}
 }}
 };
-Object.assign(SCENES,LIFE_SCENES,ARC_SCENES);
+Object.assign(SCENES,LIFE_SCENES,ARC_SCENES,CEREMONY_SCENES);
 export const SCENE_KEYS=Object.keys(SCENES);

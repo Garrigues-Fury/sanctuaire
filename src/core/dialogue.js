@@ -7,7 +7,7 @@ import { legacy } from './scale.js';
 import { TONS } from './character.js';
 import { arcById, arcCond } from './arcs.js';
 // Conditions propres aux feuilletons : un choix qui ne les remplit pas est caché (pas grisé).
-export const ARC_KEYS=['flag','noflag','aff','affMax','clues','romance','cx2'];
+export const ARC_KEYS=['flag','noflag','aff','affMax','clues','romance','cx2','v'];
 export const isArcReq=req=>!!req&&ARC_KEYS.some(x=>req[x]!=null);
 function arcOk(req,k,S){const a=S.world&&S.world.active;if(!a||!isArcReq(req))return true;const P=S.knights.concat(S.guards||[],S.aps);return arcCond(req,a.arcId!=null?arcById(a.arcId):{flags:[],clues:[],aff:0},{k,k2:P.find(p=>p.id===a.k2)});}
 
@@ -19,12 +19,15 @@ export function pickText(t,p){
  if(p){for(const q of(p.qual||[]))if(t[q.k])return t[q.k];for(const f of(p.flaw||[]))if(t[f.k])return t[f.k];}
  return t.default;
 }
-export function fill(s,vars){return s.replace(/\{(\w+)\}/g,(m,k)=>vars[k]!=null?vars[k]:m);}
+// Après les noms : « de Anahit » devient « d’Anahit », « que Ilyas » devient « qu’Ilyas ».
+export function fill(s,vars){return s.replace(/\{(\w+)\}/g,(m,k)=>vars[k]!=null?vars[k]:m).replace(/(^|[^\wÀ-ÿ’])([Dd]e|[Qq]ue) (?=[AEIOUYÂÉÈÊÎÏÔÛÜ])/g,(m,b,w)=>b+(w[0]==='d'||w[0]==='D'?w[0]:w.slice(0,2))+'’');}
 
 // Condition d'un choix : qualité, défaut, statistique minimale ou ressource à payer.
 export function reqOk(req,k,S){
  if(!req)return true;
  if(!arcOk(req,k,S))return false;
+ // v : une variable de la scène doit être vraie (cérémonie : hasPope, hasMaster…)
+ if(req.v!=null){const a=S.world&&S.world.active;if(!(a&&a.vars&&a.vars[req.v]))return false;if(Object.keys(req).length===1)return true;}
  if(req.qual)return(k.qual||[]).some(q=>req.qual.split('|').includes(q.k));
  if(req.flaw)return(k.flaw||[]).some(f=>req.flaw.split('|').includes(f.k));
  if(req.stat)return legacy(k,req.stat[0])>=req.stat[1];

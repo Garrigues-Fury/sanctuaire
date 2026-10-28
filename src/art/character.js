@@ -56,6 +56,7 @@ export function specOf(p,o={}){
   metal:fac?fac.metal:(rank||'bronze'),faction:o.faction||null,boss:!!o.boss,glow:!!o.boss,
   outfit:fac?'foe':rank?'knight':child?'apprentice':'villager',cover:F?(r()<.75?'midriff':'full'):(rank&&rank!=='or'&&r()<.45?'bare':'suit'),r};
  if(child)s.cover=F?'full':'suit';
+ if(o.outfit)s.outfit=o.outfit; // ex. la tunique d'apprenti, pour l'image « avant » de la cérémonie
  // Morphologie et visage variés (demande de Seba du 2026-10-24), pour les adultes seulement.
  // Tirés à part, pour ne pas changer l'apparence déjà connue des personnages existants.
  const r2=rng((p.seed^0x9e3779b1)>>>0),adult=!child,gourmand=(p.flaw||[]).some(x=>x.k==='gourmand');

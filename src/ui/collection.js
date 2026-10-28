@@ -14,6 +14,7 @@ import { S } from '../core/state.js';
 import { dur, esc, fmt } from '../core/util.js';
 import { bar, ptImg } from './app.js';
 import { icon } from './icons.js';
+import { photoHtml } from './ceremony.js';
 
 const pct=v=>Math.round(v*100)+' %';
 const STN={fo:'force',vi:'vitesse',de:'dextérité',en:'endurance',ps:'psychokinésie',co:'cosmos'};
@@ -68,11 +69,13 @@ function card(c){
 }
 export function viewCollection(){
  const seen=seenCons(),done=S.epDone||[];
+ const album=(S.album||[]).slice().reverse();
  const tot={};done.forEach(k=>{const b=epBonus(k);if(b)tot[b.key]=(tot[b.key]||0)+b.v;});
  const lv=CONS.reduce((t,c)=>t+(gameOf(c.k)?mgOf(c.k).done:0),0);
  let h='<section class="sec"><div class="coll-kpis"><div><b class="num">'+seen.length+'</b><span>cartes découvertes / 88</span></div><div><b class="num">'+done.length+'</b><span>épreuves accomplies</span></div><div><b class="num">'+lv+'</b><span>niveaux de jeux réussis</span></div><div><b class="num">'+CONS.reduce((t,c)=>t+(DEFI_OF_CONS[c.k]?defiOf(c.k).done:0),0)+'</b><span>paliers de défis réels</span></div></div>';
  h+=Object.keys(tot).length?'<p class="hint">Bonus gagnés : '+Object.entries(tot).map(([k,v])=>'+'+v+' % '+BONUS_N[k]).join(' · ')+'.</p>':'<p class="hint">Aucun bonus encore : finissez l’épreuve d’un chevalier pour dorer sa carte.</p>';
  h+='</section>';
+ if(album.length)h+='<section class="sec"><div class="sec-h"><h2>Album souvenir</h2><span class="aside">'+album.length+' photo'+(album.length>1?'s':'')+'</span></div><div class="album">'+album.slice(0,12).map(ph=>'<button class="ph-btn" data-act="photo:'+S.album.indexOf(ph)+'">'+photoHtml(ph,true)+'</button>').join('')+'</div></section>';
  RANK_ORDER.forEach(r=>{const L=CONS.filter(c=>c.rank===r);
   h+='<section class="sec"><div class="sec-h"><h2>'+RANKS[r]+'</h2><span class="aside">'+L.filter(c=>isDone(c.k)).length+' / '+L.length+'</span></div><div class="coll">'+L.map(card).join('')+'</div></section>';});
  return h;

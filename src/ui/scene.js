@@ -17,6 +17,8 @@ import { mountBattle } from '../battle/battle.js';
 import { beastKind, svgBeast } from '../art/beast.js';
 import { dataUrl } from '../art/character.js';
 import { render } from './app.js';
+import { ceremonyCast, closeCeremony } from '../core/ceremony.js';
+import { openInvestiture } from './ceremony.js';
 
 let root=null,tw=null,twKey='',target=null,autoTimer=null,lastLog=0,results=null,lastRoll=null,ctl=null,animating=false;
 
@@ -54,7 +56,7 @@ function draw(){
  const R=regionOf(a);
  root.style.setProperty('--bg1',R.bg[0]);root.style.setProperty('--bg2',R.bg[1]);
  const A=a.kind==='arc'?arcById(a.arcId):null;
- const place=a.ev?a.vars.v+' · '+a.ev.nat:A?'« '+ARCS[A.key].n+' » · épisode '+(A.ep+1)+' : '+ARCS[A.key].eps[A.ep]:'Le Sanctuaire';
+ const place=a.kind==='ceremony'?'Investiture · le palais du Grand Pope':a.ev?a.vars.v+' · '+a.ev.nat:A?'« '+ARCS[A.key].n+' » · épisode '+(A.ep+1)+' : '+ARCS[A.key].eps[A.ep]:'Le Sanctuaire';
  const top='<div class="sc-top"><span>'+esc(place)+'</span><button class="sc-x" data-sc="close" aria-label="Fermer (la scène reste en attente)">✕</button></div>';
  if(a.battle){
   // Le canevas du combat reste en place : on ne redessine que les barres et les boutons.
@@ -150,7 +152,10 @@ function onClick(e){
   case'auto':startAuto();hud(a);return;
   case'stopauto':stopAuto();hud(a);return;
   case'afterfight':if(animating)return;endFight();dropBattle();break;
-  case'end':{const end=currentNode().end;const out=finishScene();results={end,out};sfx(end==='lose'||end==='leave'?'close':'milestone');save();draw();return;}
+  case'end':{const end=currentNode().end;
+   // cérémonie : pas de bilan, mais la transformation et la photo souvenir
+   if(a.kind==='ceremony'){const c=a.cer,cast=ceremonyCast(c);finishScene();const ph=cast?closeCeremony(c,cast):null;save();stopAuto();dropBattle();root.hidden=true;if(ph)openInvestiture(c,ph);else render();return;}
+   const out=finishScene();results={end,out};sfx(end==='lose'||end==='leave'?'close':'milestone');save();draw();return;}
  }
  save();draw();
 }

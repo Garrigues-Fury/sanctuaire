@@ -21,6 +21,8 @@ import { LIFE_NEEDS, acceptChance, applyLifeFx, castFor } from './romance.js';
 import { CX_LINES } from './data/lifescenes.js';
 import { fill, reqOk } from './dialogue.js';
 import { arcById, arcVars, endEpisode, episodeKey } from './arcs.js';
+import { ceremonyCast } from './ceremony.js';
+import { CONS_BY, armorLow } from './data/world.js';
 
 export const EXP_E=30,MAX_EVENTS=4,EVENT_LIFE=72;
 const r=()=>Math.random();
@@ -120,6 +122,15 @@ export function goTo(id){
  if(node.branch){const k=activeKnight(),b=node.branch.find(x=>!x.if||reqOk(x.if,k,S));return goTo(b.go);}
  return node;
 }
+// La cérémonie d'investiture (core/ceremony.js) : le nouveau chevalier (k), son maître (k2), son meilleur ami (k3), le Pope.
+export function startCeremony(c){
+ const W=ensureWorld();if(W.active)return null;const cast=ceremonyCast(c);if(!cast)return null;
+ const {k,master,pope,friends}=cast,f=friends[0]||null,cons=CONS_BY[c.cons];
+ const vars=varsFor(k,{k2:master?master.name:'',e2:master?G(master,'e'):'',k3:f?f.name:'',e3:f?G(f,'e'):'',armure:armorLow(cons),
+  hasPope:!!pope,hasMaster:!!master,hasFriend:!!f,promo:!!c.promo,pope:pope?pope.name:''});
+ W.active={kind:'ceremony',cer:c,scene:'investiture',node:'a',kid:k.id,k2:master&&master.id,k3:f&&f.id,battle:null,mods:{},fx:[],vars,cast:{},log:[]};
+ goTo('a');return W.active;
+}
 // Un épisode de feuilleton (core/arcs.js) : mêmes personnages et mêmes seconds rôles d'un épisode à l'autre.
 export function startArcEpisode(id){
  const W=ensureWorld(),A=arcById(id);if(W.active||!A||A.done||S.gt<A.at)return null;
@@ -153,6 +164,9 @@ export function finishScene(){
   if(end!=='lose'){W.events=W.events.filter(e=>e.id!==ev.id);}
   if(end==='win'||end==='peace')W.wins++;
   log(k.name+' revient de '+ev.v+' : '+({win:'victoire',peace:'paix conclue',recruit:'une recrue',lose:'défaite',leave:'retour bredouille'})[end]+'.');
+ }else if(a.kind==='ceremony'){
+  const k2=a.k2!=null?people().find(x=>x.id===a.k2):null,k3=a.k3!=null?people().find(x=>x.id===a.k3):null;
+  fx.forEach(f=>{if(/^(friend|friend3|bon)(:|$)/.test(f))applyLifeFx(f,{k,k2,k3},out);});
  }else if(a.kind==='arc'){
   const A=arcById(a.arcId),k2=people().find(x=>x.id===a.k2),k3=a.k3?people().find(x=>x.id===a.k3):null;
   fx.forEach(f=>{

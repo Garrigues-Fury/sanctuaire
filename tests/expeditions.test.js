@@ -37,7 +37,7 @@ describe('expéditions', () => {
   });
   it('partir coûte de l’énergie, et chaque scène se joue jusqu’au bout', () => {
     ensureWorld();
-    for (const key of Object.keys(SCENES).filter(k => SCENES[k].kind !== 'home' && SCENES[k].kind !== 'arc')) {
+    for (const key of Object.keys(SCENES).filter(k => !['home', 'arc', 'ceremony'].includes(SCENES[k].kind))) {
       S.world.events = []; S.world.active = null;
       const ev = spawn(SCENES[key].kind === 'attack' ? 'attack' : 'recruit'); ev.scene = key;
       const k = S.knights[0]; k.nrg = 100;

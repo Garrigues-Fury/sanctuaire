@@ -762,3 +762,34 @@ nav.tabs button span:not(.badge){max-width:100%;overflow:hidden;text-overflow:el
 @keyframes glIn{from{opacity:0}to{opacity:1}}
 @keyframes glRise{from{opacity:0;transform:translate(-50%,24px) scale(.96)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 @media (prefers-reduced-motion:reduce){.laurel{display:none}.gl-card,.gl-img{animation:none}}
+
+/* ---------- Cérémonie d'investiture et photos souvenir (ui/ceremony.js) ---------- */
+#ceremony{position:fixed;inset:0;z-index:72;overflow-x:hidden;background:radial-gradient(90% 60% at 50% 40%,#5a3a1e,#1a100b 70%,#0a0706);color:var(--marble);overflow-y:auto}
+#ceremony[hidden]{display:none}
+.cer-card{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:max(14px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));text-align:center}
+.cer-stage{position:relative;width:min(92vw,420px);height:62vh}
+.cer-stage img{position:absolute;left:50%;top:0;height:100%;transform:translateX(-50%);object-fit:contain;
+ -webkit-mask-image:radial-gradient(ellipse 62% 70% at 50% 46%,#000 58%,transparent 100%);mask-image:radial-gradient(ellipse 62% 70% at 50% 46%,#000 58%,transparent 100%)}
+.cer-before{animation:cerOut 2.2s ease-in forwards}
+.cer-after{opacity:0;animation:cerIn 1.4s ease-out 1.9s forwards}
+.cer-flash{position:absolute;inset:-20%;background:radial-gradient(circle,#fff 0,#ffe7a3 25%,rgba(255,214,120,0) 60%);opacity:0;animation:cerFlash 1.2s ease-out 1.4s forwards;pointer-events:none}
+.cer-rays{position:absolute;inset:-30%;background:repeating-conic-gradient(from 0deg,rgba(255,214,120,.18) 0 6deg,transparent 6deg 18deg);opacity:0;animation:cerRays 6s linear 1.6s infinite;border-radius:50%;pointer-events:none}
+.cer-text{opacity:0;animation:cerIn .8s ease-out 2.6s forwards}
+.cer-text h2,.photo-step h2{margin:0;font-family:var(--f-display);color:var(--gold-hi);font-size:1.6rem;text-shadow:0 0 14px rgba(255,200,90,.5)}
+.cer-text p{margin:4px 0 10px;color:var(--marble-dim)}
+@keyframes cerOut{0%{opacity:1;filter:brightness(1)}70%{opacity:1;filter:brightness(2.4)}100%{opacity:0;filter:brightness(3)}}
+@keyframes cerIn{from{opacity:0;transform:translateX(-50%) scale(.96)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+.cer-text{transform:none}@keyframes cerFlash{0%{opacity:0}35%{opacity:1}100%{opacity:0}}
+@keyframes cerRays{0%{opacity:.9;transform:rotate(0)}100%{opacity:.9;transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.cer-before{display:none}.cer-after,.cer-text{opacity:1;animation:none}.cer-flash,.cer-rays{display:none}}
+/* la photo */
+.photo{margin:0;display:grid;gap:6px;width:min(94vw,460px)}
+.ph-frame{position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;border:8px solid #f3e7cf;box-shadow:0 10px 30px rgba(0,0,0,.55);background:linear-gradient(rgba(20,12,8,.25),rgba(20,12,8,.55)),var(--bg) center/cover}
+.ph-fig{position:absolute;bottom:0;object-fit:contain;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 45%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 60% 70% at 50% 45%,#000 55%,transparent 100%)}
+.ph-fig.hero{height:96%;left:50%;transform:translateX(-50%);z-index:3}
+.ph-fig.back{height:80%;z-index:1;bottom:6%}.ph-fig.back.left{left:4%}.ph-fig.back.right{right:4%}
+.ph-fig.front{height:58%;z-index:4}.ph-fig.front.left{left:-2%}.ph-fig.front.right{right:-2%}
+.photo figcaption{display:grid;gap:2px;font-size:.85rem;color:var(--marble-dim)}.photo figcaption b{color:var(--gold-hi);font-size:.95rem}
+.photo.small{width:100%}.photo.small .ph-frame{border-width:5px}.photo.small figcaption{font-size:.72rem}.photo.small figcaption b{font-size:.78rem}
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ph-btn{padding:0;border:0;background:none;color:inherit;text-align:left;cursor:pointer}

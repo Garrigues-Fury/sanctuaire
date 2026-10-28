@@ -6,6 +6,7 @@
      perdra presque toujours ; il obtient l'armure s'il a su montrer les techniques fondamentales pendant le combat.
    - Les autres armures font passer une épreuve classique (chance de réussite). */
 import { gloryNote } from './glory.js';
+import { queueCeremony } from './ceremony.js';
 import { armorAffinity } from './armor.js';
 import { autoResolve, duelStats, newDuelBattle } from './combat.js';
 import { SKILLS } from './data/skills.js';
@@ -80,7 +81,7 @@ export function promoteApprentice(ap,c,resonance){
  const kn={id:ap.id,seed:ap.seed,sex:ap.sex,age:ap.age,name:ap.name,nat:ap.nat,qual:ap.qual,flaw:ap.flaw,bio:ap.bio,sign:ap.sign,rank:c.rank,cons:c.k,lv:ap.lv,xp:0,st:Object.assign({},ap.st),role:null,
   tech:(ap.tech||[]).concat([SIG_WORDS[ap.seed%SIG_WORDS.length]+' '+(c.rank==='or'?'d’or':de(c.n))]),origin:'forme',pot:ap.pot,sp:ap.sp||0,nrg:ap.nrg,tr:ap.tr,tacc:ap.tacc,
   sk:ap.sk,skp:ap.skp,skx:ap.skx,mentors:(ap.mentors||[]).concat(ap.master!=null?[ap.master]:[])};
- kn.since=S.gt;S.knights.push(kn);gloryNote(kn,'armor',c.k);if(c.rank==='or'&&!S.houses[c.sign])S.houses[c.sign]=1;
+ kn.since=S.gt;S.knights.push(kn);gloryNote(kn,'armor',c.k);queueCeremony({kid:kn.id,cons:c.k,master:ap.master!=null?ap.master:null});if(c.rank==='or'&&!S.houses[c.sign])S.houses[c.sign]=1;
  log('★ '+ap.name+' obtient l’'+armorLow(c)+' et devient chevalier de '+RANKS[c.rank].toLowerCase()+' !');
  if((resonance||[]).length)log('Par résonance, l’armure transmet à '+ap.name+' : '+resonance.map(id=>SKILLS[id].n.toLowerCase()).join(', ')+'.');
  return kn;

@@ -7,6 +7,7 @@ import { duelAvailable, godState } from '../core/duel.js';
 import { POSTS, afford, cap, capacity, defenseOf, elemScores, masterOf, siteProd, siteSlots, usedSlots, people, pope, postName, power, rates, sanctPower, slotsFor, trialEval, villageCap } from '../core/rules.js';
 import { compat, compatLabel } from '../core/social.js';
 import { ensureLove } from '../core/romance.js';
+import { pendingCeremonies } from '../core/ceremony.js';
 import { ensureArcs, episodeTitle, readyArcs } from '../core/arcs.js';
 import { ARCS } from '../core/data/arcs.js';
 import { DEFI_OF_CONS, DEFI_TYPES } from '../core/data/defis.js';
@@ -78,6 +79,7 @@ export function todo(){
  const idle=S.workers.filter(w=>!w.job).length;if(idle)add({ic:'users',t:idle+' villageois sans affectation',d:'Envoyez-les sur un site.',act:'sub:sanctuaire:batir'});
  const full=RKEYS.filter(r=>S.res[r]>=cap(r)-.5);if(full.length)add({ic:'block',t:'Réserves pleines : '+full.map(r=>RES[r].n.toLowerCase()).join(', '),d:'La production est perdue. Dépensez ou agrandissez les réserves.',act:'sub:sanctuaire:batir'});
  {const rd=Object.keys(DEFI_OF_CONS).filter(k=>{const st=nextStep(k);return defiOpen(k)&&st&&st.ready;});if(rd.length)add({ic:'bolt',t:rd.length+' défi'+(rd.length>1?'s':'')+' réel'+(rd.length>1?'s':'')+' à relever aujourd’hui',d:[...new Map(rd.map(k=>[DEFI_OF_CONS[k],k])).values()].map(k=>DEFI_TYPES[DEFI_OF_CONS[k]].n+' : '+nextStep(k).text).join(' · ')+'.',act:'sub:personnages:epreuves'});}
+ pendingCeremonies().forEach(c=>{const kk=S.knights.find(q=>q.id===c.kid);if(kk)add({ic:'armor',t:'Cérémonie d’investiture : '+kk.name,d:'Le Grand Pope, son maître et ses amis l’attendent dans la grande salle.',act:'ceremony:'+kk.id,urgent:true});});
  if(S.glory&&S.glory.length)add({ic:'crown',t:S.glory.length+' exploit'+(S.glory.length>1?'s':'')+' à célébrer',d:'Niveaux, découvertes, bâtiments : venez féliciter vos personnages.',act:'glory',urgent:true});
  readyArcs().forEach(A=>add({ic:'heart',t:'Feuilleton : « '+ARCS[A.key].n+' »',d:'Épisode '+(A.ep+1)+' : '+episodeTitle(A)+'.',act:'arc:'+A.id,urgent:true}));
  if(S.world&&S.world.home)add({ic:'users',t:'Il se passe quelque chose au Sanctuaire',d:'Une scène entre vos personnages vous attend.',act:'home:start'});

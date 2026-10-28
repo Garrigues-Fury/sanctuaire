@@ -34,6 +34,8 @@ import { COMPLEXES, TONS, ensureLife, heartLabel, heartText, promiseOf, serviceT
 import { isCouple, loveOf, partnerOf, rivalOf } from '../core/romance.js';
 import { givePool } from '../core/minigames.js';
 import { gloryNote } from '../core/glory.js';
+import { pendingCeremonies, photosOf, queueCeremony } from '../core/ceremony.js';
+import { photoHtml } from './ceremony.js';
 import { openGlory } from './glory.js';
 import { openMinigame } from './minigames.js';
 import { armDefi, cardModal } from './collection.js';
@@ -55,7 +57,7 @@ import { G, ROMAN, clamp, dur, esc, fmt, fmt1 } from '../core/util.js';
 import { syncAgents } from '../map/agents.js';
 import { mountMap } from '../map/map.js';
 import { setSound, sfx, soundPrefs, unlockAudio } from '../audio/audio.js';
-import { ensureWorld, startArcEpisode, startExpedition, startHomeScene } from '../core/expeditions.js';
+import { ensureWorld, startArcEpisode, startCeremony, startExpedition, startHomeScene } from '../core/expeditions.js';
 import { episodeTitle, readyArcs } from '../core/arcs.js';
 import { ARCS } from '../core/data/arcs.js';
 import { eventModal, viewMonde } from './world.js';
@@ -192,6 +194,7 @@ export function viewSanctuaire(){
  if(S.starve)h+='<div class="banner bad">Les vivres sont épuisés. L’entraînement tourne au ralenti (−50 %). Envoyez du monde aux oliveraies ou agrandissez-les.</div>';
  if(!pope())h+='<div class="banner info">Personne ne guide le Sanctuaire. Ouvrez l’onglet Chevaliers et nommez un Grand Pope.</div>';
  const idle=S.workers.filter(w=>!w.job).length;
+ pendingCeremonies().slice(0,2).forEach(c=>{const kk=S.knights.find(q=>q.id===c.kid);if(kk)h+='<div class="banner home">'+esc(kk.name)+' a gagné son armure : tout le Sanctuaire l’attend. <button class="btn sm" data-act="ceremony:'+kk.id+'" style="margin-left:6px">La cérémonie</button></div>';});
  readyArcs().slice(0,2).forEach(A=>{h+='<div class="banner home">Feuilleton « '+esc(ARCS[A.key].n)+' » : un nouvel épisode vous attend. <button class="btn sm" data-act="arc:'+A.id+'" style="margin-left:6px">Épisode '+(A.ep+1)+' : '+esc(episodeTitle(A))+'</button></div>';});
  if(S.world&&S.world.home)h+='<div class="banner home">Il se passe quelque chose au Sanctuaire… <button class="btn sm" data-act="home:start" style="margin-left:6px">Voir la scène</button></div>';
  if(S.world&&S.world.active)h+='<div class="banner info">Une scène attend votre retour. <button class="btn sm" data-act="scene:resume" style="margin-left:6px">Reprendre</button></div>';
@@ -657,6 +660,7 @@ export function knightModal(id){return()=>{const k=S.knights.find(x=>x.id===id);
  // Profil : le personnage en pied, ses statistiques, son histoire
  const nv=paintedVariants(k).length;
  h+='<figure class="fullbody"><img src="'+fullBody(k,k.rank)+'" alt="'+esc(k.name)+' en '+esc(armorLow(c))+'" width="300" height="675"><figcaption>'+esc(armorName(c))+'</figcaption>'+(nv>1?'<button class="btn ghost sm" data-act="artv:'+k.id+'">Autre illustration ('+((k.artV||0)%nv+1)+' / '+nv+')</button>':'')+'</figure>';
+ const phs=photosOf(k.id);if(phs.length)h+='<details class="dt" open><summary>Souvenirs <span class="aside">'+phs.length+' photo'+(phs.length>1?'s':'')+'</span></summary><div class="album">'+phs.map(ph=>'<button class="ph-btn" data-act="photo:'+S.album.indexOf(ph)+'">'+photoHtml(ph,true)+'</button>').join('')+'</div></details>';
  h+=radarBox(k)+statsHtml(k,'k')+itemUse(k,'k');
  h+='<div class="hint">Techniques : '+(k.tech.length?k.tech.map(esc).join(' · '):'aucune')+'</div>';
  h+=persoBlock(k);
@@ -694,7 +698,7 @@ export let lastTrial=null;
 // Armure choisie pour un combat d'épreuve : on demande s'il se joue en direct ou automatiquement.
 let trialPick=null;
 export function trialModal(id){return()=>{const a=S.aps.find(x=>x.id===id)||S.knights.find(x=>x.id===id);
- if(lastTrial&&lastTrial.id===id){const t=lastTrial,du=t.duel,sem=du&&du.kind==='sempai';return '<div class="result '+(t.win?'win':'lose')+'"><h3>'+(t.win?'L’armure a choisi '+esc(t.name):sem?esc(t.name)+' n’est pas encore prêt'+(t.sex==='F'?'e':''):du?esc(du.rival)+' l’emporte':'L’armure reste muette')+'</h3>'+(du?'<p class="hint">'+(sem?'Combat d’évaluation face à '+esc(du.rival)+(du.fought?' : '+esc(t.name)+' a même gagné !':' :'):'Combat contre '+esc(du.rival)+(du.rivalNpc?', disciple d’un autre maître':', votre apprenti'+(t.sex==='F'?'e':''))+' :')+'</p><div class="log">'+du.log.map(m=>'<div style="grid-template-columns:1fr">'+esc(m)+'</div>').join('')+'</div>'+(sem?'<p class="hint">Ce que '+esc(du.rival)+' a vu ('+du.eval.score+' / 5, il en faut 4) :</p><div class="list">'+du.eval.items.map(x=>'<div class="hint" style="color:var(--'+(x.ok?'ok':'bad')+')">'+(x.ok?'✓ ':'✗ ')+esc(x.n)+' : '+esc(x.t)+'</div>').join('')+'</div>':'')+(du.rivalWon?'<p class="hint" style="color:var(--gold-hi)">'+esc(du.rival)+' gagne l’armure et devient chevalier'+(du.rivalNpc?' : '+(du.rivalSex==='F'?'elle':'il')+' rejoint le Sanctuaire':'')+'.</p>':''):'')+'<p class="hint">'+(t.win?esc(t.name)+' devient chevalier de '+RANKS[t.rank].toLowerCase()+' '+esc(de(t.cons))+'. Retrouvez-'+(t.sex==='F'?'la':'le')+' dans l’onglet Chevaliers.':esc(t.name)+' a échoué cette fois et doit se reposer '+t.cd+' h. Un onguent peut abréger ce repos.')+'</p></div><button class="btn" data-act="close">Continuer</button>';}
+ if(lastTrial&&lastTrial.id===id){const t=lastTrial,du=t.duel,sem=du&&du.kind==='sempai';return '<div class="result '+(t.win?'win':'lose')+'"><h3>'+(t.win?'L’armure a choisi '+esc(t.name):sem?esc(t.name)+' n’est pas encore prêt'+(t.sex==='F'?'e':''):du?esc(du.rival)+' l’emporte':'L’armure reste muette')+'</h3>'+(du?'<p class="hint">'+(sem?'Combat d’évaluation face à '+esc(du.rival)+(du.fought?' : '+esc(t.name)+' a même gagné !':' :'):'Combat contre '+esc(du.rival)+(du.rivalNpc?', disciple d’un autre maître':', votre apprenti'+(t.sex==='F'?'e':''))+' :')+'</p><div class="log">'+du.log.map(m=>'<div style="grid-template-columns:1fr">'+esc(m)+'</div>').join('')+'</div>'+(sem?'<p class="hint">Ce que '+esc(du.rival)+' a vu ('+du.eval.score+' / 5, il en faut 4) :</p><div class="list">'+du.eval.items.map(x=>'<div class="hint" style="color:var(--'+(x.ok?'ok':'bad')+')">'+(x.ok?'✓ ':'✗ ')+esc(x.n)+' : '+esc(x.t)+'</div>').join('')+'</div>':'')+(du.rivalWon?'<p class="hint" style="color:var(--gold-hi)">'+esc(du.rival)+' gagne l’armure et devient chevalier'+(du.rivalNpc?' : '+(du.rivalSex==='F'?'elle':'il')+' rejoint le Sanctuaire':'')+'.</p>':''):'')+'<p class="hint">'+(t.win?esc(t.name)+' devient chevalier de '+RANKS[t.rank].toLowerCase()+' '+esc(de(t.cons))+'. Retrouvez-'+(t.sex==='F'?'la':'le')+' dans l’onglet Chevaliers.':esc(t.name)+' a échoué cette fois et doit se reposer '+t.cd+' h. Un onguent peut abréger ce repos.')+'</p></div>'+(t.win&&pendingCeremonies().some(c=>c.kid===t.id)?'<button class="btn" data-act="ceremony:'+t.id+'">Assister à la cérémonie d’investiture</button>':'')+'<button class="btn'+(t.win&&pendingCeremonies().some(c=>c.kid===t.id)?' ghost':'')+'" data-act="close">Continuer</button>';}
  if(!a)return '<p>Ce personnage n’est plus là.</p>';
  const kn=S.knights.includes(a);
  const avail=CONS.filter(c=>S.armors[c.k]==='restauree'&&(!kn||c.rank===NEXT_RANK[a.rank])).sort((x,y)=>armorAffinity(a,y).v-armorAffinity(a,x).v);
@@ -778,6 +782,8 @@ export function act(a){
  case'renameok':{const p=getP(x,+y);if(!p)return;const e=doRename(p);if(e){flash=e;render();return;}renaming=null;sfx('confirm');break;}
  case'mg':closeModal();openMinigame(x,+y);return;
  case'glory':closeModal();openGlory(null);return;
+ case'photo':{const ph=(S.album||[])[+x];if(!ph)return;openModal(()=>photoHtml(ph)+'<div class="btns"><button class="btn" data-act="close">Fermer</button></div>');return;}
+ case'ceremony':{const c=pendingCeremonies().find(q=>q.kid===+x);if(!c)return;closeModal();lastTrial=null;if(!startCeremony(c))return;save();render();openScene();return;}
  case'defarm':armDefi(x);render();if(modalFn)openModal(modalFn);return;
  case'defyes':{armDefi(null);const out=validateHonor(x);if(!out)return;sfx('milestone');save();render();defiResult('Palier réussi !',out);return;}
  case'ccard':openModal(cardModal(x));return;
@@ -863,7 +869,7 @@ export function act(a){
  case'trialOpen':lastTrial=null;trialPick=null;openModal(trialModal(+x));return;
  case'trial':{const kp=S.knights.find(q=>q.id===+x),c0=CONS_BY[y];
   if(kp&&c0){const e=trialEval(kp,c0);if(!e.ok)return;const win=Math.random()<e.ch;const cd=restHours(kp);
-   if(win){(e.resonance||[]).forEach(id=>grantSkill(kp,id));promoteStats(kp,c0,c0.rank);const old=CONS_BY[kp.cons];gloryNote(kp,'armor',c0.k);kp.prevCons=(kp.prevCons||[]).concat([old.k]);S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
+   if(win){(e.resonance||[]).forEach(id=>grantSkill(kp,id));promoteStats(kp,c0,c0.rank);const old=CONS_BY[kp.cons];gloryNote(kp,'armor',c0.k);queueCeremony({kid:kp.id,cons:c0.k,promo:true,old:old.k});kp.prevCons=(kp.prevCons||[]).concat([old.k]);S.armors[old.k]='restauree';S.armors[c0.k]='portee';kp.rank=c0.rank;kp.cons=c0.k;kp.tech=kp.tech.concat([SIG_WORDS[kp.seed%SIG_WORDS.length]+' '+(c0.rank==='or'?'d’or':de(c0.n))]);
     if(c0.rank==='or'&&!S.houses[c0.sign])S.houses[c0.sign]=1;log('★ '+kp.name+' est promu'+G(kp,'e')+' : '+armorLow(c0)+' ! L’'+armorLow(old)+' attend un nouveau porteur.');}
    else{kp.cd=S.gt+cd;log(kp.name+' échoue à l’épreuve de l’'+armorLow(c0)+'.');}
    lastTrial={id:kp.id,win,name:kp.name,rank:c0.rank,cons:c0.n,sex:kp.sex,cd};save();render();return;}
