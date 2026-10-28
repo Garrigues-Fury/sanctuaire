@@ -9,7 +9,7 @@ const armorKey=c=>c.rank==='or'?'or-'+SIGN_KEY[c.sign]:c.rank+'-'+c.el;
 // et même sexe. Une image n'a qu'un porteur à la fois : le premier chevalier qui y a droit ; les autres gardent le générateur.
 // Illustrations propres à la constellation : perso-cons-fourneau-F, puis les variantes F2, F3… au choix du joueur (p.artV).
 export function paintedVariants(p){
- if(!p||!p.cons||!p.sex)return[];const own='perso-cons-'+p.cons+'-'+p.sex,out=[];
+ if(!p||!p.cons||!p.sex||(p.age!=null&&p.age<18))return[];const own='perso-cons-'+p.cons+'-'+p.sex,out=[];
  // « -M », puis « -M1 », « -M2 »… (le 1 est accepté aussi)
  if(PAINTED.has(own))out.push(own);
  for(let i=1;i<10;i++)if(PAINTED.has(own+i))out.push(own+i);
@@ -17,7 +17,7 @@ export function paintedVariants(p){
 }
 // Une illustration propre à la constellation passe avant celle de l'élément : elle va à celui qui porte l'armure.
 export function paintedOf(p){
- const c=p&&p.cons&&CONS_BY[p.cons];if(!c||!S||!S.knights)return null;
+ const c=p&&p.cons&&CONS_BY[p.cons];if(!c||!S||!S.knights||(p.age!=null&&p.age<18))return null;
  const vs=paintedVariants(p);if(vs.length){const own=vs[(p.artV||0)%vs.length];return{body:'img/gacha/'+own+'.webp',head:'img/gacha/'+own+'-tete.webp'};}
  const key='perso-'+armorKey(c)+'-'+p.sex;if(!PAINTED.has(key))return null;
  const first=S.knights.filter(k=>k.sex===p.sex&&k.cons&&CONS_BY[k.cons]&&armorKey(CONS_BY[k.cons])===armorKey(c)).sort((a,b)=>a.id-b.id)[0];

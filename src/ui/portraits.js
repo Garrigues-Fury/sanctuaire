@@ -12,9 +12,9 @@ export function strand(g,x0,y0,x1,y1,w,bend){g.beginPath();g.moveTo(x0-w/2,y0);g
 const PC2=new Map();
 export function portrait(p,rank,opts={}){
  if(rank&&rank!=='garde'&&!opts.faction){const pa=paintedOf(p);if(pa)return pa.head;}
- const key=p.seed+'|'+(rank||'')+'|'+p.nat+'|'+p.sex+'|'+(p.cons||'')+'|'+(opts.faction||'')+'|'+(p.age!=null&&p.age<17?'c':'');
+ const key=p.seed+'|'+(rank||'')+'|'+p.nat+'|'+p.sex+'|'+(p.cons||'')+'|'+(opts.faction||'')+'|'+(p.age!=null&&p.age<18?'c':'');
  if(PC2.has(key))return PC2.get(key);
- const s=specOf(p,{rank:rank&&rank!=='garde'?rank:null,faction:opts.faction||(rank==='garde'?'bandits':undefined),elder:opts.elder,child:!rank&&!opts.faction&&(p.age!=null?p.age<17:!!p.child)});
+ const s=specOf(p,{rank:rank&&rank!=='garde'?rank:null,faction:opts.faction||(rank==='garde'?'bandits':undefined),elder:opts.elder,child:!opts.faction&&(p.age!=null?p.age<18:!rank&&!!p.child)});
  const url=dataUrl(svgBust(s,{size:256}));PC2.set(key,url);return url;
 }
 export function fullBody(p,rank,opts={}){if(rank&&rank!=='garde'&&!opts.faction){const pa=paintedOf(p);if(pa)return pa.body;}return dataUrl(svgFull(specOf(p,{rank:rank||null,faction:opts.faction}),{w:300,h:675}));}

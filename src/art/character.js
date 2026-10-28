@@ -42,7 +42,8 @@ const FACTION={
 export function specOf(p,o={}){
  const L=looks(p),r=rng((p.seed^0x51ed27)>>>0),F=p.sex==='F';
  const rank=o.rank!==undefined?o.rank:(p.rank||null);
- const child=o.child!=null?o.child:(!rank&&!o.faction&&p.age!=null&&p.age<17);
+ // Moins de 18 ans : silhouette de jeune, jamais sexualisée, même quand il porte une armure (règle ferme de Seba).
+ const child=o.child!=null?o.child:(!o.faction&&p.age!=null&&p.age<18);
  const el=SIGNS[p.sign||0].el,cons=p.cons?CONS_BY[p.cons]:null;
  const stylesF=['long','long','queue','carre','tresse','chignon','mi'],stylesM=['court','court','mi','queue','ras','long'];
  let hair=L.curly?(r()<.7?'boucles':(F?'tresse':'ras')):(F?stylesF:stylesM)[Math.floor(r()*(F?7:6))];
@@ -54,6 +55,7 @@ export function specOf(p,o={}){
   rank,el,cons,motif:fac?(fac.motif||null):rank?motifOf(cons):null,cloth:fac?fac.cloth:EL[el].cloth,gem:EL[el].gem,
   metal:fac?fac.metal:(rank||'bronze'),faction:o.faction||null,boss:!!o.boss,glow:!!o.boss,
   outfit:fac?'foe':rank?'knight':child?'apprentice':'villager',cover:F?(r()<.75?'midriff':'full'):(rank&&rank!=='or'&&r()<.45?'bare':'suit'),r};
+ if(child)s.cover=F?'full':'suit';
  // Morphologie et visage variés (demande de Seba du 2026-10-24), pour les adultes seulement.
  // Tirés à part, pour ne pas changer l'apparence déjà connue des personnages existants.
  const r2=rng((p.seed^0x9e3779b1)>>>0),adult=!child,gourmand=(p.flaw||[]).some(x=>x.k==='gourmand');
